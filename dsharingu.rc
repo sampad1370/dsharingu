@@ -1,0 +1,228 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Japanese resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
+#ifdef _WIN32
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+#pragma code_page(932)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "041104b0"
+        BEGIN
+            VALUE "FileDescription", "DSharingu Application"
+            VALUE "FileVersion", "1, 0, 0, 1"
+            VALUE "InternalName", "dsharing"
+            VALUE "LegalCopyright", "Copyright (C) 2005"
+            VALUE "OriginalFilename", "DSharingu.exe"
+            VALUE "ProductName", "DSharingu Application"
+            VALUE "ProductVersion", "1, 0, 0, 1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x411, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICO_APPL            ICON                    "ico_appl.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP1             BITMAP                  "main_icon_48.bmp"
+#endif    // Japanese resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUT DIALOGEX 0, 0, 205, 135
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+EXSTYLE WS_EX_STATICEDGE
+CAPTION "About DSharingu"
+FONT 9, "Tahoma", 400, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,77,114,50,14
+    GROUPBOX        "About:",IDC_STATIC,7,7,191,99
+    LTEXT           "DSharingu 0.5a",IDC_STATIC,100,20,80,9
+    LTEXT           "desktop sharing software",IDC_STATIC,85,30,85,8,
+                    SS_CENTERIMAGE
+    LTEXT           "written by Davide Pasca 2006",IDC_STATIC,76,40,96,8
+    PUSHBUTTON      "http://kazzuya.com/dsharingu",IDC_HOMEPAGE,70,80,108,14
+    LTEXT           "Internet site:",IDC_STATIC,25,83,43,8
+    CONTROL         118,IDB_BITMAP9,"Static",SS_BITMAP | WS_BORDER,34,20,29,
+                    29
+    PUSHBUTTON      "Manual and License",IDC_MANUAL,70,59,108,14
+    LTEXT           "Info:",IDC_STATIC,52,62,15,8
+END
+
+IDD_SETTINGS DIALOGEX 0, 0, 222, 293
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "DSharingu Settings"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Call Settings:",IDC_STATIC,7,7,208,67
+    COMBOBOX        IDC_CONNECT_IP_COMBO,71,19,130,12,CBS_DROPDOWN | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    RADIOBUTTON     "Standard Port (51112)",IDC_STANDARD_PORT_CALL_RADIO,70,
+                    36,88,10
+    RADIOBUTTON     "Custom Port:",IDC_CUSTOM_PORT_CALL_RADIO,70,52,58,10
+    EDITTEXT        IDC_CUSTOM_PORT_CALL_EDIT,128,50,33,14,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    GROUPBOX        "Accept Settings:",IDC_STATIC,7,77,208,60
+    CONTROL         "Accept Connections",IDC_LISTEN_CONNECTIONS_CHECK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,19,90,79,10
+    RADIOBUTTON     "Standard Port (51112)",IDC_STANDARD_PORT_LISTEN_RADIO,
+                    32,104,88,10
+    RADIOBUTTON     "Custom Port:",IDC_CUSTOM_PORT_LISTEN_RADIO,32,120,58,10
+    EDITTEXT        IDC_CUSTOM_PORT_LISTEN_EDIT,90,117,33,14,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    GROUPBOX        "Communication Settings:",IDC_STATIC,7,143,208,120
+    CONTROL         "Show My Screen  (Must choose a password)",
+                    IDC_SHOW_MY_SCREEN_CHECK,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,21,156,157,10
+    CONTROL         "Share My Screen (Must choose a password)",
+                    IDC_SHARE_MY_SCREEN_CHECK,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,21,172,156,10
+    EDITTEXT        IDC_PASSWORD1_EDIT,71,185,130,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    EDITTEXT        IDC_PASSWORD2_EDIT,71,203,130,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    CONTROL         "See Remote's Screen",IDC_SEE_REMOTE_SCREEN_CHECK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,21,225,83,10
+    EDITTEXT        IDC_REMOTE_PASSWORD_EDIT,71,238,130,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,108,272,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,165,272,50,14
+    LTEXT           "Connect to IP:",IDC_STATIC,20,21,48,8
+    LTEXT           "Password:",IDC_STATIC,34,188,34,8
+    LTEXT           "Re-Type:",IDC_STATIC,36,206,31,8
+    LTEXT           "Password:",IDC_STATIC,34,240,34,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_ABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 198
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 128
+    END
+
+    IDD_SETTINGS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 215
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 286
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
