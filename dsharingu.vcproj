@@ -194,85 +194,88 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\com_basedef.h">
+			RelativePath=".\src\com_basedef.h">
 		</File>
 		<File
-			RelativePath=".\compak.cpp">
+			RelativePath=".\src\compak.cpp">
 		</File>
 		<File
-			RelativePath=".\compak.h">
+			RelativePath=".\src\compak.h">
 		</File>
 		<File
-			RelativePath=".\data_schema.cpp">
+			RelativePath=".\src\data_schema.cpp">
 		</File>
 		<File
-			RelativePath=".\data_schema.h">
+			RelativePath=".\src\data_schema.h">
 		</File>
 		<File
-			RelativePath=".\debugout.cpp">
+			RelativePath=".\src\debugout.cpp">
 		</File>
 		<File
-			RelativePath=".\debugout.h">
+			RelativePath=".\src\debugout.h">
 		</File>
 		<File
-			RelativePath=".\drtysock.h">
+			RelativePath=".\src\drtysock.h">
 		</File>
 		<File
-			RelativePath=".\dsharingu.cpp">
+			RelativePath=".\src\dsharingu.cpp">
 		</File>
 		<File
-			RelativePath=".\dsharingu_protocol.h">
+			RelativePath=".\src\dsharingu_protocol.h">
 		</File>
 		<File
-			RelativePath=".\dsinstance.cpp">
+			RelativePath=".\src\dsinstance.cpp">
 		</File>
 		<File
-			RelativePath=".\dsinstance.h">
+			RelativePath=".\src\dsinstance.h">
 		</File>
 		<File
-			RelativePath=".\interactsys.cpp">
+			RelativePath=".\src\interactsys.cpp">
 		</File>
 		<File
-			RelativePath=".\interactsys.h">
+			RelativePath=".\src\interactsys.h">
 		</File>
 		<File
-			RelativePath=".\resource.h">
+			RelativePath=".\src\packet_def.h">
 		</File>
 		<File
-			RelativePath=".\screen_grabber.cpp">
+			RelativePath=".\src\resource.h">
 		</File>
 		<File
-			RelativePath=".\screen_grabber.h">
+			RelativePath=".\src\screen_grabber.cpp">
 		</File>
 		<File
-			RelativePath=".\screen_packer.cpp">
+			RelativePath=".\src\screen_grabber.h">
 		</File>
 		<File
-			RelativePath=".\screen_packer.h">
+			RelativePath=".\src\screen_packer.cpp">
 		</File>
 		<File
-			RelativePath=".\screen_sharing.cpp">
+			RelativePath=".\src\screen_packer.h">
 		</File>
 		<File
-			RelativePath=".\screen_sharing.h">
+			RelativePath=".\src\screen_sharing.cpp">
 		</File>
 		<File
-			RelativePath=".\settings.cpp">
+			RelativePath=".\src\screen_sharing.h">
 		</File>
 		<File
-			RelativePath=".\settings.h">
+			RelativePath=".\src\settings.cpp">
 		</File>
 		<File
-			RelativePath=".\SHA1.cpp">
+			RelativePath=".\src\settings.h">
 		</File>
 		<File
-			RelativePath=".\SHA1.h">
+			RelativePath=".\src\SHA1.cpp">
 		</File>
 		<File
-			RelativePath=".\socksupport.cpp">
+			RelativePath=".\src\SHA1.h">
 		</File>
 		<File
-			RelativePath=".\socksupport.h">
+			RelativePath=".\src\socksupport.cpp">
+		</File>
+		<File
+			RelativePath=".\src\socksupport.h">
 		</File>
 	</Files>
 	<Globals>
