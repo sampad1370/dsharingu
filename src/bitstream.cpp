@@ -18,17 +18,17 @@
 ///
 ///
 ///
-//============================================================================
+//==================================================================
 
 #include "psys.h"
 #include "bitstream.h"
 
-//============================================================================
+//==================================================================
 #ifdef _DEBUG
 //#define DEBUG_VERIFY_IO
 #endif
 
-//============================================================================
+//==================================================================
 static int required_bits( u_int value )
 {
 	for (int i=0; i < 32; ++i)
@@ -39,11 +39,11 @@ static int required_bits( u_int value )
 		value >>= 1;
 	}
 
-	KASSERT( 0 );
+	PSYS_ASSERT( 0 );
 	return 31;
 }
 
-//============================================================================
+//==================================================================
 void BitStream_Init( BitStream *T, u_int max_value, void *datap, int data_max_size )
 {
 	T->max_value		= max_value;
@@ -52,19 +52,19 @@ void BitStream_Init( BitStream *T, u_int max_value, void *datap, int data_max_si
 	T->datap			= (u_char *)datap;
 	T->data_max_size	= data_max_size;
 
-	KASSERT( T->bits_per_value >= 1 );
+	PSYS_ASSERT( T->bits_per_value >= 1 );
 }
 
-//============================================================================
+//==================================================================
 void BitStream_Init( BitStream *T, u_int max_value, const void *datap, int data_max_size )
 {
 	BitStream_Init( T, max_value, (void *)datap, data_max_size );
 }
 
-//============================================================================
+//==================================================================
 void BitStream_WriteValue( BitStream *T, u_int value )
 {
-	KASSERT( value <= T->max_value );
+	PSYS_ASSERT( value <= T->max_value );
 
 /*
 value: abc
@@ -82,7 +82,11 @@ i |			   |			|
 	int	idx = T->cur_idx + T->bits_per_value;
 
 	// make sure that we are not trying to index outside the maximum data size
-	KASSERTERR( idx / 8 < T->data_max_size );
+	if NOT( idx / 8 < T->data_max_size )
+	{
+		PSYS_ASSERT( 0 );
+		return;
+	}
 
 	for (int i=T->bits_per_value; i > 0; --i)
 	{
@@ -106,17 +110,19 @@ i |			   |			|
 		verify_stream.cur_idx -= verify_stream.bits_per_value;
 		u_int read_back_value = BitStream_ReadValue( &verify_stream );
 
-		KASSERT( read_back_value == original_value );
+		PSYS_ASSERT( read_back_value == original_value );
 	}
 #endif
-
-exiterr:;
 }
 
-//============================================================================
+//==================================================================
 void BitStream_WriteEnd( BitStream *T )
 {
-	KASSERTERR( (T->cur_idx+7) / 8 <= T->data_max_size );
+	if NOT( (T->cur_idx+7) / 8 <= T->data_max_size )
+	{
+		PSYS_ASSERT( 0 );
+		return;
+	}
 
 	u_char	*datap_div	= T->datap + T->cur_idx / 8;
 
@@ -124,17 +130,15 @@ void BitStream_WriteEnd( BitStream *T )
 		*datap_div &= ~(1 << (i & 7));
 
 	T->cur_idx = (T->cur_idx + 7) & ~7;
-
-exiterr:;
 }
 
-//============================================================================
+//==================================================================
 u_char	*BitStream_GetEndPtr( BitStream *T )
 {
 	return T->datap + (T->cur_idx+7) / 8;
 }
 
-//============================================================================
+//==================================================================
 u_int BitStream_ReadValue( BitStream *T )
 {
 /*
@@ -152,7 +156,11 @@ i |			|			|
 	int	idx = T->cur_idx;
 
 	// make sure that we are not trying to index outside the maximum data size
-	KASSERTERR( (idx + T->bits_per_value-1) / 8 < T->data_max_size );
+	if NOT( (idx + T->bits_per_value-1) / 8 < T->data_max_size )
+	{
+		PSYS_ASSERT( 0 );
+		return 0;
+	}
 
 	for (int i=T->bits_per_value; i > 0; --i)
 	{
@@ -168,7 +176,4 @@ i |			|			|
 	T->cur_idx += T->bits_per_value;
 
 	return out_value;
-
-exiterr:;
-	return 0;
 }

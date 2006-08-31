@@ -74,14 +74,21 @@ static void get_name_and_value( char *line, char *name, char *value )
 }
 
 //==================================================================
-static char	_item_name[256];
-static char	_item_value[1024];
+char *ItemBase::strcpyalloc( const char *srcp )
+{
+	char	*d;
+
+	int	len = strlen( srcp );
+	d = new	char [ len + 1 ];
+	strcpy( d, srcp );
+	return d;
+}
 
 //==================================================================
-int config_parse_next( FILE *fp, char **namepp, char **valuepp )
+bool config_parse_next( FILE *fp, char *namep, char *valuep )
 {
-char	*retstr;
-char	buff[4096];
+	char	*retstr;
+	char	buff[4096];
 
 	while ( 1 )
 	{
@@ -90,41 +97,24 @@ char	buff[4096];
 		{
 			if ( feof(fp) )
 			{
-				*namepp = NULL;
-				*valuepp = NULL;
-				return 0;
+				return true;
 			}
 			else
 			{
-				*namepp = NULL;
-				*valuepp = NULL;
-
-				return -1;
+				//throw "cfg file error";
+				return true;
 			}
 		}
 		else
 		if ( buff[0] != '#' )
 		{
 			// not safe
-			get_name_and_value( buff, _item_name, _item_value );
-			*namepp = _item_name;
-			*valuepp = _item_value;
-			return 0;
+			get_name_and_value( buff, namep, valuep );
+			return false;
 		}
 	}
 
-	return 0;
-}
-
-//==================================================================
-char *dlgmk_item_c::strcpyalloc( const char *srcp )
-{
-char	*d;
-
-	int	len = strlen( srcp );
-	d = new	char [ len + 1 ];
-	strcpy( d, srcp );
-	return d;
+	return false;
 }
 
 //==================================================================
@@ -176,113 +166,60 @@ static void hexstring_from_SHA1( char *strp, const u_char sha1hash[20] )
 }
 
 //==================================================================
-void dlgmk_item_c::LoadFromString( const char *strp )
+void ItemSHA1Hash::LoadFromString( const char *strp )
 {
-	switch ( _dtype )
-	{
-	case DTYPE_STRING:
-		psys_strcpy( (char *)_datap, strp, _max_str_size );
-		break;
-
-	case DTYPE_SHA1HASH:
-		SHA1_from_hexstring( (u_char *)_datap, strp );
-		break;
-
-	case DTYPE_INT:
-		*(int *)_datap = atoi( strp );
-		PCLAMP( *(int *)_datap, _i_min, _i_max );
-		break;
-
-	case DTYPE_ULONG:
-		*(u_long *)_datap = atoi( strp );
-		PCLAMP( *(u_long *)_datap, _ul_min, _ul_max );
-		break;
-
-	case DTYPE_FLOAT:
-		*(float *)_datap = atof( strp );
-		PCLAMP( *(float *)_datap, _f_min, _f_max );
-		break;
-
-	case DTYPE_BOOLEAN:
-		*(bool *)_datap = (atoi( strp ) ? true : false);
-		break;
-	}
+	SHA1_from_hexstring( (u_char *)_datap, strp );
 }
-//==================================================================
-const char *dlgmk_item_c::StoreToString( char *outstrp )
-{
-	switch ( _dtype )
-	{
-	case DTYPE_STRING:		return (const char *)_datap;							break;
-	case DTYPE_SHA1HASH:	hexstring_from_SHA1( outstrp, (const u_char *)_datap );	break;
-	case DTYPE_INT:			sprintf( outstrp, "%i", *(int *)_datap );				break;
-	case DTYPE_ULONG:		sprintf( outstrp, "%lu", *(u_long *)_datap );			break;
-	case DTYPE_FLOAT:		sprintf( outstrp, "%g", *(float *)_datap );				break;
-	case DTYPE_BOOLEAN:		sprintf( outstrp, "%i", *(bool *)_datap ? 1 : 0 );		break;
-	}
 
+//==================================================================
+const char *ItemSHA1Hash::StoreToString( char *outstrp )
+{
+	hexstring_from_SHA1( outstrp, (const u_char *)_datap );
 	return outstrp;
 }
 
 //==================================================================
-DataSchema::DataSchema( const char *stridp )
+DataSchema::DataSchema( const char *stridp ) :
+	_stridp(stridp)
 {
-	memset( this, 0, sizeof(*this) );
-
-	_stridp	 = stridp;
 }
 
 //==================================================================
 DataSchema::~DataSchema()
 {
-	for (int i=0; i < _itemsp_list.len(); ++i)
-		delete _itemsp_list[i];
-}
-
-//==================================================================
-dlgmk_item_c *DataSchema::addItem( dlgmk_item_c *itemp )
-{
-	_itemsp_list.append( itemp );
-
-	return itemp;
 }
 
 //==================================================================
 void DataSchema::AddString( const char *stridp, char *datap, int strsize )
 {
-	addItem( new dlgmk_item_c( stridp, datap, strsize ) );
+	_itemsp_list.append( new ItemString( stridp, datap, strsize ) );
 }
 //==================================================================
 void DataSchema::AddSHA1Hash( const char *stridp, sha1_t *sha1hashp )
 {
-	addItem( new dlgmk_item_c( stridp, sha1hashp ) );
+	_itemsp_list.append( new ItemSHA1Hash( stridp, sha1hashp ) );
 }
 //---------------------------------------------------------------------------
 void DataSchema::AddInt( const char *stridp, int *datap, int i_min, int i_max )
 {
-	addItem( new dlgmk_item_c( stridp, datap, i_min, i_max ) );
+	_itemsp_list.append( new ItemInt( stridp, datap, i_min, i_max ) );
 }
 //---------------------------------------------------------------------------
 void DataSchema::AddULong( const char *stridp, u_long *datap, u_long ul_min, u_long ul_max )
 {
-	addItem( new dlgmk_item_c( stridp, datap, ul_min, ul_max ) );
+	_itemsp_list.append( new ItemULong( stridp, datap, ul_min, ul_max ) );
 }
 //---------------------------------------------------------------------------
 void DataSchema::AddFloat( const char *stridp, float *datap, float f_min, float f_max )
 {
-	addItem( new dlgmk_item_c( stridp, datap, f_min, f_max ) );
+	_itemsp_list.append( new ItemFloat( stridp, datap, f_min, f_max ) );
 }
 //---------------------------------------------------------------------------
 void DataSchema::AddBool( const char *stridp, bool *datap )
 {
-	addItem( new dlgmk_item_c( stridp, datap ) );
+	_itemsp_list.append( new ItemBool( stridp, datap ) );
 }
 
-//==================================================================
-static int mymax( int a, int b )
-{
-	return a > b ? a : b;
-}
 //==================================================================
 static int make_blank_safe_string( char *desp, const char *srcp, int dmax )
 {
@@ -323,9 +260,9 @@ PError DataSchema::SaveData( FILE *fp )
 
 	for (int i=0; i < _itemsp_list.len(); ++i)
 	{
-	dlgmk_item_c	*itemp = _itemsp_list[i];
-	char			buff[256];
-	char			buff2[1024];
+	ItemBase	*itemp = _itemsp_list[i];
+	char		buff[256];
+	char		buff2[1024];
 	
 		int err = make_blank_safe_string( buff, itemp->_stridp, sizeof(buff) );
 		PSYS_ASSERT( err == 0 );
@@ -343,7 +280,7 @@ PError DataSchema::SaveData( FILE *fp )
 }
 
 //==================================================================
-dlgmk_item_c *DataSchema::item_find_by_strid( const char *stridp )
+ItemBase *DataSchema::item_find_by_strid( const char *stridp )
 {
 	for (int i=0; i < _itemsp_list.len(); ++i)
 	{
@@ -357,29 +294,28 @@ dlgmk_item_c *DataSchema::item_find_by_strid( const char *stridp )
 //==================================================================
 int DataSchema::LoadData( FILE *fp )
 {
-char			*namep, *valuep;
-dlgmk_item_c	*itemp;
+ItemBase	*itemp;
 
-	while NOT( config_parse_next( fp, &namep, &valuep ) )
+	char	name[256];
+	char	value[1024];
+
+	while NOT( config_parse_next( fp, name, value ) )
 	{
-		if NOT( namep )
-			return 0;
-
-		if ( valuep )
+		if ( value[0] )
 		{
-			if ( !stricmp( namep, "@begin" ) )
+			if ( !stricmp( name, "@begin" ) )
 				continue;
 
-			if ( !stricmp( namep, "@end" ) )
+			if ( !stricmp( name, "@end" ) )
 				return 0;
 
-			if NOT( itemp = item_find_by_strid( namep ) )
+			if NOT( itemp = item_find_by_strid( name ) )
 			{
 				PSYS_ASSERT( 0 );
 			}
 			else
 			{
-				itemp->LoadFromString( valuep );
+				itemp->LoadFromString( value );
 			}
 		}
 	}
