@@ -18,14 +18,14 @@
 ///
 ///
 ///
-//============================================================================
+//==================================================================
 
-#ifndef _BITSTREAM_H_
-#define _BITSTREAM_H_
+#ifndef BITSTREAM_H
+#define BITSTREAM_H
 
 #include "psys.h"
 
-//============================================================================
+//==================================================================
 struct BitStream
 {
 	int		bits_per_value;
@@ -35,7 +35,7 @@ struct BitStream
 	int		data_max_size;
 };
 
-//============================================================================
+//==================================================================
 void	BitStream_Init( BitStream *T, u_int max_value, void *datap, int data_max_size );
 void	BitStream_Init( BitStream *T, u_int max_value, const void *datap, int data_max_size );
 

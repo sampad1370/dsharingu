@@ -51,115 +51,194 @@ public:
 };
 
 //==================================================================
-class dlgmk_item_c
+class ItemBase
 {
-	enum {
-		DTYPE_STRING,
-		DTYPE_SHA1HASH,
-		DTYPE_INT,
-		DTYPE_ULONG,
-		DTYPE_FLOAT,
-		DTYPE_BOOLEAN,
-	};
-private:
-	static const int	NUM_STRSIZE = 32;
-
-	static char		*strcpyalloc( const char *srcp );
+public:
+	safe_ptr<char>	_stridp;
 
 public:
-	//---------------------------------------------------------------------------
-	void init( const char *stridp )
+	ItemBase( const char *stridp )
 	{
-		memset( this, 0, sizeof(*this) );
-		_stridp	 = strcpyalloc( stridp );
+		_stridp	= strcpyalloc( stridp );
 	}
-	//---------------------------------------------------------------------------
-	dlgmk_item_c( const char *stridp, sha1_t *sha1hashp )
+
+	virtual ~ItemBase(){};
+
+	virtual void		LoadFromString( const char *strp ) = 0;
+	virtual const char	*StoreToString( char *outstrp ) = 0;
+
+	static char		*strcpyalloc( const char *srcp );
+};
+
+//==================================================================
+class ItemString : public ItemBase
+{
+public:
+	char	*_datap;
+	int		_max_str_size;
+
+public:
+	ItemString( const char *stridp, char *datap, int strsize ) :
+	  ItemBase(stridp)
 	{
-		init( stridp );
-		_dtype	 = DTYPE_SHA1HASH;
-		_datap	 = sha1hashp;
-	}
-	//---------------------------------------------------------------------------
-	dlgmk_item_c( const char *stridp, char *datap, int strsize )
-	{
-		init( stridp );
-		_dtype	 = DTYPE_STRING;
 		_datap	 = datap;
 		_max_str_size = strsize;
 	}
-	//---------------------------------------------------------------------------
-	dlgmk_item_c( const char *stridp, int *datap, int i_min, int i_max )
-	{
-		init( stridp );
-		_dtype	 = DTYPE_INT;
-		_datap	 = datap;
-		_i_min	 = i_min;
-		_i_max	 = i_max;
-	}
-	//---------------------------------------------------------------------------
-	dlgmk_item_c( const char *stridp, u_long *datap, u_long ul_min, u_long ul_max )
-	{
-		init( stridp );
-		_dtype	 = DTYPE_ULONG;
-		_datap	 = datap;
-		_ul_min	 = ul_min;
-		_ul_max	 = ul_max;
-	}
-	//---------------------------------------------------------------------------
-	dlgmk_item_c( const char *stridp, float *datap, float f_min, float f_max )
-	{
-		init( stridp );
-		_dtype	 = DTYPE_FLOAT;
-		_datap	 = datap;
-		_f_min	 = f_min;
-		_f_max	 = f_max;
-	}
-	//---------------------------------------------------------------------------
-	dlgmk_item_c( const char *stridp, bool *datap )
-	{
-		init( stridp );
-		_dtype	 = DTYPE_BOOLEAN;
-		_datap	 = datap;
-	}
-	//---------------------------------------------------------------------------
-	~dlgmk_item_c()
-	{
-		if ( _titlep )
-		{
-			delete _titlep;
-			_titlep = NULL;
-		}
-		if ( _stridp )
-		{
-			delete _stridp;
-			_stridp = NULL;
-		}
-	}
-	//---------------------------------------------------------------------------
-	void		LoadFromString( const char *strp );
-	const char	*StoreToString( char *outstrp );
 
-	//---------------------------------------------------------------------------
-	char			*_titlep;
-	char			*_stridp;
-	void			*_datap;
+	virtual ~ItemString(){};
 
-	int				_dtype;
-	int				_max_str_size;
-	int				_i_min, _i_max;
-	u_long			_ul_min, _ul_max;
-	float			_f_min, _f_max;
+	virtual void		LoadFromString( const char *strp )
+	{
+		psys_strcpy( _datap, strp, _max_str_size );
 
-	u_int			store_fix_data[4];	// up to 128 bit
+	}
+	virtual const char	*StoreToString( char *outstrp )
+	{
+		return _datap;
+	}
+};
+
+//==================================================================
+class ItemSHA1Hash : public ItemBase
+{
+public:
+	sha1_t	*_datap;
+	int		_max_str_size;
+
+public:
+	ItemSHA1Hash( const char *stridp, sha1_t *sha1hashp ) :
+	  ItemBase(stridp)
+	{
+		_datap	 = sha1hashp;
+	}
+
+	virtual ~ItemSHA1Hash(){};
+
+	virtual void		LoadFromString( const char *strp );
+	virtual const char	*StoreToString( char *outstrp );
+};
+
+//==================================================================
+class ItemInt : public ItemBase
+{
+public:
+	int		*_datap;
+	int		_min, _max;
+
+public:
+	ItemInt( const char *stridp, int *datap, int minval, int maxval ) :
+		ItemBase(stridp),
+		_datap(datap),
+		_min(minval),
+		_max(maxval)
+	{
+	}
+
+	virtual ~ItemInt(){};
+
+	virtual void		LoadFromString( const char *strp )
+	{
+		*_datap = atoi( strp );
+		PCLAMP( *_datap, _min, _max );
+	}
+	virtual const char	*StoreToString( char *outstrp )
+	{
+		sprintf( outstrp, "%i", *_datap );
+		return outstrp;
+	}
+};
+
+//==================================================================
+class ItemULong : public ItemBase
+{
+public:
+	u_long		*_datap;
+	u_long		_min, _max;
+
+public:
+	ItemULong( const char *stridp, u_long *datap, u_long minval, u_long maxval ) :
+		ItemBase(stridp),
+		_datap(datap),
+		_min(minval),
+		_max(maxval)
+	{
+	}
+
+	virtual ~ItemULong(){};
+
+	virtual void		LoadFromString( const char *strp )
+	{
+		*_datap = atoi( strp );
+		PCLAMP( *_datap, _min, _max );
+	}
+	virtual const char	*StoreToString( char *outstrp )
+	{
+		sprintf( outstrp, "%lu", *_datap );
+		return outstrp;
+	}
+};
+
+//==================================================================
+class ItemFloat : public ItemBase
+{
+public:
+	float		*_datap;
+	float		_min, _max;
+
+public:
+	ItemFloat( const char *stridp, float *datap, float minval, float maxval ) :
+		ItemBase(stridp),
+		_datap(datap),
+		_min(minval),
+		_max(maxval)
+	{
+	}
+
+	virtual ~ItemFloat(){};
+
+	virtual void		LoadFromString( const char *strp )
+	{
+		*_datap = atof( strp );
+		PCLAMP( *_datap, _min, _max );
+	}
+	virtual const char	*StoreToString( char *outstrp )
+	{
+		sprintf( outstrp, "%g", *_datap );
+		return outstrp;
+	}
+};
+
+//==================================================================
+class ItemBool : public ItemBase
+{
+public:
+	bool	*_datap;
+
+public:
+	ItemBool( const char *stridp, bool *datap ) :
+		ItemBase(stridp),
+		_datap(datap)
+	{
+	}
+
+	virtual ~ItemBool(){};
+
+	virtual void		LoadFromString( const char *strp )
+	{
+		*_datap = (atoi( strp ) ? true : false);
+	}
+	virtual const char	*StoreToString( char *outstrp )
+	{
+		sprintf( outstrp, "%i", *_datap ? 1 : 0 );
+		return outstrp;
+	}
 };
 
 //==================================================================
 class DataSchema
 {
 public:
-	PArray<dlgmk_item_c *>	_itemsp_list;
-
+	PArray<ItemBase *>		_itemsp_list;
 	const char				*_stridp;
 
 	//---------------------------------------------------------------------------
@@ -178,9 +257,7 @@ public:
 	int		LoadData( FILE *fp );
 
 private:
-	dlgmk_item_c	*addItem( dlgmk_item_c *itemp );
-
-	dlgmk_item_c	*item_find_by_strid( const char *stridp );
+	ItemBase	*item_find_by_strid( const char *stridp );
 };
 
 #endif

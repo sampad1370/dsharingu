@@ -34,7 +34,7 @@
 ;--------------------------------
 ;Pages
 
-  !insertmacro MUI_PAGE_LICENSE "License.txt"
+  !insertmacro MUI_PAGE_LICENSE "..\manual\license.txt"
   !insertmacro MUI_PAGE_COMPONENTS
   !insertmacro MUI_PAGE_DIRECTORY
   
@@ -69,7 +69,7 @@ Section "Core Files (required)" SecCoreFiles
   CreateDirectory "$INSTDIR\manual"
   SetOutPath "$INSTDIR\manual"
   File "..\manual\index.html"
-;  File "..\manual\settings_giving_help.png"
+  File "..\manual\license.txt"
 ;  File "..\manual\settings_needing_help.png"
 
   SetOutPath "$INSTDIR"
