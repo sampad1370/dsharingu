@@ -203,12 +203,6 @@
 			RelativePath=".\src\compak.h">
 		</File>
 		<File
-			RelativePath=".\src\data_schema.cpp">
-		</File>
-		<File
-			RelativePath=".\src\data_schema.h">
-		</File>
-		<File
 			RelativePath=".\src\debugout.cpp">
 		</File>
 		<File
