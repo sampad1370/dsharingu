@@ -7,19 +7,19 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dsharingu", "dsharingu.vcpr
 		{155C319B-18CD-471A-ABEF-CBB5C4AEEDFA} = {155C319B-18CD-471A-ABEF-CBB5C4AEEDFA}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "appbase3", "..\..\pascalibs\appbase3\appbase3.vcproj", "{155C319B-18CD-471A-ABEF-CBB5C4AEEDFA}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "appbase3", "..\..\..\pascalibs\trunk\appbase3\appbase3.vcproj", "{155C319B-18CD-471A-ABEF-CBB5C4AEEDFA}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "psys", "..\..\pascalibs\psys\pc\psys.vcproj", "{0D09AF35-110C-469D-9FD7-4E5EAEA5DA59}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "psys", "..\..\..\pascalibs\trunk\psys\pc\psys.vcproj", "{0D09AF35-110C-469D-9FD7-4E5EAEA5DA59}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "putils", "..\..\pascalibs\putils\pc\putils.vcproj", "{4D8C897F-9B7E-4F66-9184-318F778F690B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "putils", "..\..\..\pascalibs\trunk\putils\pc\putils.vcproj", "{4D8C897F-9B7E-4F66-9184-318F778F690B}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "glew_static", "..\..\pascalibs\externals\glew\build\vsnet2003\glew_static.vcproj", "{10858E44-F2E0-41CA-892E-53A8AF89E7D1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "glew_static", "..\..\..\pascalibs\trunk\externals\glew\build\vsnet2003\glew_static.vcproj", "{10858E44-F2E0-41CA-892E-53A8AF89E7D1}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
