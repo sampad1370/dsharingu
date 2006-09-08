@@ -34,7 +34,7 @@
 
 #define CHNTAG	"*> "
 #define APP_NAME			"DSharingu"
-#define APP_VERSION_STR		"0.5a"
+#define APP_VERSION_STR		"0.6a"
 
 #define WINDOW_TITLE		APP_NAME" " APP_VERSION_STR " by Davide Pasca 2006 ("__DATE__" "__TIME__ ")"
 

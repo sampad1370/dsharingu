@@ -46,7 +46,7 @@ BEGIN
             VALUE "FileDescription", "DSharingu Application"
             VALUE "FileVersion", "1, 0, 0, 1"
             VALUE "InternalName", "dsharing"
-            VALUE "LegalCopyright", "Copyright (C) 2005"
+            VALUE "LegalCopyright", "Copyright (C) 2006"
             VALUE "OriginalFilename", "DSharingu.exe"
             VALUE "ProductName", "DSharingu Application"
             VALUE "ProductVersion", "1, 0, 0, 1"
@@ -127,7 +127,7 @@ FONT 9, "Tahoma", 400, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,77,114,50,14
     GROUPBOX        "About:",IDC_STATIC,7,7,191,99
-    LTEXT           "DSharingu 0.5a",IDC_STATIC,100,20,80,9
+    LTEXT           "DSharingu 0.6a",IDC_STATIC,100,20,80,9
     LTEXT           "desktop sharing software",IDC_STATIC,85,30,85,8,
                     SS_CENTERIMAGE
     LTEXT           "written by Davide Pasca 2006",IDC_STATIC,76,40,96,8

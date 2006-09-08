@@ -91,7 +91,7 @@ public:
 	};
 
 private:
-	static const int	INPACK_BUFF_SIZE = 1024*512;
+	static const int	INPACK_BUFF_SIZE = 1024*1024;
 
 	State				_state;
 	State				_new_state;
