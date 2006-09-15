@@ -51,6 +51,7 @@ enum {
 //==================================================================
 Compak::Compak() :
 	_status(NOT_CONNECTED),
+	_connected_as_caller(false),
 	_fd(-1),
 	_listen_fd(-1),
 	_top_pack_done_bytes(0),
@@ -690,6 +691,7 @@ int Compak::Idle()
 					//---- reset the stats on a new connection
 					_stats.Reset();
 
+					_connected_as_caller = false;
 					onConnect();
 
 					return COM_ERR_CONNECTED;
@@ -710,6 +712,7 @@ int Compak::Idle()
 			//---- reset the stats on a new connection
 			_stats.Reset();
 
+			_connected_as_caller = true;
 			onConnect();
 			return COM_ERR_CONNECTED;
 		}

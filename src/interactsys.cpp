@@ -255,5 +255,6 @@ bool InteractiveSystem::ProcessMessage_s( u_int pack_id, const void *datap, int 
 //==================================================================
 void InteractiveSystem::OnPackCallback_s( const void *datap, u_int data_size, void *userdatap )
 {
-	ProcessMessage_s( REMOCON_ARRAY_PKID, datap, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN) );
+	if ( ((InteractiveSystem *)userdatap)->_is_input_active )
+		ProcessMessage_s( REMOCON_ARRAY_PKID, datap, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN) );
 }

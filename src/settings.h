@@ -28,29 +28,19 @@
 #include "kwindow.h"
 #include "psys.h"
 #include "data_schema.h"
+#include "wingui_utils.h"
 
 //==================================================================
 class Settings
 {
-	bool	_is_open;
+	bool		_is_open;
 public:
-	char	_call_ip[128];
-
-	bool	_use_custom_port_call;
-	int		_call_port;
-
-	bool	_listen_for_connections;
-	bool	_use_custom_port_listen;
-	int		_listen_port;
-
-	bool	_show_my_screen;
-	bool	_share_my_screen;
-	sha1_t	_local_pw;
-
-	bool	_see_remote_screen;
-	sha1_t	_remote_pw;
-
-	bool	_changed;
+	char		_username[32];
+	sha1_t		_password;
+	bool		_listen_for_connections;
+	int			_listen_port;
+	bool		_show_my_screen;
+	bool		_share_my_screen;
 
 	DataSchema	_schema;
 
@@ -58,19 +48,28 @@ public:
 	~Settings();
 	void	OpenDialog( win_t *parent_winp, void (*onChangedSettingsCB)( void *userdatap ), void *cb_userdatap );
 	void	SaveConfig( FILE *fp );
-	int		GetCallPortNum() const;
+
+	static DataSchema *SchemaLoaderProc_s( FILE *fp, void *userdatap )
+	{
+		return ((Settings *)userdatap)->SchemaLoaderProc( fp );
+	}
+	DataSchema *SchemaLoaderProc( FILE *fp )
+	{
+		return &_schema;
+	}
 	
 	bool	ListenForConnections() const;
 	int		GetListenPortNum() const;
 
 private:
-	void	(*_onChangedSettingsCB)( void *userdatap );
-	void	*_cb_userdatap;
-	static BOOL CALLBACK Settings::DialogProc_s( HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam );
-	BOOL CALLBACK Settings::DialogProc( HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam );
-	bool	checkPasswords( HWND hwnd );
-	bool	checkPort( HWND hwnd );
-	void	enableListenGroup( HWND hwnd );
+	void			(*_onChangedSettingsCB)( void *userdatap );
+	void			*_cb_userdatap;
+
+	static BOOL CALLBACK DialogProc_s( HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam );
+	BOOL CALLBACK	DialogProc( HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam );
+	WGUTCheckPWMsg	checkPasswords( HWND hwnd );
+	bool			checkPort( HWND hwnd );
+	void			enableListenGroup( HWND hwnd );
 };
 
 #endif

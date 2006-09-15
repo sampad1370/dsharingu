@@ -31,27 +31,33 @@
 #include "resource.h"
 #include "SHA1.h"
 #include "data_schema.h"
+#include "appbase3.h"
 
 #define CHNTAG	"*> "
 #define APP_NAME			"DSharingu"
-#define APP_VERSION_STR		"0.6a"
+#define APP_VERSION_STR		"0.7a"
 
 #define WINDOW_TITLE		APP_NAME" " APP_VERSION_STR " by Davide Pasca 2006 ("__DATE__" "__TIME__ ")"
 
 
 //===============================================================
-static long FAR PASCAL about_dlgproc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)
+BOOL CALLBACK DSChannel::aboutDialogProc_s(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)
+{
+	if ( umsg == WM_INITDIALOG )
+		SetWindowLongPtr( hwnd, GWLP_USERDATA, lparam );
+
+	DSChannel *mythis = (DSChannel *)GetWindowLongPtr( hwnd, GWLP_USERDATA );
+
+	return mythis->aboutDialogProc( hwnd, umsg, wparam, lparam );
+}
+
+//===============================================================
+BOOL CALLBACK DSChannel::aboutDialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)
 {
     switch( umsg )
     {
     case WM_INITDIALOG:
-		//SetTimer( hwnd, 0, 1000/20, NULL );
 		break; 
-
-	case WM_TIMER:
-//		rd_idle_everything();
-//		SetTimer( hwnd, 0, 1000/20, NULL );
-		break;
 
     case WM_COMMAND:
 	    switch(LOWORD(wparam))
@@ -68,13 +74,17 @@ static long FAR PASCAL about_dlgproc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM
 
 		case IDOK:
 		case IDCANCEL:                 
-			PostMessage(hwnd, WM_CLOSE, 0, 0);
+			DestroyWindow( hwnd );
 			break;
 	    }
 		break;
 
-    case WM_CLOSE:
-		EndDialog(hwnd, 0);
+	case WM_CLOSE:
+		DestroyWindow( hwnd );
+		break;
+	case WM_DESTROY:
+		_about_is_open = false;
+		appbase_rem_modeless_dialog( hwnd );
 		break;
 
     default:
@@ -88,13 +98,19 @@ static long FAR PASCAL about_dlgproc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM
 //==================================================================
 //==
 //==================================================================
-DSChannel::DSChannel() :
+DSChannel::DSChannel( const char *config_fnamep ) :
 	_intersys( &_cpk ),
-	_inpack_buffp(NULL)
+	_inpack_buffp(NULL),
+	_is_transmitting(false),
+	_is_connected(false),
+	_im_caller(false),
+	_about_is_open(false),
+	_connecting_dlg_hwnd(NULL)
 {
 	_state = STATE_IDLE;
-	_is_connected = false;
 	_view_fitwindow = false;//true;
+
+	psys_strcpy( _config_fname, config_fnamep, sizeof(_config_fname) );
 
 	_intersys.Activate( false );
 	_disp_off_x = 0;
@@ -133,26 +149,56 @@ bool DSChannel::getInteractiveMode()
 }
 
 //==================================================================
-void DSChannel::onConnect()
+void DSChannel::onConnect( bool is_connected_as_caller )
 {
 	GGET_Manager	*gmp = &_tool_win._gget_manager;
 
-	_console.cons_line_printf( CHNTAG"Accepted an incoming connection !" );
+	if ( _connecting_dlg_hwnd )
+	{
+		CloseWindow( _connecting_dlg_hwnd );
+		_connecting_dlg_hwnd = NULL;
+	}
 
-	gmp->EnableGadget( BUTT_CALL, false );
+	_remote_mng.CloseDialog();
+
+	if ( is_connected_as_caller )
+	{
+		_console.cons_line_printf( CHNTAG"Establishing connection..." );
+	}
+	else
+	{
+		_console.cons_line_printf( CHNTAG"Incoming connection..." );
+	}
+
+	//gmp->EnableGadget( BUTT_CONNECTION, false );
 	gmp->EnableGadget( BUTT_HANGUP, true );
-	gmp->SetGadgetText( BUTT_CALL, "[O] Connected" );
-	
+	//gmp->SetGadgetText( BUTT_CONNECTION, "[O] Connected" );
+
 	_is_connected = true;
 	_is_transmitting = false;
-	_remote_gives_view = false;
-	_remote_gives_share = false;
 	_remote_wants_view = false;
 	_remote_wants_share = false;
+	_remote_allows_view = false;
+	_remote_allows_share = false;
 
-	HandShakeMsg	msg( PROTOCOL_VERSION );
-	if ERR_ERROR( _cpk.SendPacket( HANDSHAKE_PKID, &msg, sizeof(msg), NULL ) )
-		return;
+	if ( is_connected_as_caller )
+	{
+		_session_remotep = _remote_mng.GetCurRemote();
+
+		HandShakeMsg	msg( PROTOCOL_VERSION,
+							_settings._username,
+							_session_remotep->_rm_username,
+							_session_remotep->_rm_password._data );
+
+		if ERR_ERROR( _cpk.SendPacket( HANDSHAKE_PKID, &msg, sizeof(msg), NULL ) )
+			return;
+	}
+	else
+	{
+		// will wait for handshake to findout the name
+		_session_remotep = NULL;
+		_remote_mng.UnlockRemote();
+	}
 }
 
 //==================================================================
@@ -160,15 +206,24 @@ void DSChannel::onDisconnect()
 {
 	GGET_Manager	*gmp = &_tool_win._gget_manager;
 
+	if ( _connecting_dlg_hwnd )
+	{
+		CloseWindow( _connecting_dlg_hwnd );
+		_connecting_dlg_hwnd = NULL;
+	}
+
 	_scrwriter.StopGrabbing();
 
-	_console.cons_line_printf( CHNTAG"Disconnected." );
+	_console.cons_line_printf( CHNTAG"Disconnected (onDisconnect())." );
 	_cpk.Disconnect();
-	gmp->EnableGadget( BUTT_CALL, true );
+	//gmp->EnableGadget( BUTT_CONNECTION, true );
 	gmp->EnableGadget( BUTT_HANGUP, false );
-	gmp->SetGadgetText( BUTT_CALL, "[ ] Call..." );
+	//gmp->SetGadgetText( BUTT_CONNECTION, "[ ] Connections..." );
 
 	_is_connected = false;
+	_session_remotep = NULL;
+	_remote_mng.UnlockRemote();
+
 
 	setInteractiveMode( false );
 }
@@ -181,13 +236,13 @@ void DSChannel::setState( State state )
 	switch ( _new_state = _state = state )
 	{
 	case STATE_CONNECTING:
-		gmp->EnableGadget( BUTT_CALL, false );
+		//gmp->EnableGadget( BUTT_CONNECTION, false );
 		gmp->EnableGadget( BUTT_HANGUP, true );
-		gmp->SetGadgetText( BUTT_CALL, "[ ] Calling..." );
+		//gmp->SetGadgetText( BUTT_CONNECTION, "[ ] Calling..." );
 		break;
 
 	case STATE_CONNECTED:
-		onConnect();
+		onConnect( _cpk.IsConnectedAsCaller() );
 		break;
 
 	case STATE_DISCONNECTED:
@@ -196,17 +251,21 @@ void DSChannel::setState( State state )
 		break;
 
 	case STATE_QUIT:
-		if ( _do_save_config )
-		{
-			FILE *fp = fopen( "dsharingu.cfg", "wt" );
+		break;
+	}
+}
 
-			PSYS_ASSERT( fp != NULL );
-			if ( fp )
-			{
-				_settings._schema.SaveData( fp );
-				fclose( fp );
-			}
-		}
+//==================================================================
+void DSChannel::saveConfig()
+{
+	FILE *fp = fopen( _config_fname, "wt" );
+
+	PSYS_ASSERT( fp != NULL );
+	if ( fp )
+	{
+		_settings._schema.SaveData( fp );
+		_remote_mng.SaveList( fp );
+		fclose( fp );
 	}
 }
 
@@ -234,7 +293,7 @@ void DSChannel::cmd_connect( char *params[], int n_params )
 
 	cut_spaces( _destination_ip_name );
 
-	switch ( _cpk.Call( _destination_ip_name, _settings.GetCallPortNum() ) )
+	switch ( _cpk.Call( _destination_ip_name, DEF_PORT_NUMBER ) )
 	{
 	case COM_ERR_NONE:
 		//state_set( STATE_CALLING );
@@ -311,19 +370,22 @@ void DSChannel::console_line_func_s( void *userp, const char *txtp, int is_cmd )
 }
 
 //==================================================================
-void DSChannel::Create( bool do_send_desk, bool do_save_config )
+void DSChannel::Create( bool do_send_desk )
 {
-//	if ( _do_save_config )
-	{
-	FILE	*fp;
+	FILE	*fp = fopen( _config_fname, "rt" );
 
-		fp = fopen( "dsharingu.cfg", "rt" );
-		//PSYS_ASSERT( fp != NULL );
-		if ( fp )
+	if ( fp )
+	{
+		DataSchema::LoaderItem	loader_items[2] =
 		{
-			_settings._schema.LoadData( fp );
-			fclose( fp );
-		}
+			"Settings", Settings::SchemaLoaderProc_s, &_settings,
+			"RemoteDef", RemoteMng::RemoteDefLoaderProc_s, &_remote_mng,
+		};
+		DataSchema::LoadSchemas_s( fp, loader_items, 2 );
+
+		//_settings._schema.LoadData( fp );
+		//_remote_mng.LoadList( fp );
+		fclose( fp );
 	}
 
 
@@ -375,16 +437,14 @@ void DSChannel::Create( bool do_send_desk, bool do_save_config )
 
 	_console.cons_show( 1 );
 
-//	_settings._show_my_screen = do_send_desk;
-//	_settings._share_my_screen = do_send_desk;
-
-	_do_save_config = do_save_config;
 /*
 	_intsysmsgparser.SetCompak( &_cpk );
 	_intsysmsgparser.StartThread();
 */
 
-	_cpk.SetOnPackCallback( REMOCON_ARRAY_PKID, InteractiveSystem::OnPackCallback_s, NULL );
+	// we need to initialize this after loading the settings
+	_intersys.ActivateExternalInput( _settings._share_my_screen && _settings._show_my_screen );
+	_cpk.SetOnPackCallback( REMOCON_ARRAY_PKID, InteractiveSystem::OnPackCallback_s, &_intersys );
 
 	if ( _settings._listen_for_connections )
 		StartListening( _settings._listen_port );
@@ -399,7 +459,12 @@ void DSChannel::gadgetCallback( int gget_id, GGET_Item *itemp )
 
 	switch ( gget_id )
 	{
-	case BUTT_CALL:
+	case BUTT_CONNECTION:
+		_remote_mng.OpenDialog( &_main_win,
+								handleChangedRemoteManager_s,
+								handleCallRemoteManager_s,
+								this );
+		/*
 		if ( _settings._call_ip[0] )
 		{
 			if NOT( _cpk.Call( _settings._call_ip, _settings.GetCallPortNum() ) )
@@ -408,22 +473,23 @@ void DSChannel::gadgetCallback( int gget_id, GGET_Item *itemp )
 			}
 			else
 			{
-				//tool_barp->ToggleTool( BUTT_CALL, false );
-				gmp->EnableGadget( BUTT_CALL, false );
+				//tool_barp->ToggleTool( BUTT_CONNECTION, false );
+				gmp->EnableGadget( BUTT_CONNECTION, false );
 			}
 		}
 		else
 		{
-			//tool_barp->ToggleTool( BUTT_CALL, false );
-			gmp->EnableGadget( BUTT_CALL, true );
+			//tool_barp->ToggleTool( BUTT_CONNECTION, false );
+			gmp->EnableGadget( BUTT_CONNECTION, true );
 			MessageBox( _main_win.hwnd, "Please select a calling destination.", "Missing Destination", MB_OK | MB_ICONWARNING );
 			_settings_open_for_call = true;
 			_settings.OpenDialog( &_main_win, handleChangedSettings_s, this );
 		}
+		*/
 		break;
 
 	case BUTT_HANGUP:
-		ensureDisconnect( "Succesfully disconnected." );
+		ensureDisconnect( "Successfully disconnected." );
 		break;
 
 	case BUTT_SETTINGS:
@@ -453,18 +519,14 @@ void DSChannel::gadgetCallback( int gget_id, GGET_Item *itemp )
 		break;
 
 	case BUTT_HELP:
+		if NOT( _about_is_open )
 		{
-			static int	about_open;
-
-			if ( about_open )
-				return;
-
-			about_open = 1;
-			DialogBox( (HINSTANCE)win_system_getinstance(),
-				MAKEINTRESOURCE(IDD_ABOUT), _main_win.hwnd,
-				(DLGPROC)about_dlgproc);
-			about_open = 0;
-
+			HWND hwnd = CreateDialogParam( (HINSTANCE)win_system_getinstance(),
+											MAKEINTRESOURCE(IDD_ABOUT), _main_win.hwnd,
+											(DLGPROC)aboutDialogProc_s, (LPARAM)this );
+			appbase_add_modeless_dialog( hwnd );
+			ShowWindow( hwnd, SW_SHOWNORMAL );
+			_about_is_open = true;
 		}
 		break;
 	}
@@ -494,7 +556,7 @@ void DSChannel::rebuildButtons()
 	if ( stextp )
 		stextp->SetFillType( GGET_StaticText::FILL_TYPE_HTOOLBAR );
 
-	gmp->AddButton( BUTT_CALL, x, y, 98, h, "[ ] Call..." );		x += 98 + x_margin;
+	gmp->AddButton( BUTT_CONNECTION, x, y, 98, h, "Connections..." );		x += 98 + x_margin;
 	gmp->AddButton( BUTT_HANGUP, x, y, 85, h, "Hangup" );			x += 85 + x_margin;
 	gmp->EnableGadget( BUTT_HANGUP, false );
 	x += x_margin;
@@ -1060,14 +1122,41 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 
 				if ( msg._protocol_version == PROTOCOL_VERSION )
 				{
+					if ( stricmp( msg._receiver_username, _settings._username ) )
+					{
+						_console.cons_line_printf( "* PROBLEM: Rejected connection from '%s'. The wrong username was provided.",
+													msg._caller_username );
+						_cpk.SendPacket( HS_BAD_USERNAME_PKID );
+						ensureDisconnect( "Disconnecting." );
+						return;
+					}
+
+					if NOT( sha1_t::AreEqual( msg._receiver_password, _settings._password._data ) )
+					{
+						_console.cons_line_printf( "* PROBLEM: Rejected connection for '%s'. The wrong password was provided.",
+													msg._caller_username );
+						_cpk.SendPacket( HS_BAD_PASSWORD_PKID );
+						ensureDisconnect( "Disconnecting." );
+						return;
+					}
+
+					_session_remotep = _remote_mng.FindOrAddRemoteDefAndSelect( msg._caller_username );
+					_remote_mng.LockRemote( _session_remotep );
+
+					_console.cons_line_printf( "* SUCCESFULLY CONNECTED to caller '%s'",
+												msg._caller_username );
+
 					_flow_cnt = 0;
 					_is_transmitting = true;
 					_frame_since_transmission = 0;
+					_cpk.SendPacket( HS_OK );
 				}
 				else
 				{
 					if ( msg._protocol_version > PROTOCOL_VERSION )
 					{
+						_cpk.SendPacket( HS_NEW_PROTOCOL_PKID );
+						ensureDisconnect( "Disconnecting." );
 						if ( MessageBox( _main_win.hwnd,
 									"Cannot communicate because the other party has a newer version of the program !\n"
 									"Do you want to download the latest version ?",
@@ -1079,16 +1168,70 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 					}
 					else
 					{
-						if ( MessageBox( _main_win.hwnd,
-									"Cannot communicate because the other party has an older version of the program !\n"
-									"Do you want to download the latest version ? (the other party should do the same)",
+						_cpk.SendPacket( HS_OLD_PROTOCOL_PKID );
+						ensureDisconnect( "Disconnecting." );
+						MessageBox( _main_win.hwnd,
+									"Cannot communicate because the other party has an older version of the program !\n",
 									"Incompatible Versions",
-									MB_YESNO | MB_ICONERROR ) == IDYES )
-						{
-							ShellExecute( _main_win.hwnd, "open", "http://kazzuya.com/dsharingu", NULL, NULL, SW_SHOWNORMAL );
-						}
+									MB_OK | MB_ICONERROR );
 					}
 				}
+			}
+			break;
+
+		case HS_BAD_USERNAME_PKID:
+			if ( _session_remotep )
+				_console.cons_line_printf( "* PROBLEM: The provided Internet address doesn't belong to '%s'",
+				_session_remotep->_rm_username );
+			else
+			{
+				PSYS_ASSERT( _session_remotep != NULL );
+			}
+			break;
+
+		case HS_BAD_PASSWORD_PKID:
+			if ( _session_remotep )
+				_console.cons_line_printf( "* PROBLEM: You don't have the right password to connect to '%s'",
+				_session_remotep->_rm_username );
+			else
+			{
+				PSYS_ASSERT( _session_remotep != NULL );
+			}
+			break;
+
+
+		case HS_NEW_PROTOCOL_PKID:
+			ensureDisconnect( "Disconnecting." );
+			MessageBox( _main_win.hwnd,
+				"Cannot communicate because the other party has an older version of the program !\n",
+				"Incompatible Versions",
+				MB_OK | MB_ICONERROR );
+			break;
+
+		case HS_OLD_PROTOCOL_PKID:
+			ensureDisconnect( "Disconnecting." );
+			if ( MessageBox( _main_win.hwnd,
+				"Cannot communicate because the other party has a newer version of the program !\n"
+				"Do you want to download the latest version ?",
+				"Incompatible Versions",
+				MB_YESNO | MB_ICONERROR ) == IDYES )
+			{
+				ShellExecute( _main_win.hwnd, "open", "http://kazzuya.com/dsharingu", NULL, NULL, SW_SHOWNORMAL );
+			}
+			break;
+
+		case HS_OK:
+			if ( _session_remotep )
+			{
+				_console.cons_line_printf( "* SUCCESFULLY CONNECTED to responder '%s'",
+											_session_remotep->_rm_username );
+
+				_is_transmitting = true;
+			}
+			else
+			{
+				PSYS_ASSERT( _session_remotep != NULL );
+				ensureDisconnect( "Disconnecting. aaa" );
 			}
 			break;
 		}
@@ -1100,7 +1243,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 		switch ( pack_id )
 		{
 		case TEXT_MSG_PKID:
-			_console.cons_line_printf( "MSG> %s", (const char *)datap );
+			_console.cons_line_printf( "%s> %s", _session_remotep->_rm_username, (const char *)datap );
 			break;
 
 		case DESK_IMG_PKID:
@@ -1108,33 +1251,23 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 			win_invalidate( &_view_win );
 			break;
 
-		case ACCEPTING_DESK_PKID:
-			_remote_gives_view = ((SettingMsg *)datap)->_show_my_screen;
-			_remote_gives_share = ((SettingMsg *)datap)->_share_my_screen;
-
-			_remote_wants_view = ((SettingMsg *)datap)->_see_remote_screen;
-			if ( _remote_wants_view && (_settings._show_my_screen || _settings._share_my_screen) )
-			{
-				if NOT( sha1_t::AreEqual( ((SettingMsg *)datap)->_remote_access_pw, _settings._local_pw._data ) )
-				{
-					_console.cons_line_puts( "* PROBLEM: Remote provided the wrong password !" );
-					_remote_wants_view = false;
-					_cpk.SendPacket( BAD_PASSWORD_PKID );
-				}
-			}	
+		case USAGE_WISH_PKID:
+			_remote_wants_view  = ((UsageWishMsg *)datap)->_see_remote_screen;
+			_remote_wants_share = ((UsageWishMsg *)datap)->_use_remote_screen;
 			break;
 
-		case BAD_PASSWORD_PKID:
-			_console.cons_line_puts( "* PROBLEM: The password for remote access is invalid. Access disabled." );
-/*			if ( MessageBox( _main_win.hwnd,
-						"The password for remote access is invalid\n"
-						"Do you want to change the password or renounce to remote access ?",
-						"Invalid Password",
-						MB_YESNO | MB_ICONERROR ) == IDYES )
+		case USAGE_ABILITY_PKID:
+			_remote_allows_view  = ((UsageAbilityMsg *)datap)->_see_remote_screen;
+			_remote_allows_share = ((UsageAbilityMsg *)datap)->_use_remote_screen;
+			if ( _remote_allows_share && _remote_allows_view )
 			{
-				_settings.OpenDialog( &_main_win );
+				_tool_win._gget_manager.EnableGadget( BUTT_USEREMOTE, true );
 			}
-*/
+			else
+			{
+				_tool_win._gget_manager.EnableGadget( BUTT_USEREMOTE, false );
+				setInteractiveMode( false );
+			}
 			break;
 		}
 	}
@@ -1215,16 +1348,7 @@ void DSChannel::handleChangedSettings_s( void *mythis )
 //==================================================================
 void DSChannel::handleChangedSettings()
 {
-	if ( _is_transmitting )
-	{
-		SettingMsg	msg( _settings._show_my_screen,
-						_settings._share_my_screen,
-						_settings._see_remote_screen,
-						_settings._remote_pw._data );
-
-		if ERR_ERROR( _cpk.SendPacket( ACCEPTING_DESK_PKID, &msg, sizeof(msg), NULL ) )
-			return;
-	}
+	saveConfig();
 
 	_cpk.StopListen();
 	if ( _settings._listen_for_connections )
@@ -1232,8 +1356,131 @@ void DSChannel::handleChangedSettings()
 
 	if ( _settings_open_for_call )
 	{
-		gadgetCallback( BUTT_CALL, NULL );
+		gadgetCallback( BUTT_CONNECTION, NULL );
 	}
+
+	_intersys.ActivateExternalInput( _settings._share_my_screen && _settings._show_my_screen );
+
+	if ( _is_transmitting )
+	{
+		UsageAbilityMsg	msg(_settings._show_my_screen,
+							_settings._share_my_screen );
+		if ERR_ERROR( _cpk.SendPacket( USAGE_ABILITY_PKID, &msg, sizeof(msg), NULL ) )
+			return;
+	}
+}
+
+//==================================================================
+void DSChannel::handleChangedRemoteManager_s( void *mythis )
+{
+	((DSChannel *)mythis)->handleChangedRemoteManager();
+}
+//==================================================================
+void DSChannel::handleChangedRemoteManager()
+{
+	saveConfig();
+
+	if ( _is_transmitting )
+	{
+		UsageWishMsg	msg(
+			_session_remotep->_see_remote_screen,
+			_session_remotep->_use_remote_screen );
+
+		if ERR_ERROR( _cpk.SendPacket( USAGE_WISH_PKID, &msg, sizeof(msg), NULL ) )
+			return;
+	}
+}
+
+//==================================================================
+void DSChannel::handleCallRemoteManager_s( void *mythis )
+{
+	((DSChannel *)mythis)->handleCallRemoteManager();
+}
+//==================================================================
+void DSChannel::handleCallRemoteManager()
+{
+	_session_remotep = _remote_mng.GetCurRemote();
+	_remote_mng.LockRemote( _session_remotep );
+
+	if ERR_NULL( _session_remotep )
+		return;
+
+	if ( _state >= STATE_CONNECTING && _state <= STATE_CONNECTED )
+	{
+		if ( MessageBox( _main_win.hwnd,
+			"You are already connected.\n"
+			"Do you want to terminate the current connection ?",
+			"Already Connected",
+			MB_YESNO | MB_ICONQUESTION ) == IDYES )
+		{
+			ensureDisconnect( "Successfully disconnected." );
+		}
+		else
+			return;
+	}
+
+	if NOT( _cpk.Call( _session_remotep->_rm_ip_address, _session_remotep->GetCallPortNum() ) )
+	{
+		setState( STATE_CONNECTING );
+
+		_connecting_dlg_hwnd =
+			CreateDialogParam( (HINSTANCE)win_system_getinstance(),
+						MAKEINTRESOURCE(IDD_CONNECTING), _main_win.hwnd,
+						(DLGPROC)connectingDialogProc_s, (LPARAM)this );
+		
+		if ERR_NULL( _connecting_dlg_hwnd )
+			return;
+
+		appbase_add_modeless_dialog( _connecting_dlg_hwnd );
+		ShowWindow( _connecting_dlg_hwnd, SW_SHOWNORMAL );
+	}
+}
+
+//===============================================================
+BOOL CALLBACK DSChannel::connectingDialogProc_s(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)
+{
+	if ( umsg == WM_INITDIALOG )
+	{
+		SetWindowLongPtr( hwnd, GWLP_USERDATA, lparam );
+	}
+
+	DSChannel *mythis = (DSChannel *)GetWindowLongPtr( hwnd, GWLP_USERDATA );
+
+	return mythis->connectingDialogProc( hwnd, umsg, wparam, lparam );
+}
+//===============================================================
+BOOL CALLBACK DSChannel::connectingDialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)
+{
+	switch( umsg )
+	{
+	case WM_INITDIALOG:
+		break; 
+
+	case WM_COMMAND:
+		switch( LOWORD(wparam) )
+		{
+		case IDOK:
+		case IDCANCEL:
+			ensureDisconnect( "Connection aborted." );
+			PostMessage(hwnd, WM_CLOSE, 0, 0);
+			break;
+		}
+		break;
+
+	case WM_CLOSE:
+		DestroyWindow( hwnd );
+		break;
+
+	case WM_DESTROY:
+		appbase_rem_modeless_dialog( hwnd );
+		_connecting_dlg_hwnd = NULL;
+		break;
+
+	default:
+		return 0;
+	}
+
+	return 1;
 }
 
 //==================================================================
@@ -1248,13 +1495,21 @@ void DSChannel::handleConnectedFlow()
 
 		if ( _frame_since_transmission == 1 )
 		{
-			SettingMsg	msg( _settings._show_my_screen,
-							 _settings._share_my_screen,
-							 _settings._see_remote_screen,
-							 _settings._remote_pw._data );
+			{
+				UsageWishMsg	msg(_session_remotep->_see_remote_screen,
+					_session_remotep->_use_remote_screen );
 
-			if ERR_ERROR( _cpk.SendPacket( ACCEPTING_DESK_PKID, &msg, sizeof(msg), NULL ) )
-				return;
+				if ERR_ERROR( _cpk.SendPacket( USAGE_WISH_PKID, &msg, sizeof(msg), NULL ) )
+					return;
+			}
+
+			{
+				UsageAbilityMsg	msg(_settings._show_my_screen,
+									_settings._share_my_screen );
+				if ERR_ERROR( _cpk.SendPacket( USAGE_ABILITY_PKID, &msg, sizeof(msg), NULL ) )
+					return;
+
+			}
 		}
 	}
 
