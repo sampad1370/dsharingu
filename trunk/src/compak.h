@@ -101,6 +101,7 @@ typedef void	(*CompackOnPackCb)( const void *datap, u_int data_size, void *userd
 class Compak
 {
 	int					_status;
+	bool				_connected_as_caller;
 	int					_fd;
 	int					_listen_fd;
 
@@ -132,6 +133,10 @@ public:
 	int		StartListen( int port_number );
 	void	StopListen();
 	int		Idle();
+	bool	IsConnectedAsCaller() const
+	{
+		return _connected_as_caller;
+	}
 
 	bool	GetInputPack( u_int *out_pack_idp,
 						  u_int *out_pack_data_sizep,

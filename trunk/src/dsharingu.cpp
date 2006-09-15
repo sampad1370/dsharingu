@@ -40,9 +40,9 @@ static DSChannel		*_basechannel;
 static DSChannel		*_extrachannel;
 
 #ifdef _DEBUG
-//#define USE_EXTRA_CHANNEL
+#define USE_EXTRA_CHANNEL
 #endif
-//#define USE_EXTRA_CHANNEL
+#define USE_EXTRA_CHANNEL
 
 //==================================================================
 bool main_start()
@@ -52,11 +52,11 @@ bool main_start()
 	_control87( _RC_CHOP, _MCW_RC );
 	ss_init_winsock();
 
-	_basechannel = new DSChannel();
-	_basechannel->Create( true, true );
+	_basechannel = new DSChannel( "dsharingu.cfg" );
+	_basechannel->Create( true );
 #ifdef USE_EXTRA_CHANNEL
-	_extrachannel = new DSChannel();
-	_extrachannel->Create( false, false );
+	_extrachannel = new DSChannel( "dsharingu2.cfg" );
+	_extrachannel->Create( false );
 #endif
 
 //	FONT_Create();

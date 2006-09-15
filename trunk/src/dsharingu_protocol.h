@@ -27,15 +27,21 @@
 //==================================================================
 #define DEF_PORT_NUMBER		51112
 #define DEF_PORT_NUMBER_STR	"51112"
-#define PROTOCOL_VERSION	2
+#define PROTOCOL_VERSION	3
 
 enum {
 	TEXT_MSG_PKID = 1,
 	DESK_IMG_PKID,
 
 	HANDSHAKE_PKID,
-	ACCEPTING_DESK_PKID,
-	BAD_PASSWORD_PKID,
+	HS_BAD_USERNAME_PKID,
+	HS_BAD_PASSWORD_PKID,
+	HS_OLD_PROTOCOL_PKID,
+	HS_NEW_PROTOCOL_PKID,
+	HS_OK,
+
+	USAGE_WISH_PKID,
+	USAGE_ABILITY_PKID,
 
 	REMOCON_ARRAY_PKID,
 };
@@ -44,27 +50,47 @@ enum {
 struct HandShakeMsg
 {
 	u_int	_protocol_version;
+	char	_caller_username[32];
+	char	_receiver_username[32];
+	u_char	_receiver_password[20];
 
-	HandShakeMsg( int protocol_version ) :
+	HandShakeMsg(	u_int protocol_version,
+					const char caller_username[32],
+					const char receiver_username[32],
+					const u_char receiver_password[20] ) :
 		_protocol_version(protocol_version)
+	{
+		memcpy( _caller_username, caller_username, 32 );
+		memcpy( _receiver_username, receiver_username, 32 );
+		memcpy( _receiver_password, receiver_password, 20 );
+	}
+};
+
+//==================================================================
+struct UsageWishMsg
+{
+	bool	_see_remote_screen;
+	bool	_use_remote_screen;
+
+	UsageWishMsg(	bool see_remote_screen,
+					bool use_remote_screen ) :
+		_see_remote_screen(see_remote_screen),
+		_use_remote_screen(use_remote_screen)
 	{
 	}
 };
 
 //==================================================================
-struct SettingMsg
+struct UsageAbilityMsg
 {
-	bool	_show_my_screen;
-	bool	_share_my_screen;
 	bool	_see_remote_screen;
-	u_char	_remote_access_pw[20];
+	bool	_use_remote_screen;
 
-	SettingMsg( bool give_local_view, bool give_local_share, bool want_remote_view, const u_char remote_access_pw[20] ) :
-		_show_my_screen(give_local_view),
-		_share_my_screen(give_local_share),
-		_see_remote_screen(want_remote_view)
+	UsageAbilityMsg(	bool see_remote_screen,
+						bool use_remote_screen ) :
+			_see_remote_screen(see_remote_screen),
+			_use_remote_screen(use_remote_screen)
 	{
-		memcpy( _remote_access_pw, remote_access_pw, 20 );
 	}
 };
 

@@ -32,6 +32,7 @@
 #include "data_schema.h"
 #include "interactsys.h"
 #include "settings.h"
+#include "remotemng.h"
 
 /*
 //==================================================================
@@ -81,7 +82,7 @@ public:
 	enum 
 	{
 		STEXT_TOOLBARBASE,
-		BUTT_CALL = 600,
+		BUTT_CONNECTION = 600,
 		BUTT_HANGUP,
 		BUTT_SETTINGS,
 		BUTT_USEREMOTE,
@@ -92,24 +93,29 @@ public:
 
 private:
 	static const int	INPACK_BUFF_SIZE = 1024*1024;
+	char				_config_fname[256];
 
 	State				_state;
 	State				_new_state;
-	Compak			_cpk;
+	Compak				_cpk;
 	ScrShare::Writer	_scrwriter;
 	ScrShare::Reader	_scrreader;
 	Settings			_settings;
+	RemoteMng			_remote_mng;
+	RemoteDef			*_session_remotep;	// $$$ this one may become deleted and then.. boom crash !!!
 	console_t			_console;
 	int					_flow_cnt;
 	bool				_is_connected;
 	bool				_is_transmitting;
-	bool				_remote_gives_view;
-	bool				_remote_gives_share;
+	bool				_im_caller;
+
 	bool				_remote_wants_view;
 	bool				_remote_wants_share;
+	bool				_remote_allows_view;
+	bool				_remote_allows_share;
+
 	bool				_view_fitwindow;
 	bool				_do_quit_flag;
-	bool				_do_save_config;
 	bool				_settings_open_for_call;
 	char				_destination_ip_name[128];
 
@@ -121,6 +127,7 @@ private:
 	win_t				_tool_win;
 	win_t				_view_win;
 	win_t				_dbg_win;
+	HWND				_connecting_dlg_hwnd;
 
 	InteractiveSystem	_intersys;
 
@@ -132,12 +139,25 @@ private:
 	u_int				_frame_since_transmission;
 
 //	IntSysMessageParser	_intsysmsgparser;
+public:
+	DSChannel( const char *config_fnamep );
+	~DSChannel();
+
+	void	Create( bool do_send_desk );
+	void	StartListening( int port_listen );
+	State	Idle();
+	win_t	*GetWindowPtr()
+	{
+		return &_main_win;
+	}
 
 private:
-	void		onConnect();
+	void		onConnect( bool is_connected_as_caller );
 	void		onDisconnect();
 	void		setInteractiveMode( bool onoff );
 	bool		getInteractiveMode();
+	BOOL CALLBACK connectingDialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
+	static BOOL CALLBACK connectingDialogProc_s(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
 	void		setState( State state );
 	void		processInputPacket( u_int pack_id, const u_char *datap, u_int data_size );
 	void		ensureDisconnect( const char *messagep, bool is_error=0 );
@@ -175,17 +195,17 @@ private:
 	static void	handleChangedSettings_s( void *mythis );
 	void		handleChangedSettings();
 
-public:
-			DSChannel();
-			~DSChannel();
+	static void	handleChangedRemoteManager_s( void *mythis );
+	void		handleChangedRemoteManager();
 
-	void	Create( bool do_send_desk, bool do_save_config );
-	void	StartListening( int port_listen );
-	State	Idle();
-	win_t	*GetWindowPtr()
-	{
-		return &_main_win;
-	}
+	static void	handleCallRemoteManager_s( void *mythis );
+	void		handleCallRemoteManager();
+
+	bool		_about_is_open;
+	static BOOL CALLBACK aboutDialogProc_s(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
+	BOOL CALLBACK aboutDialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
+
+	void		saveConfig();
 };
 
 #endif

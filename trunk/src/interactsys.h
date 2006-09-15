@@ -31,8 +31,9 @@
 //==================================================================
 class InteractiveSystem
 {
-	Compak			*_cpkp;
+	Compak				*_cpkp;
 	bool				_is_active;
+	bool				_is_input_active;
 	u_int				_last_feed_time;
 	u_int				_last_send_time;
 
@@ -78,6 +79,11 @@ public:
 	bool IsActive() const
 	{
 		return _is_active;
+	}
+
+	void ActivateExternalInput( bool onoff )
+	{
+		_is_input_active = onoff;
 	}
 
 private:
