@@ -85,15 +85,15 @@ IDB_BITMAP1             BITMAP                  "main_icon_48.bmp"
 // Dialog
 //
 
-IDD_REMOTEMNG DIALOGEX 0, 0, 357, 202
+IDD_REMOTEMNG DIALOGEX 0, 0, 357, 183
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | 
     WS_CAPTION | WS_SYSMENU
 CAPTION "Remotes Manager"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LISTBOX         IDC_RM_REMOTES_LIST,7,7,128,147,LBS_SORT | 
+    LISTBOX         IDC_RM_REMOTES_LIST,7,7,128,108,LBS_SORT | 
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Connect Now !",IDC_RM_CONNECT,7,158,128,14
+    PUSHBUTTON      "Connect Now !",IDC_RM_CONNECT,7,137,128,19
     EDITTEXT        IDC_RM_REMOTE_NAME,213,24,124,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_RM_REMOTE_PASSWORD,213,43,124,14,ES_PASSWORD | 
                     ES_AUTOHSCROLL
@@ -101,14 +101,13 @@ BEGIN
     EDITTEXT        IDC_RM_REMOTE_PORT,244,81,33,14,ES_AUTOHSCROLL | 
                     ES_NUMBER
     CONTROL         "Watch Remote's Screen",IDC_RM_SEE_REMOTE_SCREEN,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,205,108,92,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,205,111,92,10
     CONTROL         "Use Remote's Screen",IDC_RM_USE_REMOTE_SCREEN,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,205,125,83,10
-    PUSHBUTTON      "Add to List",IDC_RM_ADDTOLIST,177,147,50,14
-    PUSHBUTTON      "Change",IDC_RM_CHANGE,235,147,50,14
-    PUSHBUTTON      "Delete",IDC_RM_DELETE_REMOTE,293,147,50,14
-    DEFPUSHBUTTON   "Close",IDOK,300,181,50,14
-    GROUPBOX        "Remote's Info:",IDC_STATIC,142,7,208,166
+                    BS_AUTOCHECKBOX | WS_TABSTOP,205,129,83,10
+    PUSHBUTTON      "New Remote...",IDC_RM_NEW_REMOTE,7,119,69,14
+    PUSHBUTTON      "Delete",IDC_RM_DELETE_REMOTE,85,119,50,14
+    DEFPUSHBUTTON   "Close",IDOK,300,162,50,14
+    GROUPBOX        "Remote's Info:",IDC_STATIC,142,7,208,150
     LTEXT           "Internet Address:",IDC_STATIC,151,65,58,8
     LTEXT           "Username:",IDC_STATIC,173,27,36,8
     LTEXT           "Password:",IDC_STATIC,175,45,34,8
@@ -124,8 +123,8 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     PUSHBUTTON      "Abort",IDCANCEL,68,56,50,14
     LTEXT           "Connecting...",IDC_STATIC,74,17,45,8
-    CONTROL         "",IDC_PROGRESS1,"msctls_progress32",WS_BORDER,26,30,132,
-                    14
+    CONTROL         "",IDC_CONNECTING_REMOTE_PROGRESS,"msctls_progress32",
+                    WS_BORDER,26,30,132,14
 END
 
 
@@ -142,7 +141,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 350
         TOPMARGIN, 7
-        BOTTOMMARGIN, 195
+        BOTTOMMARGIN, 176
     END
 
     IDD_CONNECTING, DIALOG
@@ -208,7 +207,7 @@ FONT 9, "Tahoma", 400, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,77,114,50,14
     GROUPBOX        "About:",IDC_STATIC,7,7,191,99
-    LTEXT           "DSharingu 0.7a",IDC_STATIC,100,20,80,9
+    LTEXT           "DSharingu 0.8a",IDC_STATIC,100,20,80,9
     LTEXT           "desktop sharing software",IDC_STATIC,85,30,85,8,
                     SS_CENTERIMAGE
     LTEXT           "written by Davide Pasca 2006",IDC_STATIC,76,40,96,8

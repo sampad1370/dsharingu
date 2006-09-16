@@ -88,11 +88,11 @@ WGUTCheckPWMsg Settings::checkPasswords( HWND hwnd )
 		return CHECKPW_MSG_BAD;
 	}
 
-	WGUTCheckPWMsg pw1_msg = GetDlgEditPasswordState( hwnd, IDC_PASSWORD1_EDIT );
+	WGUTCheckPWMsg pw1_msg = GetDlgEditPasswordState( hwnd, IDC_PASSWORD1_EDIT, true );
 	if ( pw1_msg == CHECKPW_MSG_BAD )
 		return CHECKPW_MSG_BAD;
 
-	WGUTCheckPWMsg pw2_msg = GetDlgEditPasswordState( hwnd, IDC_PASSWORD2_EDIT );
+	WGUTCheckPWMsg pw2_msg = GetDlgEditPasswordState( hwnd, IDC_PASSWORD2_EDIT, true );
 	if ( pw2_msg == CHECKPW_MSG_BAD )
 		return CHECKPW_MSG_BAD;
 

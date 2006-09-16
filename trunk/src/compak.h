@@ -104,6 +104,7 @@ class Compak
 	bool				_connected_as_caller;
 	int					_fd;
 	int					_listen_fd;
+	double				_connection_started_time;
 
 	u_int				_top_pack_done_bytes;
 	CompakOutpack		_outpack_queue[COMPACK_MAX_OUT_QUEUE];
@@ -137,6 +138,7 @@ public:
 	{
 		return _connected_as_caller;
 	}
+	bool	IsConnected() const;
 
 	bool	GetInputPack( u_int *out_pack_idp,
 						  u_int *out_pack_data_sizep,

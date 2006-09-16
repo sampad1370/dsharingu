@@ -64,7 +64,7 @@ public:
 	~RemoteMng();
 	void	OpenDialog( win_t *parent_winp,
 						void (*onChangedSettingsCB)( void *userdatap ),
-						void (*onCallCB)( void *userdatap ),
+						void (*onCallCB)( void *userdatap, RemoteDef *remotep ),
 						void *cb_userdatap );
 	void	CloseDialog();
 
@@ -95,21 +95,23 @@ public:
 			refreshEnabledStatus( _hwnd );
 	}
 
+	void	InvalidAddressOnCall();
+
 private:
 	void	onListCommand( HWND hwnd );
 	void	onNameFocus( HWND hwnd );
+	bool	updateRemote( HWND hwnd, bool validate_for_connection );
 	void	refreshEnabledStatus( HWND hwnd );
 	void	setNewEntryRemoteDef( HWND hwnd );
-	void	setCurRemoteDef( RemoteDef *remotep, HWND hwnd );
-	bool	getCurRemoteDef( RemoteDef *remotep, bool is_adding, HWND hwnd );
-	void	(*_onChangedSettingsCB)( void *userdatap );
-	void	(*_onCallCB)( void *userdatap );
+	void	setRemoteToForm( RemoteDef *remotep, HWND hwnd );
+	void	loadRemoteFromForm( RemoteDef *remotep, HWND hwnd );
+	void	(*_onRemoteChange)( void *userdatap );
+	void	(*_onCallCB)( void *userdatap, RemoteDef *remotep );
 	void	*_cb_userdatap;
 	static BOOL CALLBACK DialogProc_s( HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam );
 	BOOL CALLBACK DialogProc( HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam );
 
-	bool	checkPort( HWND hwnd );
-	bool	checkName( const char *new_namep, bool check_duplicates, HWND hwnd ) const;
+	void	makeNameValid( RemoteDef *remotep ) const;
 	void	enableListenGroup( HWND hwnd );
 };
 

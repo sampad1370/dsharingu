@@ -21,6 +21,7 @@
 //==================================================================
 
 #include <windows.h>
+#include <CommCtrl.h>
 #include <direct.h>
 #include <gl/glew.h>
 #include "dsinstance.h"
@@ -35,7 +36,7 @@
 
 #define CHNTAG	"*> "
 #define APP_NAME			"DSharingu"
-#define APP_VERSION_STR		"0.7a"
+#define APP_VERSION_STR		"0.8a"
 
 #define WINDOW_TITLE		APP_NAME" " APP_VERSION_STR " by Davide Pasca 2006 ("__DATE__" "__TIME__ ")"
 
@@ -155,7 +156,7 @@ void DSChannel::onConnect( bool is_connected_as_caller )
 
 	if ( _connecting_dlg_hwnd )
 	{
-		CloseWindow( _connecting_dlg_hwnd );
+		DestroyWindow( _connecting_dlg_hwnd );
 		_connecting_dlg_hwnd = NULL;
 	}
 
@@ -183,7 +184,7 @@ void DSChannel::onConnect( bool is_connected_as_caller )
 
 	if ( is_connected_as_caller )
 	{
-		_session_remotep = _remote_mng.GetCurRemote();
+		PSYS_ASSERT( _session_remotep != NULL );
 
 		HandShakeMsg	msg( PROTOCOL_VERSION,
 							_settings._username,
@@ -208,19 +209,24 @@ void DSChannel::onDisconnect()
 
 	if ( _connecting_dlg_hwnd )
 	{
-		CloseWindow( _connecting_dlg_hwnd );
+		DestroyWindow( _connecting_dlg_hwnd );
 		_connecting_dlg_hwnd = NULL;
 	}
 
 	_scrwriter.StopGrabbing();
 
-	_console.cons_line_printf( CHNTAG"Disconnected (onDisconnect())." );
-	_cpk.Disconnect();
+	if ( _cpk.IsConnected() )
+	{
+		_cpk.Disconnect();
+		_console.cons_line_printf( CHNTAG"Disconnected." );
+	}
+
 	//gmp->EnableGadget( BUTT_CONNECTION, true );
 	gmp->EnableGadget( BUTT_HANGUP, false );
 	//gmp->SetGadgetText( BUTT_CONNECTION, "[ ] Connections..." );
 
 	_is_connected = false;
+	_is_transmitting = false;
 	_session_remotep = NULL;
 	_remote_mng.UnlockRemote();
 
@@ -1391,15 +1397,16 @@ void DSChannel::handleChangedRemoteManager()
 	}
 }
 
+
 //==================================================================
-void DSChannel::handleCallRemoteManager_s( void *mythis )
+void DSChannel::handleCallRemoteManager_s( void *mythis, RemoteDef *remotep )
 {
-	((DSChannel *)mythis)->handleCallRemoteManager();
+	((DSChannel *)mythis)->handleCallRemoteManager( remotep );
 }
 //==================================================================
-void DSChannel::handleCallRemoteManager()
+void DSChannel::handleCallRemoteManager( RemoteDef *remotep )
 {
-	_session_remotep = _remote_mng.GetCurRemote();
+	_session_remotep = remotep;
 	_remote_mng.LockRemote( _session_remotep );
 
 	if ERR_NULL( _session_remotep )
@@ -1419,20 +1426,33 @@ void DSChannel::handleCallRemoteManager()
 			return;
 	}
 
-	if NOT( _cpk.Call( _session_remotep->_rm_ip_address, _session_remotep->GetCallPortNum() ) )
+	int	err = _cpk.Call( _session_remotep->_rm_ip_address, _session_remotep->GetCallPortNum() );
+	switch ( err )
 	{
+	case 0:
 		setState( STATE_CONNECTING );
-
 		_connecting_dlg_hwnd =
 			CreateDialogParam( (HINSTANCE)win_system_getinstance(),
-						MAKEINTRESOURCE(IDD_CONNECTING), _main_win.hwnd,
-						(DLGPROC)connectingDialogProc_s, (LPARAM)this );
-		
-		if ERR_NULL( _connecting_dlg_hwnd )
-			return;
-
+			MAKEINTRESOURCE(IDD_CONNECTING), _main_win.hwnd,
+			(DLGPROC)connectingDialogProc_s, (LPARAM)this );
 		appbase_add_modeless_dialog( _connecting_dlg_hwnd );
 		ShowWindow( _connecting_dlg_hwnd, SW_SHOWNORMAL );
+		break;
+
+	case COM_ERR_INVALID_ADDRESS:
+		MessageBox( _main_win.hwnd, "The Internet Address seems to be invalid.\nPlease, review it.",
+			"Connection Problem", MB_OK | MB_ICONSTOP );
+
+		_remote_mng.UnlockRemote();
+		_remote_mng.InvalidAddressOnCall();
+		break;
+
+	default:
+		MessageBox( _main_win.hwnd, "Error occurred while trying to call.",
+			"Connection Problem", MB_OK | MB_ICONSTOP );
+
+		_remote_mng.UnlockRemote();
+		break;
 	}
 }
 
@@ -1454,7 +1474,11 @@ BOOL CALLBACK DSChannel::connectingDialogProc(HWND hwnd, UINT umsg, WPARAM wpara
 	switch( umsg )
 	{
 	case WM_INITDIALOG:
-		break; 
+		SendMessage( GetDlgItem( hwnd, IDC_CONNECTING_REMOTE_PROGRESS ),
+					 PBM_SETRANGE, 0, MAKELPARAM( 0, 20*4 ) );
+		SetTimer( hwnd, 1, 1000/4, NULL );
+		_connecting_dlg_timer = 0;
+		break;
 
 	case WM_COMMAND:
 		switch( LOWORD(wparam) )
@@ -1465,6 +1489,11 @@ BOOL CALLBACK DSChannel::connectingDialogProc(HWND hwnd, UINT umsg, WPARAM wpara
 			PostMessage(hwnd, WM_CLOSE, 0, 0);
 			break;
 		}
+		break;
+
+	case WM_TIMER:
+		SendMessage( GetDlgItem( hwnd, IDC_CONNECTING_REMOTE_PROGRESS ), PBM_SETPOS, ++_connecting_dlg_timer, 0 );
+		SetTimer( hwnd, 1, 1000/4, NULL );
 		break;
 
 	case WM_CLOSE:
@@ -1572,23 +1601,27 @@ DSChannel::State DSChannel::Idle()
 		break;
 
 	case COM_ERR_HARD_DISCONNECT:
-		setState( STATE_DISCONNECTED );
-		ensureDisconnect( "Connection Lost" );
+		ensureDisconnect( "Connection Lost." );
 		break;
 
 	case COM_ERR_INVALID_ADDRESS:
-		setState( STATE_DISCONNECTED );
-		ensureDisconnect( "Call Failed. No program answering." );
+		ensureDisconnect( "Call Failed. Invalid Address." );
 		break;
 
 	case COM_ERR_GRACEFUL_DISCONNECT:
-		setState( STATE_DISCONNECTED );
-		ensureDisconnect( "Connection Closed" );
+		ensureDisconnect( "Connection Closed." );
 		break;
 
 	case COM_ERR_GENERIC:
-		setState( STATE_DISCONNECTED );
 		ensureDisconnect( "Connection Lost (generic error)" );
+		break;
+
+	case COM_ERR_TIMEOUT_CONNECTING:
+		MessageBox( _main_win.hwnd, "Timed out while trying to connect.\n"
+			"Please, make sure that the Internet Address and the Port are correct.",
+			"Connection Problem", MB_OK | MB_ICONSTOP );
+
+		ensureDisconnect( "Timed out trying to connect." );
 		break;
 
 	case COM_ERR_NONE:

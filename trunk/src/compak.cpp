@@ -63,7 +63,8 @@ Compak::Compak() :
 	_need_disconnect(false),
 	_on_pack_pkid(0),
 	_on_pack_userdatap(NULL),
-	_on_pack_callback(NULL)
+	_on_pack_callback(NULL),
+	_connection_started_time(0)
 {
 	DWORD	thread_id;
 
@@ -260,6 +261,7 @@ struct sockaddr_in	out_sa;
 	if ( WaitForSingleObject( _io_mutex_h, INFINITE ) == WAIT_OBJECT_0 )
 	{
 		_status = CONNECTING;
+		_connection_started_time = psys_timer_get_d();
 		ReleaseMutex( _io_mutex_h );
 	}
 
@@ -268,6 +270,11 @@ struct sockaddr_in	out_sa;
 	{
 		if NOT( hp = gethostbyname( ipnamep ) )
 		{
+			if ( WaitForSingleObject( _io_mutex_h, INFINITE ) == WAIT_OBJECT_0 )
+			{
+				_status = NOT_CONNECTED;
+				ReleaseMutex( _io_mutex_h );
+			}
 			return COM_ERR_INVALID_ADDRESS;
 		}
 		addr = *(long *)hp->h_addr;
@@ -281,6 +288,12 @@ struct sockaddr_in	out_sa;
 	if ( (_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0 )
 	{
 		PRINT_SOCK_ERR;
+
+		if ( WaitForSingleObject( _io_mutex_h, INFINITE ) == WAIT_OBJECT_0 )
+		{
+			_status = NOT_CONNECTED;
+			ReleaseMutex( _io_mutex_h );
+		}
 		return -1;
 	}
 	/*
@@ -306,8 +319,10 @@ struct sockaddr_in	out_sa;
 	int	err = LAST_SOCK_ERR;
 
 		if ( err )
+		{
 			if ( err != EISCONN && err != EWOULDBLOCK && err != EALREADY )
 				return onDisconnect( 1 );
+		}
 	}
 
 	return COM_ERR_NONE;
@@ -701,20 +716,28 @@ int Compak::Idle()
 		break;
 
 	case CONNECTING:
-		FD_SET( _fd, &wtset );
-		tv.tv_sec = 0;
-		tv.tv_usec = 0;
-		if ( select( 1, &rdset, &wtset, 0, &tv ) == -1 )
-			return onDisconnect( 1 );
+		if ( (psys_timer_get_d() - _connection_started_time) >= 20*1000 )
+		{
+			onDisconnect( false );
+			return COM_ERR_TIMEOUT_CONNECTING;
+		}
+		else
+		{
+			FD_SET( _fd, &wtset );
+			tv.tv_sec = 0;
+			tv.tv_usec = 0;
+			if ( select( 1, &rdset, &wtset, 0, &tv ) == -1 )
+				return onDisconnect( 1 );
 
-		if ( FD_ISSET( _fd, &wtset ) )
-		{					
-			//---- reset the stats on a new connection
-			_stats.Reset();
+			if ( FD_ISSET( _fd, &wtset ) )
+			{					
+				//---- reset the stats on a new connection
+				_stats.Reset();
 
-			_connected_as_caller = true;
-			onConnect();
-			return COM_ERR_CONNECTED;
+				_connected_as_caller = true;
+				onConnect();
+				return COM_ERR_CONNECTED;
+			}
 		}
 		break;
 
@@ -734,6 +757,12 @@ int Compak::Idle()
 	_stats.UpdateWindow( timed );
 
 	return COM_ERR_NONE;
+}
+
+//==================================================================
+bool Compak::IsConnected() const
+{
+	return _status == CONNECTED;
 }
 
 //==================================================================

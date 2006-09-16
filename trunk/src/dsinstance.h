@@ -128,6 +128,7 @@ private:
 	win_t				_view_win;
 	win_t				_dbg_win;
 	HWND				_connecting_dlg_hwnd;
+	int					_connecting_dlg_timer;
 
 	InteractiveSystem	_intersys;
 
@@ -198,8 +199,8 @@ private:
 	static void	handleChangedRemoteManager_s( void *mythis );
 	void		handleChangedRemoteManager();
 
-	static void	handleCallRemoteManager_s( void *mythis );
-	void		handleCallRemoteManager();
+	static void	handleCallRemoteManager_s( void *mythis, RemoteDef *remotep );
+	void		handleCallRemoteManager( RemoteDef *remotep );
 
 	bool		_about_is_open;
 	static BOOL CALLBACK aboutDialogProc_s(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
