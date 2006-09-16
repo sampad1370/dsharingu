@@ -109,7 +109,7 @@ void SetDlgItemUnchangedPassword( HWND hwnd, u_int item_id )
 }
 
 //===============================================================
-WGUTCheckPWMsg GetDlgEditPasswordState( HWND hwnd, u_int item_id )
+WGUTCheckPWMsg GetDlgEditPasswordState( HWND hwnd, u_int item_id, bool prompt_user )
 {
 	if NOT( IsDlgEditPasswordChanged( hwnd, item_id ) )
 		return CHECKPW_MSG_UNCHANGED;
@@ -119,15 +119,21 @@ WGUTCheckPWMsg GetDlgEditPasswordState( HWND hwnd, u_int item_id )
 
 	if ( strlen(rem_buff) > 32 )
 	{
-		MessageBox( hwnd, "Password too long !\nUse 32 characters maximum.", "Remote Manager Problem", MB_OK | MB_ICONSTOP );
-		SetDlgEditForReview( hwnd, item_id );
+		if ( prompt_user )
+		{
+			MessageBox( hwnd, "Password too long !\nUse 32 characters maximum.", "Remote Manager Problem", MB_OK | MB_ICONSTOP );
+			SetDlgEditForReview( hwnd, item_id );
+		}
 		return CHECKPW_MSG_BAD;
 	}
 
 	if ( strlen(rem_buff) < 4 )
 	{
-		MessageBox( hwnd, "Password too short !\nUse 4 characters minimum.", "Remote Manager Problem", MB_OK | MB_ICONSTOP );
-		SetDlgEditForReview( hwnd, item_id );
+		if ( prompt_user )
+		{
+			MessageBox( hwnd, "Password too short !\nUse 4 characters minimum.", "Remote Manager Problem", MB_OK | MB_ICONSTOP );
+			SetDlgEditForReview( hwnd, item_id );
+		}
 		return CHECKPW_MSG_BAD;
 	}
 

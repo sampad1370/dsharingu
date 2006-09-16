@@ -42,7 +42,7 @@ enum WGUTCheckPWMsg
 	CHECKPW_MSG_BAD,
 	CHECKPW_MSG_UNCHANGED,
 };
-WGUTCheckPWMsg GetDlgEditPasswordState( HWND hwnd, u_int item_id );
+WGUTCheckPWMsg GetDlgEditPasswordState( HWND hwnd, u_int item_id, bool prompt_user );
 
 
 #endif
