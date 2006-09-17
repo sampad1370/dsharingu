@@ -75,6 +75,8 @@ public:
 		STATE_IDLE,
 		STATE_CONNECTING,
 		STATE_CONNECTED,
+		STATE_DISCONNECT_START,
+		STATE_DISCONNECTING,
 		STATE_DISCONNECTED,
 		STATE_QUIT
 	};
@@ -116,7 +118,6 @@ private:
 
 	bool				_view_fitwindow;
 	bool				_do_quit_flag;
-	bool				_settings_open_for_call;
 	char				_destination_ip_name[128];
 
 	u_char				*_inpack_buffp;
@@ -154,14 +155,13 @@ public:
 
 private:
 	void		onConnect( bool is_connected_as_caller );
-	void		onDisconnect();
 	void		setInteractiveMode( bool onoff );
 	bool		getInteractiveMode();
 	BOOL CALLBACK connectingDialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
 	static BOOL CALLBACK connectingDialogProc_s(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
 	void		setState( State state );
 	void		processInputPacket( u_int pack_id, const u_char *datap, u_int data_size );
-	void		ensureDisconnect( const char *messagep, bool is_error=0 );
+	void		doDisconnect( const char *messagep, bool is_error=0 );
 
 	int			mainEventFilter( win_event_type etype, win_event_t *eventp );
 	static int	mainEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );

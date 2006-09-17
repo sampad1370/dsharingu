@@ -15,9 +15,10 @@
 //	along with this program; if not, write to the Free Software
 //	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //==================================================================
-//==
-//==
-//==
+///
+///
+///
+///
 //==================================================================
 
 #include <windows.h>
@@ -34,9 +35,9 @@
 #include "data_schema.h"
 #include "appbase3.h"
 
-#define CHNTAG	"*> "
+#define CHNTAG				"* "
 #define APP_NAME			"DSharingu"
-#define APP_VERSION_STR		"0.8a"
+#define APP_VERSION_STR		"0.10a"
 
 #define WINDOW_TITLE		APP_NAME" " APP_VERSION_STR " by Davide Pasca 2006 ("__DATE__" "__TIME__ ")"
 
@@ -106,7 +107,8 @@ DSChannel::DSChannel( const char *config_fnamep ) :
 	_is_connected(false),
 	_im_caller(false),
 	_about_is_open(false),
-	_connecting_dlg_hwnd(NULL)
+	_connecting_dlg_hwnd(NULL),
+	_session_remotep(NULL)
 {
 	_state = STATE_IDLE;
 	_view_fitwindow = false;//true;
@@ -164,7 +166,7 @@ void DSChannel::onConnect( bool is_connected_as_caller )
 
 	if ( is_connected_as_caller )
 	{
-		_console.cons_line_printf( CHNTAG"Establishing connection..." );
+		_console.cons_line_printf( CHNTAG"Calling..." );
 	}
 	else
 	{
@@ -203,38 +205,6 @@ void DSChannel::onConnect( bool is_connected_as_caller )
 }
 
 //==================================================================
-void DSChannel::onDisconnect()
-{
-	GGET_Manager	*gmp = &_tool_win._gget_manager;
-
-	if ( _connecting_dlg_hwnd )
-	{
-		DestroyWindow( _connecting_dlg_hwnd );
-		_connecting_dlg_hwnd = NULL;
-	}
-
-	_scrwriter.StopGrabbing();
-
-	if ( _cpk.IsConnected() )
-	{
-		_cpk.Disconnect();
-		_console.cons_line_printf( CHNTAG"Disconnected." );
-	}
-
-	//gmp->EnableGadget( BUTT_CONNECTION, true );
-	gmp->EnableGadget( BUTT_HANGUP, false );
-	//gmp->SetGadgetText( BUTT_CONNECTION, "[ ] Connections..." );
-
-	_is_connected = false;
-	_is_transmitting = false;
-	_session_remotep = NULL;
-	_remote_mng.UnlockRemote();
-
-
-	setInteractiveMode( false );
-}
-
-//==================================================================
 void DSChannel::setState( State state )
 {
 	GGET_Manager	*gmp = &_tool_win._gget_manager;
@@ -251,9 +221,42 @@ void DSChannel::setState( State state )
 		onConnect( _cpk.IsConnectedAsCaller() );
 		break;
 
+	case STATE_DISCONNECT_START:
+		{
+			GGET_Manager	*gmp = &_tool_win._gget_manager;
+
+			if ( _connecting_dlg_hwnd )
+			{
+				DestroyWindow( _connecting_dlg_hwnd );
+				_connecting_dlg_hwnd = NULL;
+			}
+
+			_scrwriter.StopGrabbing();
+
+			gmp->EnableGadget( BUTT_CONNECTION, false );
+			gmp->EnableGadget( BUTT_HANGUP, false );
+			//gmp->SetGadgetText( BUTT_CONNECTION, "[ ] Connections..." );
+
+			_is_connected = false;
+			_is_transmitting = false;
+			_session_remotep = NULL;
+			_remote_mng.UnlockRemote();
+
+			setInteractiveMode( false );
+
+			_state = STATE_DISCONNECTING;
+		}
+		break;
+
+	case STATE_DISCONNECTING:
+		break;
+
 	case STATE_DISCONNECTED:
-		onDisconnect();
-		_state = STATE_IDLE;
+		{
+			GGET_Manager	*gmp = &_tool_win._gget_manager;
+			gmp->EnableGadget( BUTT_CONNECTION, true );
+			_state = STATE_IDLE;
+		}
 		break;
 
 	case STATE_QUIT:
@@ -303,24 +306,24 @@ void DSChannel::cmd_connect( char *params[], int n_params )
 	{
 	case COM_ERR_NONE:
 		//state_set( STATE_CALLING );
-		_console.cons_line_printf( "* Calling '%s'...", _destination_ip_name );
+		_console.cons_line_printf( CHNTAG"Calling '%s'...", _destination_ip_name );
 		return;
 
 	case COM_ERR_INVALID_ADDRESS:
 		//state_set( STATE_CALLING );
-		_console.cons_line_printf( "* Calling an Invalid Address" );
+		_console.cons_line_printf( CHNTAG"Calling an Invalid Address" );
 		break;
 
 	case COM_ERR_ALREADY_CONNECTED:
-		_console.cons_line_printf( "* Already Connected !" );
+		_console.cons_line_printf( CHNTAG"Already Connected !" );
 		break;
 
 	case COM_ERR_GENERIC:
-		_console.cons_line_printf( "* Cannot Connect" );
+		_console.cons_line_printf( CHNTAG"Cannot Connect" );
 		break;
 
 	default:
-		_console.cons_line_printf( "* Cannot Connect (unknown error)" );
+		_console.cons_line_printf( CHNTAG"Cannot Connect (unknown error)" );
 		break;
 	}
 }
@@ -349,8 +352,7 @@ void DSChannel::cmd_debug_s( void *userp, char *params[], int n_params )
 //==================================================================
 cons_cmd_def_t	DSChannel::_cmd_defs[] =
 {
-"/connect",		DSChannel::cmd_connect_s			,"/connect <IP>    : connect",
-"/debug",		DSChannel::cmd_debug_s				,"/debug           : connect",
+"/debug",		DSChannel::cmd_debug_s				,"/debug           : debug",
 0
 };
 
@@ -456,6 +458,18 @@ void DSChannel::Create( bool do_send_desk )
 		StartListening( _settings._listen_port );
 
 	setState( STATE_IDLE );
+
+
+	if ( _settings._username[0] == 0 || _settings._password.IsEmpty() )
+	{
+		if ( MessageBox( _main_win.hwnd,
+			"In order to connect and receive calls, you need to choose a Username and Password in the Settings dialog.\n"
+			"Do you want to do it now ?",
+			"Calling Problem", MB_YESNO | MB_ICONQUESTION ) == IDYES )
+		{
+			_settings.OpenDialog( &_main_win, handleChangedSettings_s, this );		
+		}
+	}
 }
 
 //==================================================================
@@ -470,36 +484,13 @@ void DSChannel::gadgetCallback( int gget_id, GGET_Item *itemp )
 								handleChangedRemoteManager_s,
 								handleCallRemoteManager_s,
 								this );
-		/*
-		if ( _settings._call_ip[0] )
-		{
-			if NOT( _cpk.Call( _settings._call_ip, _settings.GetCallPortNum() ) )
-			{
-				setState( STATE_CONNECTING );
-			}
-			else
-			{
-				//tool_barp->ToggleTool( BUTT_CONNECTION, false );
-				gmp->EnableGadget( BUTT_CONNECTION, false );
-			}
-		}
-		else
-		{
-			//tool_barp->ToggleTool( BUTT_CONNECTION, false );
-			gmp->EnableGadget( BUTT_CONNECTION, true );
-			MessageBox( _main_win.hwnd, "Please select a calling destination.", "Missing Destination", MB_OK | MB_ICONWARNING );
-			_settings_open_for_call = true;
-			_settings.OpenDialog( &_main_win, handleChangedSettings_s, this );
-		}
-		*/
 		break;
 
 	case BUTT_HANGUP:
-		ensureDisconnect( "Successfully disconnected." );
+		doDisconnect( "Successfully disconnected." );
 		break;
 
 	case BUTT_SETTINGS:
-		_settings_open_for_call = false;
 		_settings.OpenDialog( &_main_win, handleChangedSettings_s, this );
 		break;
 
@@ -1130,27 +1121,26 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 				{
 					if ( stricmp( msg._receiver_username, _settings._username ) )
 					{
-						_console.cons_line_printf( "* PROBLEM: Rejected connection from '%s'. The wrong username was provided.",
+						_console.cons_line_printf( CHNTAG"PROBLEM: Rejected connection from '%s'. The wrong username was provided.",
 													msg._caller_username );
 						_cpk.SendPacket( HS_BAD_USERNAME_PKID );
-						ensureDisconnect( "Disconnecting." );
+						doDisconnect( "Connection Failed." );
 						return;
 					}
 
 					if NOT( sha1_t::AreEqual( msg._receiver_password, _settings._password._data ) )
 					{
-						_console.cons_line_printf( "* PROBLEM: Rejected connection for '%s'. The wrong password was provided.",
+						_console.cons_line_printf( CHNTAG"PROBLEM: Rejected connection for '%s'. The wrong password was provided.",
 													msg._caller_username );
 						_cpk.SendPacket( HS_BAD_PASSWORD_PKID );
-						ensureDisconnect( "Disconnecting." );
+						doDisconnect( "Connection Failed." );
 						return;
 					}
 
 					_session_remotep = _remote_mng.FindOrAddRemoteDefAndSelect( msg._caller_username );
 					_remote_mng.LockRemote( _session_remotep );
 
-					_console.cons_line_printf( "* SUCCESFULLY CONNECTED to caller '%s'",
-												msg._caller_username );
+					_console.cons_line_printf( CHNTAG"OK ! Successfully connected to '%s'", msg._caller_username );
 
 					_flow_cnt = 0;
 					_is_transmitting = true;
@@ -1162,7 +1152,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 					if ( msg._protocol_version > PROTOCOL_VERSION )
 					{
 						_cpk.SendPacket( HS_NEW_PROTOCOL_PKID );
-						ensureDisconnect( "Disconnecting." );
+						doDisconnect( "Connection Failed." );
 						if ( MessageBox( _main_win.hwnd,
 									"Cannot communicate because the other party has a newer version of the program !\n"
 									"Do you want to download the latest version ?",
@@ -1175,7 +1165,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 					else
 					{
 						_cpk.SendPacket( HS_OLD_PROTOCOL_PKID );
-						ensureDisconnect( "Disconnecting." );
+						doDisconnect( "Connection Failed." );
 						MessageBox( _main_win.hwnd,
 									"Cannot communicate because the other party has an older version of the program !\n",
 									"Incompatible Versions",
@@ -1187,27 +1177,28 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 
 		case HS_BAD_USERNAME_PKID:
 			if ( _session_remotep )
-				_console.cons_line_printf( "* PROBLEM: The provided Internet address doesn't belong to '%s'",
-				_session_remotep->_rm_username );
+				_console.cons_line_printf( CHNTAG"PROBLEM: Wrong username !", _session_remotep->_rm_username );
 			else
 			{
 				PSYS_ASSERT( _session_remotep != NULL );
 			}
+			doDisconnect( "Connection Failed." );
 			break;
 
 		case HS_BAD_PASSWORD_PKID:
 			if ( _session_remotep )
-				_console.cons_line_printf( "* PROBLEM: You don't have the right password to connect to '%s'",
+				_console.cons_line_printf( CHNTAG"PROBLEM: Wrong password !",
 				_session_remotep->_rm_username );
 			else
 			{
 				PSYS_ASSERT( _session_remotep != NULL );
 			}
+			doDisconnect( "Connection Failed." );
 			break;
 
 
 		case HS_NEW_PROTOCOL_PKID:
-			ensureDisconnect( "Disconnecting." );
+			doDisconnect( "Connection Failed." );
 			MessageBox( _main_win.hwnd,
 				"Cannot communicate because the other party has an older version of the program !\n",
 				"Incompatible Versions",
@@ -1215,7 +1206,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 			break;
 
 		case HS_OLD_PROTOCOL_PKID:
-			ensureDisconnect( "Disconnecting." );
+			doDisconnect( "Connection Failed." );
 			if ( MessageBox( _main_win.hwnd,
 				"Cannot communicate because the other party has a newer version of the program !\n"
 				"Do you want to download the latest version ?",
@@ -1229,7 +1220,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 		case HS_OK:
 			if ( _session_remotep )
 			{
-				_console.cons_line_printf( "* SUCCESFULLY CONNECTED to responder '%s'",
+				_console.cons_line_printf( CHNTAG"OK ! Succesfully connected to '%s'",
 											_session_remotep->_rm_username );
 
 				_is_transmitting = true;
@@ -1237,7 +1228,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 			else
 			{
 				PSYS_ASSERT( _session_remotep != NULL );
-				ensureDisconnect( "Disconnecting. aaa" );
+				doDisconnect( "Connection Failed." );
 			}
 			break;
 		}
@@ -1280,16 +1271,12 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 }
 
 //==================================================================
-void DSChannel::ensureDisconnect( const char *messagep, bool is_error )
+void DSChannel::doDisconnect( const char *messagep, bool is_error )
 {
-	_cpk.Disconnect();
-	setState( STATE_DISCONNECTED );
-/*
-	if ( is_error )
-		MessageBox( _main_win.hwnd, "Disconnected", messagep, MB_OK | MB_ICONERROR );
-	else
-		MessageBox( _main_win.hwnd, "Disconnected", messagep, MB_OK );
-*/
+	if ( messagep )
+		_console.cons_line_printf( CHNTAG"%s", messagep );
+
+	setState( STATE_DISCONNECT_START );
 }
 
 // 286
@@ -1360,11 +1347,6 @@ void DSChannel::handleChangedSettings()
 	if ( _settings._listen_for_connections )
 		StartListening( _settings._listen_port );
 
-	if ( _settings_open_for_call )
-	{
-		gadgetCallback( BUTT_CONNECTION, NULL );
-	}
-
 	_intersys.ActivateExternalInput( _settings._share_my_screen && _settings._show_my_screen );
 
 	if ( _is_transmitting )
@@ -1406,6 +1388,18 @@ void DSChannel::handleCallRemoteManager_s( void *mythis, RemoteDef *remotep )
 //==================================================================
 void DSChannel::handleCallRemoteManager( RemoteDef *remotep )
 {
+	if ( _settings._username[0] == 0 || _settings._password.IsEmpty() )
+	{
+		if ( MessageBox( _main_win.hwnd,
+				"Please choose a Username and Password in the Settings dialog before trying to connect.\n"
+				"Do you want to do it now ?",
+				"Calling Problem", MB_YESNO | MB_ICONQUESTION ) == IDYES )
+		{
+			_settings.OpenDialog( &_main_win, handleChangedSettings_s, this );		
+		}
+		return;
+	}
+
 	_session_remotep = remotep;
 	_remote_mng.LockRemote( _session_remotep );
 
@@ -1420,7 +1414,7 @@ void DSChannel::handleCallRemoteManager( RemoteDef *remotep )
 			"Already Connected",
 			MB_YESNO | MB_ICONQUESTION ) == IDYES )
 		{
-			ensureDisconnect( "Successfully disconnected." );
+			doDisconnect( "Successfully disconnected." );
 		}
 		else
 			return;
@@ -1485,7 +1479,7 @@ BOOL CALLBACK DSChannel::connectingDialogProc(HWND hwnd, UINT umsg, WPARAM wpara
 		{
 		case IDOK:
 		case IDCANCEL:
-			ensureDisconnect( "Connection aborted." );
+			doDisconnect( "Connection aborted." );
 			PostMessage(hwnd, WM_CLOSE, 0, 0);
 			break;
 		}
@@ -1601,19 +1595,19 @@ DSChannel::State DSChannel::Idle()
 		break;
 
 	case COM_ERR_HARD_DISCONNECT:
-		ensureDisconnect( "Connection Lost." );
+		doDisconnect( "Connection Lost." );
 		break;
 
 	case COM_ERR_INVALID_ADDRESS:
-		ensureDisconnect( "Call Failed. Invalid Address." );
+		doDisconnect( "Call Failed. Invalid Address." );
 		break;
 
 	case COM_ERR_GRACEFUL_DISCONNECT:
-		ensureDisconnect( "Connection Closed." );
+		doDisconnect( "Connection Closed." );
 		break;
 
 	case COM_ERR_GENERIC:
-		ensureDisconnect( "Connection Lost (generic error)" );
+		doDisconnect( "Connection Lost (generic error)" );
 		break;
 
 	case COM_ERR_TIMEOUT_CONNECTING:
@@ -1621,7 +1615,7 @@ DSChannel::State DSChannel::Idle()
 			"Please, make sure that the Internet Address and the Port are correct.",
 			"Connection Problem", MB_OK | MB_ICONSTOP );
 
-		ensureDisconnect( "Timed out trying to connect." );
+		doDisconnect( "Timed out trying to connect." );
 		break;
 
 	case COM_ERR_NONE:
@@ -1629,7 +1623,7 @@ DSChannel::State DSChannel::Idle()
 
 	default:
 		//_is_connected = false;
-		//_console.cons_line_printf( "* connection err #%i !!", err );
+		//_console.cons_line_printf( CHNTAG"connection err #%i !!", err );
 		break;
 	}
 
@@ -1642,9 +1636,24 @@ DSChannel::State DSChannel::Idle()
 	}
 
 	//-------------
-	if ( _state == STATE_CONNECTED )
+	switch ( _state )
 	{
+	case STATE_CONNECTED:
 		handleConnectedFlow();
+		break;
+
+	case STATE_DISCONNECTING:
+		if ( _cpk.IsConnected() )
+		{
+			if ( _cpk.GetOUTQueueCnt() <= 0 )
+			{
+				_cpk.Disconnect();
+				setState( STATE_DISCONNECTED );
+			}
+		}
+		else
+			setState( STATE_DISCONNECTED );
+		break;
 	}
 
 	win_invalidate( &_dbg_win );
