@@ -77,6 +77,8 @@ void RemoteMng::setRemoteToForm( RemoteDef *remotep, HWND hwnd )
 	if NOT( remotep )
 		return;
 
+	_cur_remotep = remotep;
+
 	if ( hwnd )
 	{
 		SetDlgItemText( hwnd, IDC_RM_REMOTE_NAME, remotep->_rm_username );
@@ -89,41 +91,19 @@ void RemoteMng::setRemoteToForm( RemoteDef *remotep, HWND hwnd )
 		CheckDlgButton( hwnd, IDC_RM_SEE_REMOTE_SCREEN, remotep->_see_remote_screen );
 		CheckDlgButton( hwnd, IDC_RM_USE_REMOTE_SCREEN, remotep->_use_remote_screen );
 	}
-
-	_cur_remotep = remotep;
 }
 
 //===============================================================
 void RemoteMng::setNewEntryRemoteDef( HWND hwnd )
 {
+	_cur_remotep = NULL;
+
 	SetDlgItemText( hwnd, IDC_RM_REMOTE_NAME, _emptyname_string );
 	SetDlgItemText( hwnd, IDC_RM_REMOTE_PASSWORD, "" );
 	SetDlgItemText( hwnd, IDC_RM_REMOTE_ADDRESS, "" );
 	SetDlgItemInt( hwnd, IDC_RM_REMOTE_PORT, DEF_PORT_NUMBER );
 	CheckDlgButton( hwnd, IDC_RM_SEE_REMOTE_SCREEN, false );
 	CheckDlgButton( hwnd, IDC_RM_USE_REMOTE_SCREEN, false );
-
-	_cur_remotep = NULL;
-}
-
-//===============================================================
-void RemoteMng::loadRemoteFromForm( RemoteDef *remotep, HWND hwnd )
-{
-	GetDlgItemText( hwnd, IDC_RM_REMOTE_NAME, remotep->_rm_username, sizeof(remotep->_rm_username)-1 );
-	makeNameValid( remotep );
-
-	WGUTCheckPWMsg pw_msg = GetDlgEditPasswordState( hwnd, IDC_RM_REMOTE_PASSWORD, false );
-
-	// only grab if it was changed
-	if ( pw_msg != CHECKPW_MSG_UNCHANGED )
-		GetDlgItemSHA1PW( hwnd, IDC_RM_REMOTE_PASSWORD, &remotep->_rm_password );
-
-	GetDlgItemText( hwnd, IDC_RM_REMOTE_ADDRESS, remotep->_rm_ip_address, sizeof(remotep->_rm_ip_address)-1 );
-	psys_str_remove_beginend_spaces( remotep->_rm_ip_address );
-
-	remotep->_call_port = GetDlgItemInt( hwnd, IDC_RM_REMOTE_PORT );
-	remotep->_see_remote_screen = IsDlgButtonON( hwnd, IDC_RM_SEE_REMOTE_SCREEN );
-	remotep->_use_remote_screen = IsDlgButtonON( hwnd, IDC_RM_USE_REMOTE_SCREEN );
 }
 
 //===============================================================
@@ -134,38 +114,73 @@ static void AddDlgListTextAndSelect( HWND hwnd, int id, const char *strp, DWORD 
 	if ( is_sel )
 		SendDlgItemMessage( hwnd, id, LB_SETCURSEL, i, 0 );
 }
+//===============================================================
+static void DeleteDlgListText( HWND hwnd, int id, const char *strp, DWORD val, bool is_sel )
+{
+	int i = SendDlgItemMessage( hwnd, id, LB_ADDSTRING, 0, (DWORD)strp );
+	SendDlgItemMessage( hwnd, id, LB_SETITEMDATA, i, (DWORD)val );
+}
+
+//===============================================================
+void RemoteMng::loadRemoteNameFromForm( RemoteDef *remotep, HWND hwnd )
+{
+	char	old_name[128];
+
+	psys_strcpy( old_name, remotep->_rm_username, sizeof(old_name) );
+	GetDlgItemText( hwnd, IDC_RM_REMOTE_NAME, remotep->_rm_username, sizeof(remotep->_rm_username)-1 );
+	makeNameValid( remotep );
+	bool is_name_changed = (strcmp( remotep->_rm_username, old_name ) != 0);
+
+	if ( is_name_changed )
+	{
+		for (int i=0; i < _remotes_list.len(); ++i)
+		{
+			RemoteDef *remote_ip = (RemoteDef *)SendDlgItemMessage( hwnd, IDC_RM_REMOTES_LIST, LB_GETITEMDATA, i, 0 );
+			PSYS_ASSERT( remote_ip != NULL );
+
+			if ( remote_ip == remotep )
+			{
+				SendDlgItemMessage( hwnd, IDC_RM_REMOTES_LIST, LB_DELETESTRING, i, 0 );
+				break;
+			}
+		}
+
+		AddDlgListTextAndSelect( hwnd, IDC_RM_REMOTES_LIST, remotep->_rm_username, (DWORD)remotep, true );
+	}
+}
 
 //===============================================================
 void RemoteMng::refreshEnabledStatus( HWND hwnd )
 {
 	int	idx = SendDlgItemMessage( hwnd, IDC_RM_REMOTES_LIST, LB_GETCURSEL, 0, 0 );
-	if ERR_FALSE( idx >= 0 )
+	if ( idx < 0 )
 		return;
+
 	RemoteDef *remotep = (RemoteDef *)SendDlgItemMessage( hwnd, IDC_RM_REMOTES_LIST, LB_GETITEMDATA, idx, 0 );
+	if ERR_NULL( remotep )
+		return;
 
-	DlgEnableItem( hwnd, IDC_RM_DELETE_REMOTE, remotep != NULL );
-	DlgEnableItem( hwnd, IDC_RM_CONNECT, remotep != NULL );
+	bool	is_not_locked = ( remotep != _locked_remotep );
 
-	DlgEnableItem( hwnd, IDC_RM_USE_REMOTE_SCREEN, IsDlgButtonON( hwnd, IDC_RM_SEE_REMOTE_SCREEN) );
+	DlgEnableItem( hwnd, IDC_RM_REMOTE_NAME,		is_not_locked );
+	DlgEnableItem( hwnd, IDC_RM_REMOTE_PASSWORD,	is_not_locked );
+	DlgEnableItem( hwnd, IDC_RM_REMOTE_ADDRESS,		is_not_locked );
+	DlgEnableItem( hwnd, IDC_RM_REMOTE_PORT,		is_not_locked );
+	DlgEnableItem( hwnd, IDC_RM_DELETE_REMOTE,		is_not_locked );
+	DlgEnableItem( hwnd, IDC_RM_CONNECT,			is_not_locked );
 
-	if ( remotep == _locked_remotep && idx != 0 )
-	{
-		DlgEnableItem( hwnd, IDC_RM_REMOTE_NAME, FALSE );
-		DlgEnableItem( hwnd, IDC_RM_REMOTE_PASSWORD, FALSE );
-	}
-	else
-	{
-		DlgEnableItem( hwnd, IDC_RM_REMOTE_NAME, TRUE );
-		DlgEnableItem( hwnd, IDC_RM_REMOTE_PASSWORD, TRUE );
-	}
+	DlgEnableItem( hwnd, IDC_RM_SEE_REMOTE_SCREEN,	is_not_locked );
+	DlgEnableItem( hwnd, IDC_RM_USE_REMOTE_SCREEN,
+					IsDlgButtonON( hwnd, IDC_RM_SEE_REMOTE_SCREEN ) );
 }
 
 //===============================================================
 void RemoteMng::onListCommand( HWND hwnd )
 {
 	int	idx = SendDlgItemMessage( hwnd, IDC_RM_REMOTES_LIST, LB_GETCURSEL, 0, 0 );
-	if ERR_FALSE( idx >= 0 )
+	if ( idx < 0 )
 		return;
+
 	RemoteDef *remotep = (RemoteDef *)SendDlgItemMessage( hwnd, IDC_RM_REMOTES_LIST, LB_GETITEMDATA, idx, 0 );
 
 	PSYS_ASSERT( remotep != NULL );
@@ -188,37 +203,15 @@ void RemoteMng::onNameFocus( HWND hwnd )
 }
 
 //===============================================================
-bool RemoteMng::updateRemote( HWND hwnd, bool validate_for_connection )
+void RemoteMng::updateRemote( HWND hwnd )
 {
-	loadRemoteFromForm( _cur_remotep, hwnd );
-
-	if ( validate_for_connection )
-	{
-		if ( _cur_remotep->_rm_ip_address[0] == 0 )
-		{
-			MessageBox( hwnd, "Internet Address is empty.\nPlease provide an Internet Address for the remote to call.",
-				"Remote Manager Problem", MB_OK | MB_ICONSTOP );
-
-			SetDlgEditForReview( hwnd, IDC_RM_REMOTE_ADDRESS );
-			return false;
-		}
-
-		if ( _cur_remotep->_call_port != 0 &&
-			 (_cur_remotep->_call_port < 1 || _cur_remotep->_call_port > 65535) )
-		{
-			MessageBox( _hwnd, "Invalid port number.\nThe valid range is between 1 to 65535.\nLeave it blank to use default.",
-				"Remote Manager Problem", MB_OK | MB_ICONSTOP );
-
-			SetDlgEditForReview( _hwnd, IDC_RM_REMOTE_PORT );
-			return false;
-		}
-	}
+	if NOT( _cur_remotep )
+		return;
 
 	if ( _onRemoteChange )
 		_onRemoteChange( _cb_userdatap );
 
 	refreshEnabledStatus( hwnd );
-	return true;
 }
 
 //===============================================================
@@ -231,6 +224,27 @@ BOOL CALLBACK RemoteMng::DialogProc_s(HWND hwnd, UINT umsg, WPARAM wparam, LPARA
 	RemoteMng *mythis = (RemoteMng *)GetWindowLongPtr( hwnd, GWLP_USERDATA );
 	return mythis->DialogProc( hwnd, umsg, wparam, lparam );
 }
+
+//===============================================================
+void RemoteMng::onEmptyList( HWND hwnd )
+{
+	SetDlgItemText( hwnd, IDC_RM_REMOTE_NAME, "" );
+	SetDlgItemText( hwnd, IDC_RM_REMOTE_PASSWORD, "" );
+	SetDlgItemText( hwnd, IDC_RM_REMOTE_ADDRESS, "" );
+	SetDlgItemInt( hwnd, IDC_RM_REMOTE_PORT, DEF_PORT_NUMBER );
+	CheckDlgButton( hwnd, IDC_RM_SEE_REMOTE_SCREEN, false );
+	CheckDlgButton( hwnd, IDC_RM_USE_REMOTE_SCREEN, false );
+
+	DlgEnableItem( hwnd, IDC_RM_REMOTE_NAME, FALSE );
+	DlgEnableItem( hwnd, IDC_RM_REMOTE_PASSWORD, FALSE );
+	DlgEnableItem( hwnd, IDC_RM_REMOTE_ADDRESS, FALSE );
+	DlgEnableItem( hwnd, IDC_RM_REMOTE_PORT, FALSE );
+	DlgEnableItem( hwnd, IDC_RM_SEE_REMOTE_SCREEN, FALSE );
+	DlgEnableItem( hwnd, IDC_RM_USE_REMOTE_SCREEN, FALSE );
+	DlgEnableItem( hwnd, IDC_RM_CONNECT, FALSE );
+	DlgEnableItem( hwnd, IDC_RM_DELETE_REMOTE, FALSE );
+}
+
 //===============================================================
 BOOL CALLBACK RemoteMng::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)
 {
@@ -240,24 +254,29 @@ BOOL CALLBACK RemoteMng::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM 
 		{
 			_hwnd = hwnd;
 
-			if ( _remotes_list.len() )
+			// special case for when there are no elements
+			if NOT( _remotes_list.len() )
+			{
+				onEmptyList( hwnd );
+			}
+			else
 			{
 				if NOT( _cur_remotep )
 					_cur_remotep = _remotes_list[0];
+
+				for (int i=0; i < _remotes_list.len(); ++i)
+				{
+					AddDlgListTextAndSelect( hwnd, IDC_RM_REMOTES_LIST,
+						_remotes_list[i]->_rm_username,
+						(DWORD)_remotes_list[i],
+						_remotes_list[i] == _cur_remotep );
+				}
+
+				if ( _cur_remotep )
+					setRemoteToForm( _cur_remotep, hwnd );
+
+				refreshEnabledStatus( hwnd );
 			}
-
-			for (int i=0; i < _remotes_list.len(); ++i)
-			{
-				AddDlgListTextAndSelect( hwnd, IDC_RM_REMOTES_LIST,
-										 _remotes_list[i]->_rm_username,
-										 (DWORD)_remotes_list[i],
-										 _remotes_list[i] == _cur_remotep );
-			}
-
-			if ( _cur_remotep )
-				setRemoteToForm( _cur_remotep, hwnd );
-
-			refreshEnabledStatus( hwnd );
 		}
 		break;
 
@@ -269,36 +288,82 @@ BOOL CALLBACK RemoteMng::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM 
 			{
 				onNameFocus( hwnd );
 			}
-			break;
-
-		case IDC_RM_REMOTE_PASSWORD:
-			if ( HIWORD(wparam) == EN_SETFOCUS )
+			else
+			if ( HIWORD(wparam) == EN_CHANGE )
 			{
-				if NOT( IsDlgEditPasswordChanged( hwnd, IDC_RM_REMOTE_PASSWORD ) )
+				if ( _cur_remotep )
 				{
-					SetDlgEditForReview( hwnd, IDC_RM_REMOTE_PASSWORD );
+					loadRemoteNameFromForm( _cur_remotep, hwnd );
+					updateRemote( hwnd );
 				}
 			}
 			break;
 
-		case IDC_RM_REMOTES_LIST:
-			updateRemote( hwnd, false );
-			onListCommand( hwnd );
-			refreshEnabledStatus( hwnd );
+		case IDC_RM_REMOTE_PASSWORD:
+			if ( HIWORD(wparam) == EN_CHANGE )
+			{
+				if ( _cur_remotep )
+				{
+					WGUTCheckPWMsg pw_msg = GetDlgEditPasswordState( hwnd, IDC_RM_REMOTE_PASSWORD );
+					// only grab if it was changed
+					if ( pw_msg == CHECKPW_MSG_GOOD )
+						GetDlgItemSHA1PW( hwnd, IDC_RM_REMOTE_PASSWORD, &_cur_remotep->_rm_password );
+					updateRemote( hwnd );
+				}
+			}
+			break;
+
+		case IDC_RM_REMOTE_ADDRESS:
+			if ( HIWORD(wparam) == EN_CHANGE )
+			{
+				if ( _cur_remotep )
+				{
+					GetDlgItemText( hwnd, IDC_RM_REMOTE_ADDRESS, _cur_remotep->_rm_ip_address, sizeof(_cur_remotep->_rm_ip_address)-1 );
+					psys_str_remove_beginend_spaces( _cur_remotep->_rm_ip_address );
+					updateRemote( hwnd );
+				}
+			}
+			break;
+
+		case IDC_RM_REMOTE_PORT:
+			if ( HIWORD(wparam) == EN_CHANGE )
+			{
+				if ( _cur_remotep )
+				{
+					_cur_remotep->_call_port = GetDlgItemInt( hwnd, IDC_RM_REMOTE_PORT );
+					updateRemote( hwnd );
+				}
+			}
 			break;
 
 		case IDC_RM_SEE_REMOTE_SCREEN:
-			updateRemote( hwnd, false );
-			refreshEnabledStatus( hwnd );
+			if ( _cur_remotep )
+			{
+				_cur_remotep->_see_remote_screen = IsDlgButtonON( hwnd, IDC_RM_SEE_REMOTE_SCREEN );
+				updateRemote( hwnd );
+			}
 			break;
+
 		case IDC_RM_USE_REMOTE_SCREEN:
-			updateRemote( hwnd, false );
-			refreshEnabledStatus( hwnd );
+			if ( _cur_remotep )
+			{
+				_cur_remotep->_use_remote_screen = IsDlgButtonON( hwnd, IDC_RM_USE_REMOTE_SCREEN );
+				updateRemote( hwnd );
+			}
+			break;
+
+		case IDC_RM_REMOTES_LIST:
+			switch (HIWORD(wparam)) 
+			{ 
+			case LBN_SELCHANGE:
+				onListCommand( hwnd );
+				refreshEnabledStatus( hwnd );
+				break;
+			}
 			break;
 
 		case IDC_RM_NEW_REMOTE:
 			{
-				updateRemote( hwnd, false );
 				setNewEntryRemoteDef( hwnd );
 
 				RemoteDef	*remotep = new RemoteDef();
@@ -312,16 +377,92 @@ BOOL CALLBACK RemoteMng::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM 
 			break;
 
 		case IDC_RM_CONNECT:
-			if ( updateRemote( hwnd, true ) )
+			if ( _cur_remotep->_rm_ip_address[0] == 0 )
+			{
+				MessageBox( hwnd, "Internet Address is empty.\nPlease provide an Internet Address for the remote to call.",
+					"Remote Manager Problem", MB_OK | MB_ICONSTOP );
+
+				SetDlgEditForReview( hwnd, IDC_RM_REMOTE_ADDRESS );
+				return false;
+			}
+			else
+			if ( _cur_remotep->_call_port != 0 &&
+				(_cur_remotep->_call_port < 1 || _cur_remotep->_call_port > 65535) )
+			{
+				MessageBox( _hwnd, "Invalid port number.\nThe valid range is between 1 to 65535.\nLeave it blank to use default.",
+					"Remote Manager Problem", MB_OK | MB_ICONSTOP );
+
+				SetDlgEditForReview( _hwnd, IDC_RM_REMOTE_PORT );
+				return false;
+			}
+			else
+			if ( _cur_remotep->_rm_password.IsEmpty() )
+			{
+				MessageBox( _hwnd, "No password provided !\nUse provide a password (4 characters minimum).",
+					"Remote Manager Problem", MB_OK | MB_ICONSTOP );
+
+				SetDlgEditForReview( _hwnd, IDC_RM_REMOTE_PASSWORD );
+			}
+			else
 			{
 				if ( _onCallCB )
 					_onCallCB( _cb_userdatap, _cur_remotep );
 			}
 			break;
 
+		case IDC_RM_DELETE_REMOTE:
+			if ( _cur_remotep != _locked_remotep )
+			{
+				for (int i=0; i < _remotes_list.len(); ++i)
+				{
+					RemoteDef *remote_ip = (RemoteDef *)SendDlgItemMessage( hwnd, IDC_RM_REMOTES_LIST, LB_GETITEMDATA, i, 0 );
+					PSYS_ASSERT( remote_ip != NULL );
+
+					if ( remote_ip == _cur_remotep )
+					{
+						SendDlgItemMessage( hwnd, IDC_RM_REMOTES_LIST, LB_DELETESTRING, i, 0 );
+						SAFE_DELETE( remote_ip );
+						for (int j=0; j < _remotes_list.len(); ++j)
+						{
+							if ( _remotes_list[j] == _cur_remotep )
+							{
+								_remotes_list.erase( j );
+								break;
+							}
+						}
+						
+						if ( _remotes_list.len() )
+						{
+							if ( i >= _remotes_list.len() )
+								i = _remotes_list.len()-1;
+
+							SendDlgItemMessage( hwnd, IDC_RM_REMOTES_LIST, LB_SETCURSEL, i, 0 );
+							int	idx = SendDlgItemMessage( hwnd, IDC_RM_REMOTES_LIST, LB_GETCURSEL, 0, 0 );
+							if ( idx >= 0 )
+							{
+								setRemoteToForm(
+									(RemoteDef *)SendDlgItemMessage( hwnd, IDC_RM_REMOTES_LIST, LB_GETITEMDATA, idx, 0 ),
+									hwnd );
+							}
+						}
+						else
+						{
+							_cur_remotep = NULL;
+							onEmptyList( hwnd );
+						}
+
+						break;
+					}
+				}
+			}
+			else
+			{
+				PSYS_ASSERT( 0 );
+			}
+			break;
+
 		case IDOK:
 		case IDCANCEL:
-			updateRemote( hwnd, false );
 			DestroyWindow( hwnd );
 			break;
 		}

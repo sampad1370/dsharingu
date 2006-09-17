@@ -88,16 +88,16 @@ WGUTCheckPWMsg Settings::checkPasswords( HWND hwnd )
 		return CHECKPW_MSG_BAD;
 	}
 
-	WGUTCheckPWMsg pw1_msg = GetDlgEditPasswordState( hwnd, IDC_PASSWORD1_EDIT, true );
+	WGUTCheckPWMsg pw1_msg = GetDlgEditPasswordState( hwnd, IDC_PASSWORD1_EDIT, "Settings Problem" );
 	if ( pw1_msg == CHECKPW_MSG_BAD )
 		return CHECKPW_MSG_BAD;
 
-	WGUTCheckPWMsg pw2_msg = GetDlgEditPasswordState( hwnd, IDC_PASSWORD2_EDIT, true );
+	WGUTCheckPWMsg pw2_msg = GetDlgEditPasswordState( hwnd, IDC_PASSWORD2_EDIT, "Settings Problem" );
 	if ( pw2_msg == CHECKPW_MSG_BAD )
 		return CHECKPW_MSG_BAD;
 
-	if ( pw1_msg == CHECKPW_MSG_UNCHANGED &&
-		 pw2_msg == CHECKPW_MSG_UNCHANGED )
+	if ( (pw1_msg == CHECKPW_MSG_UNCHANGED && pw2_msg == CHECKPW_MSG_UNCHANGED) ||
+		 (pw1_msg == CHECKPW_MSG_EMPTY && pw2_msg == CHECKPW_MSG_EMPTY) )
 		 return CHECKPW_MSG_UNCHANGED;
 
 
@@ -137,8 +137,18 @@ BOOL CALLBACK Settings::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM l
 	{
 	case WM_INITDIALOG:
 		SetDlgItemText( hwnd, IDC_ST_USERNAME, _username );
-		SetDlgItemUnchangedPassword( hwnd, IDC_PASSWORD1_EDIT );
-		SetDlgItemUnchangedPassword( hwnd, IDC_PASSWORD2_EDIT );
+
+		if ( _password.IsEmpty() )
+		{
+			SetDlgItemText( hwnd, IDC_PASSWORD1_EDIT, "" );
+			SetDlgItemText( hwnd, IDC_PASSWORD2_EDIT, "" );
+		}
+		else
+		{
+			SetDlgItemUnchangedPassword( hwnd, IDC_PASSWORD1_EDIT );
+			SetDlgItemUnchangedPassword( hwnd, IDC_PASSWORD2_EDIT );
+		}
+
 		CheckDlgButton( hwnd, IDC_LISTEN_CONNECTIONS_CHECK, _listen_for_connections );
 		SetDlgItemInt( hwnd, IDC_ST_LOCAL_PORT, _listen_port );
 		enableListenGroup( hwnd );

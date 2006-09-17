@@ -40,9 +40,10 @@ enum WGUTCheckPWMsg
 {
 	CHECKPW_MSG_GOOD,
 	CHECKPW_MSG_BAD,
+	CHECKPW_MSG_EMPTY,
 	CHECKPW_MSG_UNCHANGED,
 };
-WGUTCheckPWMsg GetDlgEditPasswordState( HWND hwnd, u_int item_id, bool prompt_user );
+WGUTCheckPWMsg GetDlgEditPasswordState( HWND hwnd, u_int item_id, const char *prompt_titlep=NULL );
 
 
 #endif

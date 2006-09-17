@@ -152,6 +152,7 @@ public:
 	int		SendPacket( void *compak_allocated_datap, u_int *send_ticketp=0 );
 	int		SendPacket( u_short pk_id, const void *datap=NULL, int data_size=0, u_int *send_ticketp=NULL );
 	int		SearchOUTQueue( u_short packet_id );
+	int		GetOUTQueueCnt() const;
 
 	void				SetOnPackCallback( u_int pk_id, CompackOnPackCb callback, void *cb_userdatap )
 						{

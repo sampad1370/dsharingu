@@ -100,14 +100,16 @@ public:
 private:
 	void	onListCommand( HWND hwnd );
 	void	onNameFocus( HWND hwnd );
-	bool	updateRemote( HWND hwnd, bool validate_for_connection );
+	void	updateRemote( HWND hwnd );
 	void	refreshEnabledStatus( HWND hwnd );
 	void	setNewEntryRemoteDef( HWND hwnd );
 	void	setRemoteToForm( RemoteDef *remotep, HWND hwnd );
 	void	loadRemoteFromForm( RemoteDef *remotep, HWND hwnd );
+	void	loadRemoteNameFromForm( RemoteDef *remotep, HWND hwnd );
 	void	(*_onRemoteChange)( void *userdatap );
 	void	(*_onCallCB)( void *userdatap, RemoteDef *remotep );
 	void	*_cb_userdatap;
+	void	onEmptyList( HWND hwnd );
 	static BOOL CALLBACK DialogProc_s( HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam );
 	BOOL CALLBACK DialogProc( HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam );
 

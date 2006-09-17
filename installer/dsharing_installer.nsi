@@ -12,7 +12,7 @@
 
   ;Name and file
   Name "DSharingu"
-  OutFile "DSharingu08a.exe"
+  OutFile "DSharingu010a.exe"
 
   ;Default installation folder
   InstallDir "$PROGRAMFILES\DSharingu"

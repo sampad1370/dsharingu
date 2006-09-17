@@ -945,6 +945,24 @@ int Compak::SearchOUTQueue( u_short packet_id )
 }
 
 //==================================================================
+int Compak::GetOUTQueueCnt() const
+{
+	int				cnt;
+
+	if ( WaitForSingleObject( _io_mutex_h, INFINITE ) == WAIT_OBJECT_0 )
+	{
+		cnt = _n_outpacks;
+		ReleaseMutex( _io_mutex_h );
+	}
+	else
+	{
+		PSYS_ASSERT( 0 );
+	}
+
+	return cnt;
+}
+
+//==================================================================
 /*
 int compak_is_data_sent( Compak *cp, u_int send_ticket )
 {
