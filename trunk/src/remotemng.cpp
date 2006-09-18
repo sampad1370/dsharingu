@@ -169,7 +169,7 @@ void RemoteMng::refreshEnabledStatus( HWND hwnd )
 	DlgEnableItem( hwnd, IDC_RM_DELETE_REMOTE,		is_not_locked );
 	DlgEnableItem( hwnd, IDC_RM_CONNECT,			is_not_locked );
 
-	DlgEnableItem( hwnd, IDC_RM_SEE_REMOTE_SCREEN,	is_not_locked );
+	DlgEnableItem( hwnd, IDC_RM_SEE_REMOTE_SCREEN,	TRUE );
 	DlgEnableItem( hwnd, IDC_RM_USE_REMOTE_SCREEN,
 					IsDlgButtonON( hwnd, IDC_RM_SEE_REMOTE_SCREEN ) );
 }

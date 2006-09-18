@@ -207,7 +207,7 @@ FONT 9, "Tahoma", 400, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,77,114,50,14
     GROUPBOX        "About:",IDC_STATIC,7,7,191,99
-    LTEXT           "DSharingu 0.10a",IDC_STATIC,100,20,80,9
+    LTEXT           "DSharingu 0.11a",IDC_STATIC,100,20,80,9
     LTEXT           "desktop sharing software",IDC_STATIC,85,30,85,8,
                     SS_CENTERIMAGE
     LTEXT           "written by Davide Pasca 2006",IDC_STATIC,76,40,96,8
