@@ -59,7 +59,7 @@ class Writer
 	int					_tex_per_x;
 	int					_tex_per_y;
 
-	SPAKMM				_packer;
+	ScreenPacker		_packer;
 
 public:
 	Writer();
@@ -98,7 +98,7 @@ class Reader
 	int					_tex_per_y;
 	u_int				_texture_ids[ MAX_TEXTURES ];
 	int					_n_texture_ids;	
-	SPAKMM				_packer;
+	ScreenUnpacker		_unpacker;
 
 public:
 	Reader();

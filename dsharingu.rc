@@ -154,6 +154,41 @@ BEGIN
 END
 #endif    // APSTUDIO_INVOKED
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINMENU MENU 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Connections...",             ID_FILE_CONNECTIONS
+        MENUITEM "&Hang-Up",                    ID_FILE_HANGUP, GRAYED
+        MENUITEM "Se&ttings...",                ID_FILE_SETTINGS
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_FILE_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "Cut",                         ID_EDIT_CUT40009, GRAYED
+        MENUITEM "Copy",                        ID_EDIT_COPY40010, GRAYED
+        MENUITEM "Paste",                       ID_EDIT_PASTE40011, GRAYED
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Fit Window",                 ID_VIEW_FITWINDOW
+        MENUITEM "&Actual Size",                ID_VIEW_ACTUALSIZE
+        MENUITEM SEPARATOR
+        MENUITEM "&Shell",                      ID_VIEW_SHELL
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "About DSharingu...",          ID_HELP_ABOUT
+    END
+END
+
 #endif    // Japanese resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -207,7 +242,7 @@ FONT 9, "Tahoma", 400, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,77,114,50,14
     GROUPBOX        "About:",IDC_STATIC,7,7,191,99
-    LTEXT           "DSharingu 0.11a",IDC_STATIC,100,20,80,9
+    LTEXT           "DSharingu 0.12a",IDC_STATIC,100,20,80,9
     LTEXT           "desktop sharing software",IDC_STATIC,85,30,85,8,
                     SS_CENTERIMAGE
     LTEXT           "written by Davide Pasca 2006",IDC_STATIC,76,40,96,8

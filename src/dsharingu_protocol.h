@@ -27,7 +27,7 @@
 //==================================================================
 #define DEF_PORT_NUMBER		51112
 #define DEF_PORT_NUMBER_STR	"51112"
-#define PROTOCOL_VERSION	3
+#define PROTOCOL_VERSION	4
 
 enum {
 	TEXT_MSG_PKID = 1,

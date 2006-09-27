@@ -37,7 +37,7 @@
 
 #define CHNTAG				"* "
 #define APP_NAME			"DSharingu"
-#define APP_VERSION_STR		"0.11a"
+#define APP_VERSION_STR		"0.12a"
 
 #define WINDOW_TITLE		APP_NAME" " APP_VERSION_STR " by Davide Pasca 2006 ("__DATE__" "__TIME__ ")"
 
@@ -105,13 +105,13 @@ DSChannel::DSChannel( const char *config_fnamep ) :
 	_inpack_buffp(NULL),
 	_is_transmitting(false),
 	_is_connected(false),
-	_im_caller(false),
+	_view_fitwindow(true),
 	_about_is_open(false),
 	_connecting_dlg_hwnd(NULL),
-	_session_remotep(NULL)
+	_session_remotep(NULL),
+	_main_menu(NULL)
 {
 	_state = STATE_IDLE;
-	_view_fitwindow = false;//true;
 
 	psys_strcpy( _config_fname, config_fnamep, sizeof(_config_fname) );
 
@@ -173,9 +173,10 @@ void DSChannel::onConnect( bool is_connected_as_caller )
 		_console.cons_line_printf( CHNTAG"Incoming connection..." );
 	}
 
-	//gmp->EnableGadget( BUTT_CONNECTION, false );
+	//gmp->EnableGadget( BUTT_CONNECTIONS, false );
 	gmp->EnableGadget( BUTT_HANGUP, true );
-	//gmp->SetGadgetText( BUTT_CONNECTION, "[O] Connected" );
+	EnableMenuItem( _main_menu, ID_FILE_HANGUP, MF_BYCOMMAND | MF_ENABLED );
+	//gmp->SetGadgetText( BUTT_CONNECTIONS, "[O] Connected" );
 
 	_is_connected = true;
 	_is_transmitting = false;
@@ -183,6 +184,7 @@ void DSChannel::onConnect( bool is_connected_as_caller )
 	_remote_wants_share = false;
 	_remote_allows_view = false;
 	_remote_allows_share = false;
+	_frame_since_transmission = 0;
 
 	if ( is_connected_as_caller )
 	{
@@ -212,9 +214,10 @@ void DSChannel::setState( State state )
 	switch ( _new_state = _state = state )
 	{
 	case STATE_CONNECTING:
-		//gmp->EnableGadget( BUTT_CONNECTION, false );
+		//gmp->EnableGadget( BUTT_CONNECTIONS, false );
 		gmp->EnableGadget( BUTT_HANGUP, true );
-		//gmp->SetGadgetText( BUTT_CONNECTION, "[ ] Calling..." );
+		EnableMenuItem( _main_menu, ID_FILE_HANGUP, MF_BYCOMMAND | MF_ENABLED );
+		//gmp->SetGadgetText( BUTT_CONNECTIONS, "[ ] Calling..." );
 		break;
 
 	case STATE_CONNECTED:
@@ -233,9 +236,10 @@ void DSChannel::setState( State state )
 
 			_scrwriter.StopGrabbing();
 
-			gmp->EnableGadget( BUTT_CONNECTION, false );
+			gmp->EnableGadget( BUTT_CONNECTIONS, false );
 			gmp->EnableGadget( BUTT_HANGUP, false );
-			//gmp->SetGadgetText( BUTT_CONNECTION, "[ ] Connections..." );
+			EnableMenuItem( _main_menu, ID_FILE_HANGUP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED );
+			//gmp->SetGadgetText( BUTT_CONNECTIONS, "[ ] Connections..." );
 
 			_is_connected = false;
 			_is_transmitting = false;
@@ -254,7 +258,7 @@ void DSChannel::setState( State state )
 	case STATE_DISCONNECTED:
 		{
 			GGET_Manager	*gmp = &_tool_win._gget_manager;
-			gmp->EnableGadget( BUTT_CONNECTION, true );
+			gmp->EnableGadget( BUTT_CONNECTIONS, true );
 			_state = STATE_IDLE;
 		}
 		break;
@@ -293,45 +297,6 @@ char	*s, *d;
 		++s;
 	}
 	*d++ = 0;
-}
-
-//==================================================================
-void DSChannel::cmd_connect( char *params[], int n_params )
-{
-	psys_strcpy( _destination_ip_name, params[0], sizeof(_destination_ip_name) );
-
-	cut_spaces( _destination_ip_name );
-
-	switch ( _cpk.Call( _destination_ip_name, DEF_PORT_NUMBER ) )
-	{
-	case COM_ERR_NONE:
-		//state_set( STATE_CALLING );
-		_console.cons_line_printf( CHNTAG"Calling '%s'...", _destination_ip_name );
-		return;
-
-	case COM_ERR_INVALID_ADDRESS:
-		//state_set( STATE_CALLING );
-		_console.cons_line_printf( CHNTAG"Calling an Invalid Address" );
-		break;
-
-	case COM_ERR_ALREADY_CONNECTED:
-		_console.cons_line_printf( CHNTAG"Already Connected !" );
-		break;
-
-	case COM_ERR_GENERIC:
-		_console.cons_line_printf( CHNTAG"Cannot Connect" );
-		break;
-
-	default:
-		_console.cons_line_printf( CHNTAG"Cannot Connect (unknown error)" );
-		break;
-	}
-}
-
-//==================================================================
-void DSChannel::cmd_connect_s( void *userp, char *params[], int n_params )
-{
-	((DSChannel *)userp)->cmd_connect( params, n_params );
 }
 
 //==================================================================
@@ -402,11 +367,15 @@ void DSChannel::Create( bool do_send_desk )
 	_state = STATE_DISCONNECTED;
 	//setState( STATE_DISCONNECTED );
 
+	_main_menu = LoadMenu( (HINSTANCE)win_system_getinstance(), MAKEINTRESOURCE(IDR_MAINMENU) );
+
 	win_init_quick( &_main_win, WINDOW_TITLE, NULL,
 					this, mainEventFilter_s,
 					WIN_ANCH_TYPE_FIXED, 0, WIN_ANCH_TYPE_FIXED, 0,
 					WIN_ANCH_TYPE_THIS_X1, 640, WIN_ANCH_TYPE_THIS_Y1, 512,
-					(win_init_flags)(0*WIN_INIT_FLG_OPENGL | 0*WIN_INIT_FLG_CLIENTEDGE) );
+					(win_init_flags)(WIN_INIT_FLG_SYSTEM),
+					//(win_init_flags)(0*WIN_INIT_FLG_OPENGL | 0*WIN_INIT_FLG_CLIENTEDGE),
+					_main_menu );
 
 	win_init_quick( &_tool_win, "tool win", &_main_win,
 					this, toolEventFilter_s,
@@ -470,6 +439,9 @@ void DSChannel::Create( bool do_send_desk )
 			_settings.OpenDialog( &_main_win, handleChangedSettings_s, this );		
 		}
 	}
+
+	CheckMenuItem( _main_menu, ID_VIEW_FITWINDOW, _view_fitwindow ? MF_CHECKED : MF_UNCHECKED );
+	CheckMenuItem( _main_menu, ID_VIEW_ACTUALSIZE, !_view_fitwindow ? MF_CHECKED : MF_UNCHECKED );
 }
 
 //==================================================================
@@ -479,7 +451,7 @@ void DSChannel::gadgetCallback( int gget_id, GGET_Item *itemp )
 
 	switch ( gget_id )
 	{
-	case BUTT_CONNECTION:
+	case BUTT_CONNECTIONS:
 		_remote_mng.OpenDialog( &_main_win,
 								handleChangedRemoteManager_s,
 								handleCallRemoteManager_s,
@@ -490,14 +462,14 @@ void DSChannel::gadgetCallback( int gget_id, GGET_Item *itemp )
 		doDisconnect( "Successfully disconnected." );
 		break;
 
-	case BUTT_SETTINGS:
-		_settings.OpenDialog( &_main_win, handleChangedSettings_s, this );
-		break;
-
+//	case BUTT_SETTINGS:
+//		_settings.OpenDialog( &_main_win, handleChangedSettings_s, this );
+//		break;
+/*
 	case BUTT_QUIT:
 		setState( STATE_QUIT );
 		break;
-
+*/
 	case BUTT_USEREMOTE:
 		setInteractiveMode( !getInteractiveMode() );
 		break;
@@ -514,7 +486,7 @@ void DSChannel::gadgetCallback( int gget_id, GGET_Item *itemp )
 			_console.cons_show( 1 );
 		}
 		break;
-
+/*
 	case BUTT_HELP:
 		if NOT( _about_is_open )
 		{
@@ -526,6 +498,7 @@ void DSChannel::gadgetCallback( int gget_id, GGET_Item *itemp )
 			_about_is_open = true;
 		}
 		break;
+*/
 	}
 }
 
@@ -553,14 +526,15 @@ void DSChannel::rebuildButtons()
 	if ( stextp )
 		stextp->SetFillType( GGET_StaticText::FILL_TYPE_HTOOLBAR );
 
-	gmp->AddButton( BUTT_CONNECTION, x, y, 98, h, "Connections..." );		x += 98 + x_margin;
-	gmp->AddButton( BUTT_HANGUP, x, y, 85, h, "Hangup" );			x += 85 + x_margin;
+	gmp->AddButton( BUTT_CONNECTIONS, x, y, 98, h, "Connections..." );		x += 98 + x_margin;
+	gmp->AddButton( BUTT_HANGUP, x, y, 85, h, "Hang-up" );			x += 85 + x_margin;
 	gmp->EnableGadget( BUTT_HANGUP, false );
-	x += x_margin;
-	x += x_margin;
-	gmp->AddButton( BUTT_SETTINGS, x, y, 98, h, "Settings..." );	x += 98 + x_margin;
-	x += x_margin;
-	gmp->AddButton( BUTT_QUIT, x, y, 60, h, "Quit" );				x += 60 + x_margin;
+	EnableMenuItem( _main_menu, ID_FILE_HANGUP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED );
+//	x += x_margin;
+//	x += x_margin;
+//	gmp->AddButton( BUTT_SETTINGS, x, y, 98, h, "Settings..." );	x += 98 + x_margin;
+//	x += x_margin;
+//	gmp->AddButton( BUTT_QUIT, x, y, 60, h, "Quit" );				x += 60 + x_margin;
 
 	x += x_margin;
 	x += x_margin;
@@ -569,7 +543,7 @@ void DSChannel::rebuildButtons()
 	gmp->AddButton( BUTT_USEREMOTE, x, y, 98, h, "[ ] Use Remote" );	x += 98 + x_margin;
 	x += x_margin;
 	gmp->AddButton( BUTT_SHELL, x, y, 60, h, "Shell" );			x += 60 + x_margin;
-	gmp->AddButton( BUTT_HELP, x, y, 60, h, "About" );			x += 60 + x_margin;
+//	gmp->AddButton( BUTT_HELP, x, y, 60, h, "About" );			x += 60 + x_margin;
 
 	setInteractiveMode( getInteractiveMode() );
 }
@@ -592,250 +566,6 @@ static void reshape( int w, int h )
 	glMatrixMode( GL_MODELVIEW );
 }
 
-//==================================================================
-static void drawRect( float x1, float y1, float w, float h )
-{
-	float	x2 = x1 + w;
-	float	y2 = y1 + h;
-
-	glVertex2f( x1, y1 );
-	glVertex2f( x2, y1 );
-	glVertex2f( x2, y2 );
-	glVertex2f( x1, y2 );
-}
-
-//==================================================================
-const static int FRAME_SIZE = 8;
-const static int ARROW_SIZE = 32;
-
-//==================================================================
-static void drawFrame( float w, float h )
-{
-	glBegin( GL_QUADS );
-
-		drawRect( 0, 0,  w, FRAME_SIZE );
-		drawRect( 0, h-FRAME_SIZE,  w, FRAME_SIZE );
-
-		drawRect( 0, FRAME_SIZE, FRAME_SIZE, h-FRAME_SIZE*2 );
-		drawRect( w-FRAME_SIZE, FRAME_SIZE, FRAME_SIZE, h-FRAME_SIZE*2 );
-
-	glEnd();
-}
-
-//==================================================================
-#define DIR_LEFT	1
-#define DIR_RIGHT	2
-#define DIR_TOP		4
-#define DIR_BOTTOM	8
-
-//==================================================================
-static void isPointerInArrows( float w, float h, u_int dirs )
-{
-}
-
-//==================================================================
-static void getArrowVerts( float verts[3][2], float w, float h, u_int dir )
-{
-	float x1, x2, y1, y2, xh, yh;
-
-	if ( dir & (DIR_LEFT|DIR_RIGHT) )	// L/R
-	{
-		if ( dir == DIR_LEFT )
-		{
-			x1 = FRAME_SIZE + FRAME_SIZE/2;
-			xh = x1 + ARROW_SIZE/2;
-		}
-		else
-		{
-			x1 = w - (FRAME_SIZE + FRAME_SIZE/2);
-			xh = x1 - ARROW_SIZE/2;
-		}
-
-		yh = h / 2;
-		y1 = yh - ARROW_SIZE/2;
-		y2 = yh + ARROW_SIZE/2;
-
-		verts[0][0]	= x1;
-		verts[0][1] = yh;
-		verts[1][0]	= xh;
-		verts[1][1] = y1;
-		verts[2][0]	= xh;
-		verts[2][1] = y2;
-	}
-	else
-	if ( dir & (DIR_TOP|DIR_BOTTOM) )	// U/D
-	{
-		if ( dir == DIR_TOP )
-		{
-			y1 = FRAME_SIZE + FRAME_SIZE/2;
-			yh = y1 + ARROW_SIZE/2;
-		}
-		else
-		{
-			y1 = h - (FRAME_SIZE + FRAME_SIZE/2);
-			yh = y1 - ARROW_SIZE/2;
-		}
-
-		xh = w / 2;
-		x1 = xh - ARROW_SIZE/2;
-		x2 = xh + ARROW_SIZE/2;
-
-		verts[0][0]	= xh;
-		verts[0][1] = y1;
-		verts[1][0]	= x2;
-		verts[1][1] = yh;
-		verts[2][0]	= x1;
-		verts[2][1] = yh;
-	}
-}
-
-//==================================================================
-static void drawArrows_verts( float w, float h, u_int dirs, bool lines_loop )
-{
-	for (int i=0; i < 4; ++i)
-	{
-		if ( dirs & (1<<i) )
-		{
-			float	verts[3][2];
-
-			getArrowVerts( verts, w, h, 1 << i );
-			if ( lines_loop )
-			{
-				glVertex2fv( verts[2] );
-				glVertex2fv( verts[0] );
-				for (int j=1; j < 3; ++j)
-				{
-					glVertex2fv( verts[j-1] );
-					glVertex2fv( verts[j  ] );
-				}
-			}
-			else
-			{
-				for (int j=0; j < 3; ++j)
-					glVertex2fv( verts[j] );
-			}
-		}
-	}
-}
-
-//==================================================================
-static void drawArrows( float w, float h, u_int dirs )
-{
-	glColor4f( 1, .1f, .1f, .4f );
-	glBegin( GL_TRIANGLES );
-	drawArrows_verts( w, h, dirs, false );
-	glEnd();
-	
-	glColor4f( 0, 0, 0, 1 );
-	glBegin( GL_LINES );
-	drawArrows_verts( w, h, dirs, true );
-	glEnd();
-}
-
-
-//==================================================================
-#define CURS_SIZE	16
-
-//==================================================================
-static void drawCursor( float px, float py )
-{
-	float	verts[3][2] = { px, py,
-							px + CURS_SIZE*1.0f, py + CURS_SIZE*0.5f,
-							px + CURS_SIZE*0.5f, py + CURS_SIZE*1.0f };
-
-	glColor4f( 1, 1, 1, 1 );
-	glBegin( GL_TRIANGLES );
-		for (int i=0; i < 3; ++i)
-			glVertex2fv( verts[i] );
-	glEnd();
-
-	glColor4f( 0, 0, 0, 1 );
-	glBegin( GL_LINES );
-		for (int i=0; i < 3; ++i)
-		{
-			glVertex2fv( verts[i] );
-			glVertex2fv( verts[(i+1)%3] );
-		}
-	glEnd();
-}
-
-
-//==================================================================
-void DSChannel::drawDispOffArrows()
-{
-	u_int	dirs = 0;
-
-	if ( _disp_off_x < 0 )
-		dirs |= DIR_LEFT;
-
-	if ( _disp_off_y < 0 )
-		dirs |= DIR_TOP;
-
-	if ( _disp_off_x+_scrreader.GetWidth() >= _view_win.w )
-		dirs |= DIR_RIGHT;
-
-	if ( _disp_off_y+_scrreader.GetHeight() >= _view_win.h )
-		dirs |= DIR_BOTTOM;
-
-	glColor4f( 1.0f, 0.2f, 0.2f, 0.6f );
-	drawArrows( _view_win.w, _view_win.h, dirs );
-}
-
-//==================================================================
-void DSChannel::doPaint()
-{
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-	begin_2D( NULL, NULL );
-	//win_context_begin_ext( winp, 1, false );
-
-		glPushMatrix();
-		// render
-
-		glColor3f( 1, 1, 1 );
-		glDisable( GL_BLEND );
-		glDisable( GL_LIGHTING );
-		glLoadIdentity();
-			//glScalef( 0.5f, 0.5f, 1 );
-
-			glPushMatrix();
-			glTranslatef( _disp_off_x, _disp_off_y, 0 );
-			_scrreader.RenderParsedFrame( _view_fitwindow );
-			glPopMatrix();
-
-			glEnable( GL_BLEND );
-			glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-
-			if ( _intersys.IsActive() )
-			{
-				glColor4f( 1.0f, 0.1f, 0.1f, 0.3f );
-			}
-			else
-			{
-				glColor4f( 0.3f, 0.3f, 0.3f, 0.3f );
-			}
-
-			drawFrame( _view_win.w, _view_win.h );
-
-			drawDispOffArrows();
-
-			if ( _intersys.IsActive() )
-			{
-				drawCursor( _disp_curs_x, _disp_curs_y );
-			}
-
-
-			glDisable( GL_BLEND );
-
-		glDisable( GL_CULL_FACE );
-		glDisable( GL_LIGHTING );
-
-		glPopMatrix();
-
-	end_2D();
-	//win_context_end( winp );
-}
-
 //=====================================================
 int DSChannel::mainEventFilter( win_event_type etype, win_event_t *eventp )
 {
@@ -855,6 +585,56 @@ int DSChannel::mainEventFilter( win_event_type etype, win_event_t *eventp )
 		break;
 
 	case WIN_ETYPE_PAINT:
+		break;
+
+	case WIN_ETYPE_COMMAND:
+		switch ( eventp->command )
+		{
+		case ID_FILE_CONNECTIONS:
+			_remote_mng.OpenDialog( &_main_win,
+									handleChangedRemoteManager_s,
+									handleCallRemoteManager_s,
+									this );
+			break;
+
+		case ID_FILE_HANGUP:
+			doDisconnect( "Successfully disconnected." );
+			break;
+
+		case ID_FILE_SETTINGS:
+			_settings.OpenDialog( &_main_win, handleChangedSettings_s, this );
+			break;
+
+		case ID_FILE_EXIT:
+			setState( STATE_QUIT );
+			break;
+
+		case ID_VIEW_FITWINDOW:
+			_view_fitwindow = true;
+			CheckMenuItem( _main_menu, ID_VIEW_FITWINDOW, _view_fitwindow ? MF_CHECKED : MF_UNCHECKED );
+			CheckMenuItem( _main_menu, ID_VIEW_ACTUALSIZE, !_view_fitwindow ? MF_CHECKED : MF_UNCHECKED );
+			win_invalidate( &_view_win );
+			break;
+
+		case ID_VIEW_ACTUALSIZE:
+			_view_fitwindow = false;
+			CheckMenuItem( _main_menu, ID_VIEW_FITWINDOW, _view_fitwindow ? MF_CHECKED : MF_UNCHECKED );
+			CheckMenuItem( _main_menu, ID_VIEW_ACTUALSIZE, !_view_fitwindow ? MF_CHECKED : MF_UNCHECKED );
+			win_invalidate( &_view_win );
+			break;
+
+		case ID_HELP_ABOUT:
+			if NOT( _about_is_open )
+			{
+				HWND hwnd = CreateDialogParam( (HINSTANCE)win_system_getinstance(),
+					MAKEINTRESOURCE(IDD_ABOUT), _main_win.hwnd,
+					(DLGPROC)aboutDialogProc_s, (LPARAM)this );
+				appbase_add_modeless_dialog( hwnd );
+				ShowWindow( hwnd, SW_SHOWNORMAL );
+				_about_is_open = true;
+			}
+			break;
+		}
 		break;
 
 	case WIN_ETYPE_DESTROY:
@@ -963,7 +743,7 @@ int DSChannel::viewEventFilter( win_event_type etype, win_event_t *eventp )
 		break;
 
 	case WIN_ETYPE_PAINT:
-		doPaint();
+		doViewPaint();
 		break;
 	}
 

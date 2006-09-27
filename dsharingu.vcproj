@@ -227,6 +227,9 @@
 				RelativePath=".\src\dsinstance.h">
 			</File>
 			<File
+				RelativePath=".\src\dsinstance_viewwin.cpp">
+			</File>
+			<File
 				RelativePath=".\src\interactsys.cpp">
 			</File>
 			<File
