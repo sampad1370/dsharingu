@@ -25,6 +25,7 @@
 #include <gl/glew.h>
 #include "screen_sharing.h"
 #include "memfile.h"
+#include "crc32.h"
 
 //==================================================================
 using namespace PUtils;
@@ -146,6 +147,56 @@ static void convert_555_to_24( const u_char *srcp, int spitch, u_char *desp, int
 		desp += dpitch;
 	}
 }
+//==================================================================
+static void copy_block( const u_char *srcp, int spitch, u_char *desp, int dpitch, int dw, int dh, int bypp )
+{
+	int	dw_size = dw * bypp;
+
+	for (; dh; --dh)
+	{
+		const u_char *srcp2 = srcp;
+		
+		u_char	*desp2 = desp;
+		u_char	*dendp = desp + dw_size;
+
+		switch( bypp )
+		{
+		case 4:
+			while ( desp2 < dendp )
+			{
+				*desp2++ = *srcp2++;
+				*desp2++ = *srcp2++;
+				*desp2++ = *srcp2++;
+				*desp2++ = *srcp2++;
+			}
+			break;
+		case 3:
+			while ( desp2 < dendp )
+			{
+				*desp2++ = *srcp2++;
+				*desp2++ = *srcp2++;
+				*desp2++ = *srcp2++;
+			}
+			break;
+		case 2:
+			while ( desp2 < dendp )
+			{
+				*desp2++ = *srcp2++;
+				*desp2++ = *srcp2++;
+			}
+			break;
+		case 1:
+			while ( desp2 < dendp )
+			{
+				*desp2++ = *srcp2++;
+			}
+			break;
+		}
+
+		srcp += spitch;
+		desp += dpitch;
+	}
+}
 
 //==================================================================
 bool ScrShare::Writer::captureAndPack( const DDSURFACEDESC2 &desc )
@@ -161,6 +212,7 @@ bool ScrShare::Writer::captureAndPack( const DDSURFACEDESC2 &desc )
 	int spitch	= desc.lPitch;
 	int	sbypp	= (desc.ddpfPixelFormat.dwRGBBitCount + 7) / 8;
 
+
 	void (*convert_x_to_24)( const u_char *srcp, int spitch, u_char *desp, int dpitch, int w, int h ) = 0;
 
 	switch ( desc.ddpfPixelFormat.dwRGBBitCount )
@@ -174,14 +226,16 @@ bool ScrShare::Writer::captureAndPack( const DDSURFACEDESC2 &desc )
 	case 24:	convert_x_to_24 = convert_24_to_24;		break;
 	case 32:	convert_x_to_24 = convert_32_to_24;		break;
 	default:
-		throw;
+		throw "Unknown bitcount";
 		break;
 	}
 
-	u_char	temp_dest[ ScrShare::BLOCK_WD * 3 * ScrShare::BLOCK_HE ];
 
 	int	height = desc.dwHeight;
 	int	width = desc.dwWidth;
+
+	int	blk_max_size = ScrShare::BLOCK_WD * ScrShare::BLOCK_HE * sbypp;
+	int	tmp_blk_pitch = sbypp * ScrShare::BLOCK_WD;
 
 	for (int y=0; y < height; y += ScrShare::BLOCK_HE)
 	{
@@ -197,11 +251,30 @@ bool ScrShare::Writer::captureAndPack( const DDSURFACEDESC2 &desc )
 			if ( x + block_w >= width )
 				block_w = width - x;
 
+			int	blk_now_size = block_w * block_h * sbypp;
+
 			srcp = (u_char *)desc.lpSurface + y * spitch + x * sbypp;
 
-			convert_x_to_24( srcp, spitch, temp_dest, ScrShare::BLOCK_WD*3, block_w, block_h );
+			u_char	tmp_blk[ ScrShare::BLOCK_WD * ScrShare::BLOCK_HE * 4 ];
+			memset( tmp_blk, 0, ScrShare::BLOCK_WD * ScrShare::BLOCK_HE * 4 );
+			copy_block( srcp, spitch, tmp_blk, tmp_blk_pitch, block_w, block_h, sbypp );
 
-			_packer.AddBlock( temp_dest );
+			u_int new_checksum = crc32( 0, (const u_char *)tmp_blk, blk_max_size );
+			if ( _packer.IsBlockChanged( new_checksum ) )
+			{
+				u_char	temp_blk24[ ScrShare::BLOCK_WD * 3 * ScrShare::BLOCK_HE ];
+				convert_x_to_24( tmp_blk, tmp_blk_pitch, temp_blk24, ScrShare::BLOCK_WD*3, block_w, block_h );
+				_packer.AddBlock( temp_blk24, 0, new_checksum );
+			}
+			else
+			if NOT( _packer.IsBlockCompleted() )
+			{
+				_packer.ContinueBlock();
+			}
+			else
+			{
+				_packer.SkipBlock();
+			}
 		}
 	}
 	if ERR_ERROR( _packer.GetError() )	return false;
@@ -309,10 +382,10 @@ bool ScrShare::Reader::ParseFrame( const void *datap, u_int data_size )
 		int w = memfile.ReadInt();
 		int h = memfile.ReadInt();
 
-		_packer.SetScreenSize( w, h );
+		_unpacker.SetScreenSize( w, h );
 
-		memfile.ReadUCharArray( _packer._data.GetUseBitmap() );
-		memfile.ReadMemfile( &_packer._data.GetData() );
+		memfile.ReadUCharArray( _unpacker._data.GetUseBitmap() );
+		memfile.ReadMemfile( &_unpacker._data.GetData() );
 
 		if ( allocTextures( w, h ) )
 		{
@@ -396,8 +469,8 @@ bool ScrShare::Reader::allocTextures( int w, int h )
 		_last_w = w;
 		_last_h = h;
 
-		_packer.SetScreenSize( _last_w, _last_h );
-		if ERR_ERROR( _packer.GetError() )
+		_unpacker.SetScreenSize( _last_w, _last_h );
+		if ERR_ERROR( _unpacker.GetError() )
 			return false;
 	}
 
@@ -409,14 +482,14 @@ bool ScrShare::Reader::unpackIntoTextures()
 {
 	int	cursel_tex_idx = -1;
 
-	_packer.BeginParse();
+	_unpacker.BeginParse();
 
 	u_char	temp_block[ ScrShare::BLOCK_WD * 3 * ScrShare::BLOCK_HE ];
 	int		ix, iy;
 
 	//double	t1 = psys_timer_get_d();
 
-	while ( _packer.ParseNextBlock( temp_block, ix, iy ) )
+	while ( _unpacker.ParseNextBlock( temp_block, ix, iy ) )
 	{
 		int	tex_x_idx = (ix/ScrShare::TEX_WD);
 		int	tex_y_idx = (iy/ScrShare::TEX_HE);
@@ -440,9 +513,9 @@ bool ScrShare::Reader::unpackIntoTextures()
 	//PSYS_DEBUG_PRINTF( "%i\n", (int)(t2 - t1) );
 	//psys_debug_printf( "%i\n", (int)(t2 - t1) );
 
-	_packer.EndParse();
+	_unpacker.EndParse();
 
-	if ERR_ERROR( _packer.GetError() )
+	if ERR_ERROR( _unpacker.GetError() )
 		return false;
 
 	return true;
@@ -467,6 +540,9 @@ void ScrShare::Reader::RenderParsedFrame( bool do_fit_viewport )
 	glPushMatrix();
 	//glLoadIdentity();
 
+	float	ratio_x = 1.0f;
+	float	ratio_y = 1.0f;
+
 	if ( do_fit_viewport )
 	{
 	int	vport[4];
@@ -476,8 +552,8 @@ void ScrShare::Reader::RenderParsedFrame( bool do_fit_viewport )
 		PSYS_ASSERT( _last_w > 0 );
 		PSYS_ASSERT( _last_h > 0 );
 
-		float	ratio_x = (float)vport[2] / _last_w;
-		float	ratio_y = (float)vport[3] / _last_h;
+		ratio_x = (float)vport[2] / _last_w;
+		ratio_y = (float)vport[3] / _last_h;
 
 		glScalef( ratio_x, ratio_y, 1 );
 	}
@@ -491,6 +567,11 @@ void ScrShare::Reader::RenderParsedFrame( bool do_fit_viewport )
 		{
 			u_int	tex_id = _texture_ids[ tex_idx ];
 			glBindTexture( GL_TEXTURE_2D, tex_id );
+
+			if ( ratio_x < 1.0f || ratio_y <= 1.0f )
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+			else
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 
 			CHECK_GLERROR;
 			glBegin( GL_QUADS );

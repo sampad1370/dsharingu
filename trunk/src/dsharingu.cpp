@@ -40,7 +40,7 @@ static DSChannel		*_basechannel;
 static DSChannel		*_extrachannel;
 
 #ifdef _DEBUG
-//#define USE_EXTRA_CHANNEL
+#define USE_EXTRA_CHANNEL
 #endif
 //#define USE_EXTRA_CHANNEL
 

@@ -84,13 +84,13 @@ public:
 	enum 
 	{
 		STEXT_TOOLBARBASE,
-		BUTT_CONNECTION = 600,
+		BUTT_CONNECTIONS = 600,
 		BUTT_HANGUP,
 		BUTT_SETTINGS,
 		BUTT_USEREMOTE,
 		BUTT_SHELL,
-		BUTT_HELP,
-		BUTT_QUIT,
+//		BUTT_HELP,
+//		BUTT_QUIT,
 	};
 
 private:
@@ -109,7 +109,6 @@ private:
 	int					_flow_cnt;
 	bool				_is_connected;
 	bool				_is_transmitting;
-	bool				_im_caller;
 
 	bool				_remote_wants_view;
 	bool				_remote_wants_share;
@@ -117,8 +116,6 @@ private:
 	bool				_remote_allows_share;
 
 	bool				_view_fitwindow;
-	bool				_do_quit_flag;
-	char				_destination_ip_name[128];
 
 	u_char				*_inpack_buffp;
 
@@ -130,6 +127,7 @@ private:
 	win_t				_dbg_win;
 	HWND				_connecting_dlg_hwnd;
 	int					_connecting_dlg_timer;
+	HMENU				_main_menu;
 
 	InteractiveSystem	_intersys;
 
@@ -170,14 +168,12 @@ private:
 	int			toolEventFilter( win_event_type etype, win_event_t *eventp );
 	static int	toolEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );
 	void		drawDispOffArrows();
-	void		doPaint();
+	void		doViewPaint();
 
 	int			dbgEventFilter( win_event_type etype, win_event_t *eventp );
 	static int	dbgEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );
 	void		dbgDoPaint();
 
-	void		cmd_connect( char *params[], int n_params );
-	static void cmd_connect_s( void *userp, char *params[], int n_params );
 	void		cmd_debug( char *params[], int n_params );
 	static void cmd_debug_s( void *userp, char *params[], int n_params );
 

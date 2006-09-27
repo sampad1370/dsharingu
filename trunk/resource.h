@@ -8,6 +8,7 @@
 #define IDB_BITMAP1                     118
 #define IDD_REMOTEMNG                   119
 #define IDD_CONNECTING                  120
+#define IDR_MAINMENU                    121
 #define IDD_ABOUT                       124
 #define IDC_CUSTOM_PORT_EDIT            1004
 #define IDC_CUSTOM_PORT_CALL_EDIT       1004
@@ -41,15 +42,26 @@
 #define IDC_RM_USE_REMOTE_SCREEN        1021
 #define IDC_RM_REMOTE_PORT              1022
 #define IDC_RM_DELETE_REMOTE            1024
-#define IDC_PROGRESS1                   1027
 #define IDC_ST_LOCAL_PORT               1029
+#define ID_FILE_CONNECTIONS             40001
+#define ID_Menu                         40003
+#define ID_FILE_EXIT                    40004
+#define ID_VIEW_SHELL                   40005
+#define ID_EDIT_CUT40009                40009
+#define ID_EDIT_COPY40010               40010
+#define ID_EDIT_PASTE40011              40011
+#define ID_HELP_ABOUT                   40013
+#define ID_FILE_SETTINGS                40014
+#define ID_FILE_HANGUP                  40015
+#define ID_VIEW_FITWINDOW               40016
+#define ID_VIEW_ACTUALSIZE              40017
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        121
-#define _APS_NEXT_COMMAND_VALUE         40001
+#define _APS_NEXT_RESOURCE_VALUE        122
+#define _APS_NEXT_COMMAND_VALUE         40018
 #define _APS_NEXT_CONTROL_VALUE         1030
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

@@ -27,6 +27,7 @@
 
 #include "psys.h"
 #include "memfile.h"
+#include "lzw_packer.h"
 #include <vector>
 
 //==================================================================
@@ -60,9 +61,9 @@ enum BLOCKPACKHEAD_FLAGS
 //==================================================================
 struct BlockPackHead
 {
-	u_char	_is_flat	: 1;
+	u_char	_complexity	: 2;
 	u_char	_sub_type	: 2;
-	u_char	_pad		: 5;
+	u_char	_pad		: 4;
 };
 
 //==================================================================
@@ -70,6 +71,7 @@ struct ScreenPackerData
 {
 	static const int	BLOCK_WD	= 32;
 	static const int	BLOCK_HE	= 32;
+	static const int	BLOCK_N_PIX	= BLOCK_WD * BLOCK_HE;
 
 	int					_w, _h;
 
@@ -77,6 +79,7 @@ struct ScreenPackerData
 	PArray<u_char>				_blocks_use_bitmap;
 	PUtils::Memfile				_blkdata_file;
 	PArray<u_char>				_blkdata_rgb;
+	PArray<u_char>				_blkdata_yuv;
 
 	//==================================================================
 	static int CalcMaxBlocks( int w, int h )
@@ -104,8 +107,9 @@ inline const PArray<u_char>	&SPAKD_GetUseBitmap( const ScreenPackerData *T ){	re
 
 //==================================================================
 //==================================================================
-struct SPAKMM
+class SPAKMM
 {
+public:
 	ScreenPackerData	_data;
 
 	int					_max_blocks;
@@ -128,18 +132,66 @@ struct SPAKMM
 	}
 
 	void	Reset();
-
 	bool	SetScreenSize( int w, int h );
-	void	BeginPack();
-	bool	AddBlock( const void *block_datap, int size=0 );
-	void	EndPack();
+
+	bool	SkipBlock();
+private:
+};
+
+//LZWPacker			_lzwpacker;
+//LZWUnpacker			_lzwunpacker;
+
+//==================================================================
+///
+//==================================================================
+class ScreenUnpacker : public SPAKMM
+{
+public:
+	//==================================================================
+	ScreenUnpacker() :
+		SPAKMM()
+	{
+	}
+
+	void	Reset()
+	{
+		SPAKMM::Reset();
+	}
 
 	void	BeginParse();
 	void	EndParse();
 	bool	ParseNextBlock( void *out_block_datap, int &blk_px, int &blk_py );
-
 private:
-	bool	SkipBlock();
+};
+
+//==================================================================
+///
+//==================================================================
+class ScreenPacker : public SPAKMM
+{
+public:
+	//==================================================================
+	ScreenPacker() :
+		SPAKMM()
+	{
+	}
+
+	void	Reset()
+	{
+		SPAKMM::Reset();
+	}
+
+	void	BeginPack();
+	bool	IsBlockChanged( u_int new_checksum ) const;
+	bool	IsBlockCompleted() const
+	{
+		const BlockPackWork	*bpworkp = &_data._blocks_pack_work[ _block_cnt ];
+		return bpworkp->_sub_level_sent >= 4;
+	}
+	bool	AddBlock( const void *block_datap, int size, u_int new_checksum );
+	void	ContinueBlock();
+	void	EndPack();
+private:
 };
 
 #endif
