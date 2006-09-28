@@ -158,7 +158,7 @@ static void drawArrows_verts( float w, float h, u_int dirs, bool lines_loop )
 //==================================================================
 static void drawArrows( float w, float h, u_int dirs )
 {
-	glColor4f( 1, .1f, .1f, .4f );
+	glColor4f( 1, .1f, .1f, .7f );
 	glBegin( GL_TRIANGLES );
 	drawArrows_verts( w, h, dirs, false );
 	glEnd();
@@ -236,7 +236,10 @@ void DSChannel::doViewPaint()
 			//glScalef( 0.5f, 0.5f, 1 );
 
 			glPushMatrix();
-			glTranslatef( _disp_off_x, _disp_off_y, 0 );
+			
+			if NOT( _view_fitwindow )
+				glTranslatef( _disp_off_x, _disp_off_y, 0 );
+
 			_scrreader.RenderParsedFrame( _view_fitwindow );
 			glPopMatrix();
 

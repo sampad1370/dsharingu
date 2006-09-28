@@ -43,9 +43,9 @@ static const int	SUBBLK_DIM = 4;
 static const int	MAX_SUBBLK_PIXELS = SUBBLK_DIM * SUBBLK_DIM;
 static const int	PAK_PAL_DIM = 4;
 
-static const int	BLK_BITS_Y			= 4;//5;
-static const int	BLK_BITS_U			= 4;//5;
-static const int	BLK_BITS_V			= 4;//5;
+static const int	BLK_BITS_Y			= 3;//5;
+static const int	BLK_BITS_U			= 0;//5;
+static const int	BLK_BITS_V			= 0;//5;
 
 static const int	BLK_BITS_Y_MASK		= (1 << BLK_BITS_Y) - 1;
 static const int	BLK_BITS_U_MASK		= (1 << BLK_BITS_U) - 1;
@@ -186,23 +186,30 @@ static void fillFlatBlock( u_char *desp, u_char src_r, u_char src_g, u_char src_
 //==================================================================
 void ScreenPacker::BeginPack()
 {
-	_data._blkdata_file.SeekFromStart(0);
+	_data._blkdata_head_file.SeekFromStart(0);
 	_block_cnt = 0;
 	_error = POK;
 
 	_cur_frame += 1;
 	if ( _cur_frame == 0 )
 		_cur_frame = 1;	// 0 is a special case for never sent ! (useful ? maybe)
+
+	_data._blkdata_bits_file.SeekFromStart(0);
+	_lzwpacker.Reset( &_data._blkdata_bits_file );
 }
 
 //==================================================================
 void ScreenPacker::EndPack()
 {
-	_data._blkdata_file.WriteAlignByte();
+	_lzwpacker.EndData();
+	_data._blkdata_bits_file.WriteAlignByte();
 
-	u_int size = _data._blkdata_file.GetCurPos();
+	_data._blkdata_head_file.WriteAlignByte();
 
-	PSYS_DEBUG_PRINTF( "total size = %i\n", size );
+	u_int size_head = _data._blkdata_head_file.GetCurPos();
+	u_int size_bits = _data._blkdata_bits_file.GetCurPos();
+
+	PSYS_DEBUG_PRINTF( "total size = %i (heads: %i  bits: %i)\n", size_head + size_bits, size_head, size_bits );
 }
 
 //==================================================================
@@ -834,7 +841,7 @@ bool ScreenPacker::AddBlock( const void *block_datap, int size, u_int new_checks
 	// at complexity 0, we can't rely on having the block converted
 	if ( head._complexity == COMPLEXITY_FLAT )
 	{
-		_data._blkdata_file.WriteData( &head, sizeof(head) );
+		_data._blkdata_head_file.WriteData( &head, sizeof(head) );
 
 		bpworkp->_sub_level_sent = 4;
 
@@ -845,9 +852,9 @@ bool ScreenPacker::AddBlock( const void *block_datap, int size, u_int new_checks
 		adapted_rgb[1] = ((const u_char *)block_datap)[1];
 		adapted_rgb[2] = ((const u_char *)block_datap)[2];
 
-		_data._blkdata_file.WriteUChar( adapted_rgb[0] );
-		_data._blkdata_file.WriteUChar( adapted_rgb[1] );
-		_data._blkdata_file.WriteUChar( adapted_rgb[2] );
+		_data._blkdata_head_file.WriteUChar( adapted_rgb[0] );
+		_data._blkdata_head_file.WriteUChar( adapted_rgb[1] );
+		_data._blkdata_head_file.WriteUChar( adapted_rgb[2] );
 	}
 	else
 	{
@@ -857,17 +864,20 @@ bool ScreenPacker::AddBlock( const void *block_datap, int size, u_int new_checks
 		blockYUV_to_PAK( pak_block, y_block, u_block, v_block );
 
 		head._sub_type = 0;
-		_data._blkdata_file.WriteData( &head, sizeof(head) );
+		_data._blkdata_head_file.WriteData( &head, sizeof(head) );
 
 		bpworkp->_sub_level_sent = 4;
 
+		_lzwpacker.PackData( &Memfile( pak_block, MAX_BLK_PAK_SIZE ) );
+//		_lzwpacker.EndData();
+/*
 		if ERR_FALSE( LZW_PackCompress( &Memfile( pak_block, MAX_BLK_PAK_SIZE ), &_data._blkdata_file ) )
 		{
 			_error = PERROR;
 			return false;
 		}
-
-		_data._blkdata_file.WriteAlignByte();
+*/
+//		_data._blkdata_bits_file.WriteAlignByte();
 	}
 
 	_data._blocks_use_bitmap[ _block_cnt / 8 ] |= 1 << (_block_cnt & 7);
@@ -969,9 +979,12 @@ bool SPAKMM::SkipBlock()
 //==================================================================
 void ScreenUnpacker::BeginParse()
 {
-	_data._blkdata_file.SeekFromStart(0);
+	_data._blkdata_head_file.SeekFromStart(0);
+	_data._blkdata_bits_file.SeekFromStart(0);
 	_block_cnt = 0;
 	_error = POK;
+
+	_lzwunpacker.Reset( &_data._blkdata_bits_file );
 }
 
 //==================================================================
@@ -997,15 +1010,15 @@ bool ScreenUnpacker::ParseNextBlock( void *out_block_datap, int &blk_px, int &bl
 		{
 			BlockPackHead	head;
 
-			_data._blkdata_file.ReadData( &head, sizeof(head) );
+			_data._blkdata_head_file.ReadData( &head, sizeof(head) );
 
 			u_char	*local_destp = &_data._blkdata_rgb[ _block_cnt * MAX_BLK_RGB_SIZE ];
 
 			if ( head._complexity == COMPLEXITY_FLAT )
 			{
-				u_char	r = _data._blkdata_file.ReadUChar();
-				u_char	g = _data._blkdata_file.ReadUChar();
-				u_char	b = _data._blkdata_file.ReadUChar();
+				u_char	r = _data._blkdata_head_file.ReadUChar();
+				u_char	g = _data._blkdata_head_file.ReadUChar();
+				u_char	b = _data._blkdata_head_file.ReadUChar();
 				fillFlatBlock( local_destp, r, g, b );
 			}
 			else
@@ -1013,12 +1026,17 @@ bool ScreenUnpacker::ParseNextBlock( void *out_block_datap, int &blk_px, int &bl
 				u_char	pak_block[ MAX_BLK_PAK_SIZE ];
 				Memfile	pak_block_memf( pak_block, MAX_BLK_PAK_SIZE );
 
+				_lzwunpacker.UnpackData( &pak_block_memf, MAX_BLK_PAK_SIZE );
+//				_lzwunpacker.SeekEnd();
+//				PSYS_ASSERT( _lzwunpacker.IsCompleted() );
+				/*
 				if ERR_FALSE( LZW_UnpackExpand( &_data._blkdata_file, &pak_block_memf ) )
 				{
 					_error = PERROR;
 					return false;
 				}
-				_data._blkdata_file.ReadAlignByte();
+				*/
+//				_data._blkdata_bits_file.ReadAlignByte();
 
 				blockPAK_to_RGB( (u_char *)local_destp, pak_block );
 			}

@@ -152,6 +152,44 @@ bool DSChannel::getInteractiveMode()
 }
 
 //==================================================================
+void DSChannel::setShellVisibility( bool do_switch )
+{
+	GGET_Manager	*gmp = &_tool_win._gget_manager;
+
+	if ( do_switch )
+	{
+		_console.cons_show( !_console.cons_is_showing() );
+	}
+
+	if ( _console.cons_is_showing() )
+	{
+		win_anchor_y2_offset_set( &_view_win, -160 );
+		_console.cons_show( 1 );
+		gmp->SetGadgetText( BUTT_SHELL, "[O] Shell" );
+	}
+	else
+	{
+		win_anchor_y2_offset_set( &_view_win, 0 );
+		_console.cons_show( 0 );
+		gmp->SetGadgetText( BUTT_SHELL, "[ ] Shell" );
+	}
+
+	updateViewMenu();
+}
+
+//==================================================================
+void DSChannel::updateViewMenu()
+{
+	if ( _console.cons_is_showing() )
+		CheckMenuItem( _main_menu, ID_VIEW_SHELL, MF_BYCOMMAND | MF_CHECKED );
+	else
+		CheckMenuItem( _main_menu, ID_VIEW_SHELL, MF_BYCOMMAND | MF_UNCHECKED );
+
+	CheckMenuItem( _main_menu, ID_VIEW_FITWINDOW, MF_BYCOMMAND | (_view_fitwindow ? MF_CHECKED : MF_UNCHECKED) );
+	CheckMenuItem( _main_menu, ID_VIEW_ACTUALSIZE, MF_BYCOMMAND | (!_view_fitwindow ? MF_CHECKED : MF_UNCHECKED) );
+}
+
+//==================================================================
 void DSChannel::onConnect( bool is_connected_as_caller )
 {
 	GGET_Manager	*gmp = &_tool_win._gget_manager;
@@ -414,6 +452,8 @@ void DSChannel::Create( bool do_send_desk )
 
 	_console.cons_show( 1 );
 
+	setShellVisibility();
+
 /*
 	_intsysmsgparser.SetCompak( &_cpk );
 	_intsysmsgparser.StartThread();
@@ -440,8 +480,7 @@ void DSChannel::Create( bool do_send_desk )
 		}
 	}
 
-	CheckMenuItem( _main_menu, ID_VIEW_FITWINDOW, _view_fitwindow ? MF_CHECKED : MF_UNCHECKED );
-	CheckMenuItem( _main_menu, ID_VIEW_ACTUALSIZE, !_view_fitwindow ? MF_CHECKED : MF_UNCHECKED );
+	updateViewMenu();
 }
 
 //==================================================================
@@ -475,16 +514,7 @@ void DSChannel::gadgetCallback( int gget_id, GGET_Item *itemp )
 		break;
 
 	case BUTT_SHELL:
-		if ( _console.cons_is_showing() )
-		{
-			win_anchor_y2_offset_set( &_view_win, 0 );
-			_console.cons_show( 0 );
-		}
-		else
-		{
-			win_anchor_y2_offset_set( &_view_win, -160 );
-			_console.cons_show( 1 );
-		}
+		setShellVisibility( true );
 		break;
 /*
 	case BUTT_HELP:
@@ -542,7 +572,7 @@ void DSChannel::rebuildButtons()
 	x += x_margin;
 	gmp->AddButton( BUTT_USEREMOTE, x, y, 98, h, "[ ] Use Remote" );	x += 98 + x_margin;
 	x += x_margin;
-	gmp->AddButton( BUTT_SHELL, x, y, 60, h, "Shell" );			x += 60 + x_margin;
+	gmp->AddButton( BUTT_SHELL, x, y, 60, h, "[ ] Shell" );			x += 60 + x_margin;
 //	gmp->AddButton( BUTT_HELP, x, y, 60, h, "About" );			x += 60 + x_margin;
 
 	setInteractiveMode( getInteractiveMode() );
@@ -611,16 +641,18 @@ int DSChannel::mainEventFilter( win_event_type etype, win_event_t *eventp )
 
 		case ID_VIEW_FITWINDOW:
 			_view_fitwindow = true;
-			CheckMenuItem( _main_menu, ID_VIEW_FITWINDOW, _view_fitwindow ? MF_CHECKED : MF_UNCHECKED );
-			CheckMenuItem( _main_menu, ID_VIEW_ACTUALSIZE, !_view_fitwindow ? MF_CHECKED : MF_UNCHECKED );
-			win_invalidate( &_view_win );
+			updateViewMenu();
+			_view_win.Invalidate();
 			break;
 
 		case ID_VIEW_ACTUALSIZE:
 			_view_fitwindow = false;
-			CheckMenuItem( _main_menu, ID_VIEW_FITWINDOW, _view_fitwindow ? MF_CHECKED : MF_UNCHECKED );
-			CheckMenuItem( _main_menu, ID_VIEW_ACTUALSIZE, !_view_fitwindow ? MF_CHECKED : MF_UNCHECKED );
-			win_invalidate( &_view_win );
+			updateViewMenu();
+			_view_win.Invalidate();
+			break;
+
+		case ID_VIEW_SHELL:
+			setShellVisibility( true );
 			break;
 
 		case ID_HELP_ABOUT:
@@ -687,6 +719,11 @@ int DSChannel::viewEventFilter( win_event_type etype, win_event_t *eventp )
 			_disp_curs_y = eventp->mouse_y;
 
 			win_invalidate( eventp->winp );
+		}
+		else
+		{
+			_disp_curs_x = eventp->mouse_x;
+			_disp_curs_y = eventp->mouse_y;
 		}
 		break;
 
@@ -1064,7 +1101,13 @@ void DSChannel::doDisconnect( const char *messagep, bool is_error )
 //==================================================================
 void DSChannel::handleAutoScroll()
 {
-	if ( _intersys.IsActive() )
+	if ( _view_fitwindow )
+	{
+
+	}
+	else
+	//if ( _intersys.IsActive() )
+	if ( _view_win.IsMousePointerInside() )
 	{
 		int	x1 = _disp_off_x;
 		int	y1 = _disp_off_y;
@@ -1100,6 +1143,7 @@ void DSChannel::handleAutoScroll()
 			_disp_off_x -= 8;
 			if ( _disp_curs_x >= _view_win.w-8 )
 				_disp_off_x -= 16;
+
 			win_invalidate( &_view_win );
 		}
 
