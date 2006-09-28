@@ -155,6 +155,8 @@ private:
 	void		onConnect( bool is_connected_as_caller );
 	void		setInteractiveMode( bool onoff );
 	bool		getInteractiveMode();
+	void		setShellVisibility( bool do_switch=false );
+	void		updateViewMenu();
 	BOOL CALLBACK connectingDialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
 	static BOOL CALLBACK connectingDialogProc_s(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
 	void		setState( State state );

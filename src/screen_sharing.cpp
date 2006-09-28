@@ -335,7 +335,8 @@ bool ScrShare::Writer::SendFrame( u_int msg_id, Compak *cpkp )
 	int	tot_size =	sizeof(int) +
 					sizeof(int) +
 					sizeof(int) + _packer._data._blocks_use_bitmap.size_bytes() +
-					sizeof(int) + _packer._data._blkdata_file.GetCurPos();
+					sizeof(int) + _packer._data._blkdata_head_file.GetCurPos() +
+					sizeof(int) + _packer._data._blkdata_bits_file.GetCurPos();
 
 	u_char	*dest_packp;
 
@@ -348,7 +349,8 @@ bool ScrShare::Writer::SendFrame( u_int msg_id, Compak *cpkp )
 		memfile.WriteInt( _packer._data.GetWidth() );
 		memfile.WriteInt( _packer._data.GetHeight() );
 		memfile.WriteUCharArray( _packer._data.GetUseBitmap() );
-		memfile.WriteMemfile( &_packer._data.GetData() );
+		memfile.WriteMemfile( &_packer._data.GetDataHead() );
+		memfile.WriteMemfile( &_packer._data.GetDataBits() );
 	} catch (...) {
 		throw;
 	}
@@ -385,7 +387,8 @@ bool ScrShare::Reader::ParseFrame( const void *datap, u_int data_size )
 		_unpacker.SetScreenSize( w, h );
 
 		memfile.ReadUCharArray( _unpacker._data.GetUseBitmap() );
-		memfile.ReadMemfile( &_unpacker._data.GetData() );
+		memfile.ReadMemfile( &_unpacker._data.GetDataHead() );
+		memfile.ReadMemfile( &_unpacker._data.GetDataBits() );
 
 		if ( allocTextures( w, h ) )
 		{
@@ -439,6 +442,10 @@ static void alloc_textures_matrix( int tot_w, int tot_h,
 //		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
+
 
 		glTexImage2D( GL_TEXTURE_2D, 0, 4, tex_w, tex_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0 );//tmpdata );
 		CHECK_GLERROR;
@@ -522,6 +529,39 @@ bool ScrShare::Reader::unpackIntoTextures()
 }
 
 //==================================================================
+static void drawTextureRect( float x, float y, float w, float h, bool is_linear )
+{
+	float	s1, s2;
+	float	t1, t2;
+
+	float	half_tex_w = 0.5f / w;
+	float	half_tex_h = 0.5f / w;
+
+	if ( is_linear )
+	{
+		s1 = half_tex_w;
+		s2 = 1 - half_tex_w;
+
+		t1 = half_tex_h;
+		t2 = 1 - half_tex_h;
+	}
+	else
+	{
+		s1 = 0;
+		t1 = 0;
+		s2 = 1;
+		t2 = 1;
+	}
+
+	glBegin( GL_QUADS );
+		glColor3f( 1, 1, 1 );	glTexCoord2f( s1, t1 );	glVertex2f( x + 0, y + 0 );
+		glColor3f( 1, 1, 1 );	glTexCoord2f( s2, t1 );	glVertex2f( x + w, y + 0 );
+		glColor3f( 1, 1, 1 );	glTexCoord2f( s2, t2 );	glVertex2f( x + w, y + h );
+		glColor3f( 1, 1, 1 );	glTexCoord2f( s1, t2 );	glVertex2f( x + 0, y + h );
+	glEnd();
+}
+
+//==================================================================
 void ScrShare::Reader::RenderParsedFrame( bool do_fit_viewport )
 {
 	float	x, y;
@@ -568,19 +608,22 @@ void ScrShare::Reader::RenderParsedFrame( bool do_fit_viewport )
 			u_int	tex_id = _texture_ids[ tex_idx ];
 			glBindTexture( GL_TEXTURE_2D, tex_id );
 
-			if ( ratio_x < 1.0f || ratio_y <= 1.0f )
-				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-			else
-				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+			bool	is_linear;
 
-			CHECK_GLERROR;
-			glBegin( GL_QUADS );
-				glColor3f( 1, 1, 1 );	glTexCoord2f( 0, 0 );	glVertex2f( x, y );
-				glColor3f( 1, 1, 1 );	glTexCoord2f( 1, 0 );	glVertex2f( x+ScrShare::TEX_WD, y );
-				glColor3f( 1, 1, 1 );	glTexCoord2f( 1, 1 );	glVertex2f( x+ScrShare::TEX_WD, y+ScrShare::TEX_HE );
-				glColor3f( 1, 1, 1 );	glTexCoord2f( 0, 1 );	glVertex2f( x, y+ScrShare::TEX_HE );
-			glEnd();
-			CHECK_GLERROR;
+			if ( ratio_x != 1.0f || ratio_y != 1.0f )
+			{
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+				is_linear = true;
+			}
+			else
+			{
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+				is_linear = false;
+			}
+
+			drawTextureRect( x, y, ScrShare::TEX_WD, ScrShare::TEX_HE, is_linear );
 		}
 	}
 

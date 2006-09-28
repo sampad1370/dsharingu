@@ -77,7 +77,8 @@ struct ScreenPackerData
 
 	std::vector<BlockPackWork>	_blocks_pack_work;
 	PArray<u_char>				_blocks_use_bitmap;
-	PUtils::Memfile				_blkdata_file;
+	PUtils::Memfile				_blkdata_head_file;
+	PUtils::Memfile				_blkdata_bits_file;
 	PArray<u_char>				_blkdata_rgb;
 	PArray<u_char>				_blkdata_yuv;
 
@@ -97,13 +98,9 @@ struct ScreenPackerData
 	int						GetWidth()		const {	return _w;	}
 	int						GetHeight()		const {	return _h;	}
 	PArray<u_char>			&GetUseBitmap()		{	return _blocks_use_bitmap;	}
-	PUtils::Memfile			&GetData()			{	return _blkdata_file;	}
+	PUtils::Memfile			&GetDataHead()		{	return _blkdata_head_file;	}
+	PUtils::Memfile			&GetDataBits()		{	return _blkdata_bits_file;	}
 };
-
-inline int					SPAKD_GetWidth( const ScreenPackerData *T )		{	return T->_w; }
-inline int					SPAKD_GetHeight( const ScreenPackerData *T )	{	return T->_h; }
-inline const PArray<u_char>	&SPAKD_GetUseBitmap( const ScreenPackerData *T ){	return T->_blocks_use_bitmap; }
-//inline const PArray<u_char>	&SPAKD_GetData( const ScreenPackerData *T )		{	return T->_blocks_data; }
 
 //==================================================================
 //==================================================================
@@ -138,14 +135,13 @@ public:
 private:
 };
 
-//LZWPacker			_lzwpacker;
-//LZWUnpacker			_lzwunpacker;
-
 //==================================================================
 ///
 //==================================================================
 class ScreenUnpacker : public SPAKMM
 {
+	LZWUnpacker			_lzwunpacker;
+
 public:
 	//==================================================================
 	ScreenUnpacker() :
@@ -169,6 +165,8 @@ private:
 //==================================================================
 class ScreenPacker : public SPAKMM
 {
+	LZWPacker		_lzwpacker;
+
 public:
 	//==================================================================
 	ScreenPacker() :

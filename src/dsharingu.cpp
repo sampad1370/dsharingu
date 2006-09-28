@@ -95,7 +95,7 @@ void main_anim(void)
 	handleChannel( _extrachannel );
 #endif
 
-	Sleep( 40 );
+	Sleep( 20 );
 }
 
 //==================================================================
