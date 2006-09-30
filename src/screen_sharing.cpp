@@ -562,7 +562,7 @@ static void drawTextureRect( float x, float y, float w, float h, bool is_linear 
 }
 
 //==================================================================
-void ScrShare::Reader::RenderParsedFrame( bool do_fit_viewport )
+void ScrShare::Reader::RenderParsedFrame( float scale_x, float scale_y )
 {
 	float	x, y;
 	int		tex_idx;
@@ -580,23 +580,7 @@ void ScrShare::Reader::RenderParsedFrame( bool do_fit_viewport )
 	glPushMatrix();
 	//glLoadIdentity();
 
-	float	ratio_x = 1.0f;
-	float	ratio_y = 1.0f;
-
-	if ( do_fit_viewport )
-	{
-	int	vport[4];
-
-		glGetIntegerv( GL_VIEWPORT, vport );
-
-		PSYS_ASSERT( _last_w > 0 );
-		PSYS_ASSERT( _last_h > 0 );
-
-		ratio_x = (float)vport[2] / _last_w;
-		ratio_y = (float)vport[3] / _last_h;
-
-		glScalef( ratio_x, ratio_y, 1 );
-	}
+	glScalef( scale_x, scale_y, 1 );
 
 	tex_idx = 0;
 	y = 0;
@@ -610,7 +594,7 @@ void ScrShare::Reader::RenderParsedFrame( bool do_fit_viewport )
 
 			bool	is_linear;
 
-			if ( ratio_x != 1.0f || ratio_y != 1.0f )
+			if ( scale_x != 1.0f || scale_y != 1.0f )
 			{
 				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );

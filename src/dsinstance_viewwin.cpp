@@ -240,7 +240,7 @@ void DSChannel::doViewPaint()
 			if NOT( _view_fitwindow )
 				glTranslatef( _disp_off_x, _disp_off_y, 0 );
 
-			_scrreader.RenderParsedFrame( _view_fitwindow );
+			_scrreader.RenderParsedFrame( _view_scale_x, _view_scale_y );
 			glPopMatrix();
 
 			glEnable( GL_BLEND );

@@ -32,9 +32,13 @@ using namespace PUtils;
 //==================================================================
 void InteractiveSystem::FeedMessage( u_int message, u_int lparam, u_int wparam,
 									 int disp_off_x, 
-									 int disp_off_y )
+									 int disp_off_y,
+									 float scale_x,
+									 float scale_y )
 {
 	PSYS_ASSERT( _is_active );
+	PSYS_ASSERT( scale_x > 0 );
+	PSYS_ASSERT( scale_y > 0 );
 
 	u_int	now_time = GetTickCount();
 
@@ -52,9 +56,9 @@ void InteractiveSystem::FeedMessage( u_int message, u_int lparam, u_int wparam,
 	switch ( message )
 	{
 	case WM_MOUSEMOVE:
-		remconmsg.SetMouseMove( LOWORD(lparam) - disp_off_x,
-							  HIWORD(lparam) - disp_off_y,
-							  diff_time );
+		remconmsg.SetMouseMove( (LOWORD(lparam) - disp_off_x) / scale_x,
+							    (HIWORD(lparam) - disp_off_y) / scale_y,
+							    diff_time );
 
 		_remocon_queue.append( remconmsg );
 		break;
@@ -102,8 +106,8 @@ void InteractiveSystem::FeedMessage( u_int message, u_int lparam, u_int wparam,
 
 			remconmsg.SetMouseButt( butt_id,
 								butt_updown,
-								LOWORD(lparam) - disp_off_x,
-								HIWORD(lparam) - disp_off_y,
+								(LOWORD(lparam) - disp_off_x) / scale_x,
+								(HIWORD(lparam) - disp_off_y) / scale_y,
 								diff_time );
 
 			_remocon_queue.append( remconmsg );

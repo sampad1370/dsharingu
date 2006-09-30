@@ -29,6 +29,129 @@
 #include "wingui_utils.h"
 #include "appbase3.h"
 
+#define APP_NAME	"DSharingu"
+
+//==================================================================
+static bool GetApplicationInstallDir( const char *appnamep, char *out_instdirp )
+{
+	out_instdirp[0] = 0;
+
+	TCHAR	buff[4096];
+
+	sprintf( buff, "Software\\%s", appnamep );
+
+	HKEY hkey;
+
+	if ( RegOpenKeyEx( HKEY_CURRENT_USER,
+						buff,
+						0,
+						KEY_QUERY_VALUE,
+						&hkey) == ERROR_SUCCESS )
+	{
+		DWORD	dwType;
+		DWORD	dwSize = sizeof(buff)-1;
+
+		bool	yesno = (RegQueryValueEx(hkey, "", NULL, &dwType, (LPBYTE)buff, &dwSize ) == ERROR_SUCCESS);
+		RegCloseKey( hkey );
+
+		strcpy( out_instdirp, buff );
+
+		return yesno;
+	}
+
+	return false;
+}
+
+
+//==================================================================
+static bool IsApplicationInRegistryRun( const char *appnamep )
+{
+	HKEY hkey;
+
+	if ( RegOpenKeyEx( HKEY_CURRENT_USER,
+						"Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+						0,
+						KEY_QUERY_VALUE,
+						&hkey) == ERROR_SUCCESS )
+	{
+		DWORD	dwType;
+		char	buff[4096];
+		DWORD	dwSize = sizeof(buff)-1;
+
+		bool	yesno;
+
+		buff[0] = 0;
+		yesno = (RegQueryValueEx( hkey, appnamep, NULL, &dwType, (LPBYTE)buff, &dwSize ) == ERROR_SUCCESS);
+		RegCloseKey( hkey );
+
+		return yesno;
+	}
+
+	return false;
+}
+
+//==================================================================
+static bool SetApplicationToRegistryRun( const char *appnamep )
+{
+	char	fullpath[4096];
+
+	strcpy( fullpath, "\"" );
+
+	GetApplicationInstallDir( appnamep, fullpath+1 );	
+	strcat( fullpath, "\\" );
+	strcat( fullpath, appnamep );
+	strcat( fullpath, ".exe\" /minimize" );
+
+	HKEY hkey;
+
+	if ( RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 
+					   0,
+					   KEY_WRITE,
+					   &hkey ) == ERROR_SUCCESS)
+	{
+		if ( RegSetValueEx( hkey, appnamep, 0,REG_SZ, (LPBYTE)fullpath, strlen(fullpath) ) == ERROR_SUCCESS )
+			return true;
+		else
+		{
+			PSYS_ASSERT( 0 );
+		}
+	}
+
+	return false;
+}
+
+//==================================================================
+static bool RemoveApplicationFromRegistryRun( const char *appnamep )
+{
+	HKEY hkey;
+
+	if ( RegOpenKeyEx(  HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 
+						0,
+						KEY_QUERY_VALUE | KEY_WRITE,
+						&hkey ) == ERROR_SUCCESS )
+
+	{
+		if ( RegQueryValueEx(hkey, appnamep, NULL, NULL, NULL, NULL) == ERROR_SUCCESS )
+		{
+			if ( RegDeleteValue( hkey, appnamep ) == ERROR_SUCCESS )
+				return true;
+			else
+			{
+				PSYS_ASSERT( 0 );
+				return false;
+			}
+		}
+		else
+		{
+			// simply no entry
+			return false;
+		}
+	}
+
+	PSYS_ASSERT( 0 );
+	return false;
+}
+
 //==================================================================
 ///
 //==================================================================
@@ -41,7 +164,9 @@ Settings::Settings() :
 	_listen_for_connections = true;
 	_listen_port = DEF_PORT_NUMBER;
 	_show_my_screen = true;
-	_share_my_screen = true;
+	_share_my_screen = false;
+	_run_after_login = IsApplicationInRegistryRun( APP_NAME );
+	_start_minimized = false;
 
 	_schema.AddString(	"_username", _username, sizeof(_username) );
 	_schema.AddSHA1Hash( "_password", &_password );
@@ -49,6 +174,8 @@ Settings::Settings() :
 	_schema.AddInt(		"_listen_port", &_listen_port, 1, 65535 );
 	_schema.AddBool(	"_show_my_screen", &_show_my_screen );
 	_schema.AddBool(	"_share_my_screen", &_share_my_screen );
+	_schema.AddBool(	"_run_after_login", &_run_after_login );
+	_schema.AddBool(	"_start_minimized", &_start_minimized );
 }
 
 //===============================================================
@@ -89,11 +216,27 @@ WGUTCheckPWMsg Settings::checkPasswords( HWND hwnd )
 	}
 
 	WGUTCheckPWMsg pw1_msg = GetDlgEditPasswordState( hwnd, IDC_PASSWORD1_EDIT, "Settings Problem" );
-	if ( pw1_msg == CHECKPW_MSG_BAD )
+	switch ( pw1_msg )
+	{
+	case CHECKPW_MSG_BAD:
 		return CHECKPW_MSG_BAD;
+		
+	case CHECKPW_MSG_EMPTY:
+		return CHECKPW_MSG_EMPTY;
+	}
 
 	WGUTCheckPWMsg pw2_msg = GetDlgEditPasswordState( hwnd, IDC_PASSWORD2_EDIT, "Settings Problem" );
-	if ( pw2_msg == CHECKPW_MSG_BAD )
+	switch ( pw2_msg )
+	{
+	case CHECKPW_MSG_BAD:
+		return CHECKPW_MSG_BAD;
+
+	case CHECKPW_MSG_EMPTY:
+		return CHECKPW_MSG_EMPTY;
+	}
+
+
+	if ( pw2_msg == CHECKPW_MSG_BAD || pw2_msg == CHECKPW_MSG_EMPTY )
 		return CHECKPW_MSG_BAD;
 
 	if ( (pw1_msg == CHECKPW_MSG_UNCHANGED && pw2_msg == CHECKPW_MSG_UNCHANGED) ||
@@ -156,6 +299,10 @@ BOOL CALLBACK Settings::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM l
 		CheckDlgButton( hwnd, IDC_SHOW_MY_SCREEN_CHECK, _show_my_screen );
 		CheckDlgButton( hwnd, IDC_SHARE_MY_SCREEN_CHECK, _share_my_screen );
 		DlgEnableItem( hwnd, IDC_SHARE_MY_SCREEN_CHECK, _show_my_screen );
+
+		_run_after_login = IsApplicationInRegistryRun( APP_NAME );
+		CheckDlgButton( hwnd, IDC_RUN_AFTER_LOGIN, _run_after_login );
+		CheckDlgButton( hwnd, IDC_SETTINGS_START_MINIMIZED, _start_minimized );
 		break; 
 
 	case WM_COMMAND:
@@ -173,6 +320,9 @@ BOOL CALLBACK Settings::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM l
 			enableListenGroup( hwnd );
 			break;
 
+		case IDC_RUN_AFTER_LOGIN:
+			break;
+
 		case IDOK:
 		case IDCANCEL:
 			if ( LOWORD(wparam) == IDOK )
@@ -188,9 +338,14 @@ BOOL CALLBACK Settings::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM l
 				}
 
 				WGUTCheckPWMsg pw_state = checkPasswords( hwnd );
-				if ( pw_state != CHECKPW_MSG_UNCHANGED )
+
+				if ( pw_state != CHECKPW_MSG_GOOD && pw_state != CHECKPW_MSG_UNCHANGED )
+					return 1;	// not OK !!
+
+				if ( pw_state == CHECKPW_MSG_GOOD )
 					GetDlgItemSHA1PW( hwnd, IDC_PASSWORD1_EDIT, &_password );
-				if ( pw_state == CHECKPW_MSG_BAD || !checkPort( hwnd ) )
+
+				if NOT( checkPort( hwnd ) )
 					return 1;	// not OK !!
 
 				_listen_for_connections = IsDlgButtonON( hwnd, IDC_LISTEN_CONNECTIONS_CHECK );
@@ -199,6 +354,15 @@ BOOL CALLBACK Settings::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM l
 				_show_my_screen = IsDlgButtonON( hwnd, IDC_SHOW_MY_SCREEN_CHECK );
 				_share_my_screen = IsDlgButtonON( hwnd, IDC_SHARE_MY_SCREEN_CHECK );
 
+				_run_after_login = IsDlgButtonON( hwnd, IDC_RUN_AFTER_LOGIN );
+				if ( _run_after_login )
+					SetApplicationToRegistryRun( APP_NAME );
+				else
+					RemoveApplicationFromRegistryRun( APP_NAME );
+
+				_start_minimized = IsDlgButtonON( hwnd, IDC_SETTINGS_START_MINIMIZED );
+
+				// do this last !!!
 				if ( _onChangedSettingsCB )
 					_onChangedSettingsCB( _cb_userdatap );
 			}

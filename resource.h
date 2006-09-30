@@ -10,6 +10,7 @@
 #define IDD_CONNECTING                  120
 #define IDR_MAINMENU                    121
 #define IDD_ABOUT                       124
+#define IDD_DOWNLOADING_UPDATE          125
 #define IDC_CUSTOM_PORT_EDIT            1004
 #define IDC_CUSTOM_PORT_CALL_EDIT       1004
 #define IDC_SHOW_MY_SCREEN_CHECK        1005
@@ -43,6 +44,13 @@
 #define IDC_RM_REMOTE_PORT              1022
 #define IDC_RM_DELETE_REMOTE            1024
 #define IDC_ST_LOCAL_PORT               1029
+#define IDC_RUN_AFTER_LOGIN             1030
+#define IDC_SETTINGS_START_MINIMIZED    1031
+#define IDC_DU_DOWNLOADING_PROGRESS     1032
+#define IDC_DU_INSTALL                  1033
+#define IDC_DU_PLEASEWAIT               1034
+#define IDC_DU_PLEASEWAIT2              1035
+#define IDC_DU_READYINSTALL             1035
 #define ID_FILE_CONNECTIONS             40001
 #define ID_Menu                         40003
 #define ID_FILE_EXIT                    40004
@@ -55,14 +63,15 @@
 #define ID_FILE_HANGUP                  40015
 #define ID_VIEW_FITWINDOW               40016
 #define ID_VIEW_ACTUALSIZE              40017
+#define ID_HELP_CHECKFORUPDATES         40018
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        122
-#define _APS_NEXT_COMMAND_VALUE         40018
-#define _APS_NEXT_CONTROL_VALUE         1030
+#define _APS_NEXT_COMMAND_VALUE         40019
+#define _APS_NEXT_CONTROL_VALUE         1035
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

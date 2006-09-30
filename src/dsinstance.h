@@ -15,9 +15,9 @@
 //	along with this program; if not, write to the Free Software
 //	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //==================================================================
-//==
-//==
-//==
+///
+///
+///
 //==================================================================
 
 #ifndef DSINSTANCE_H
@@ -33,6 +33,8 @@
 #include "interactsys.h"
 #include "settings.h"
 #include "remotemng.h"
+#include "pnetlib_httpfile.h"
+#include "download_update.h"
 
 /*
 //==================================================================
@@ -116,6 +118,8 @@ private:
 	bool				_remote_allows_share;
 
 	bool				_view_fitwindow;
+	float				_view_scale_x;
+	float				_view_scale_y;
 
 	u_char				*_inpack_buffp;
 
@@ -127,6 +131,9 @@ private:
 	win_t				_dbg_win;
 	HWND				_connecting_dlg_hwnd;
 	int					_connecting_dlg_timer;
+
+	DownloadUpdate		*_download_updatep;
+	
 	HMENU				_main_menu;
 
 	InteractiveSystem	_intersys;
@@ -143,7 +150,7 @@ public:
 	DSChannel( const char *config_fnamep );
 	~DSChannel();
 
-	void	Create( bool do_send_desk );
+	void	Create( bool start_minimized );
 	void	StartListening( int port_listen );
 	State	Idle();
 	win_t	*GetWindowPtr()
@@ -157,11 +164,15 @@ private:
 	bool		getInteractiveMode();
 	void		setShellVisibility( bool do_switch=false );
 	void		updateViewMenu();
+	void		updateViewScale();
+	void		changeSessionRemote( RemoteDef *new_remotep );
 	BOOL CALLBACK connectingDialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
 	static BOOL CALLBACK connectingDialogProc_s(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
 	void		setState( State state );
 	void		processInputPacket( u_int pack_id, const u_char *datap, u_int data_size );
 	void		doDisconnect( const char *messagep, bool is_error=0 );
+
+	HWND		openModelessDialog( void *mythisp, DLGPROC dlg_proc, LPSTR dlg_namep );
 
 	int			mainEventFilter( win_event_type etype, win_event_t *eventp );
 	static int	mainEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );

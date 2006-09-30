@@ -104,7 +104,7 @@ public:
 	Reader();
 	//~Reader();
 
-	void	RenderParsedFrame( bool do_fit_viewport );
+	void	RenderParsedFrame( float scale_x, float scale_y );
 	bool	ParseFrame( const void *datap, u_int data_size );
 	int		GetWidth() const
 	{

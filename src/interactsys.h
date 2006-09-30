@@ -57,7 +57,9 @@ public:
 
 	void FeedMessage( u_int message, u_int lparam, u_int wparam,
 					  int disp_off_x, 
-					  int disp_off_y );
+					  int disp_off_y,
+					  float scale_x,
+					  float scale_y );
 
 	static bool ProcessMessage_s( u_int pack_id, const void *datap, int disp_wd, int disp_he );
 	static void OnPackCallback_s( const void *datap, u_int data_size, void *userdatap );
