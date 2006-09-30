@@ -28,6 +28,7 @@
 #include "data_schema.h"
 
 void DlgEnableItem( HWND hwnd, int id, BOOL onoff );
+void DlgShowItem( HWND hwnd, int id, BOOL onoff );
 void SetDlgItemInt( HWND hwnd, int id, int val );
 int GetDlgItemInt( HWND hwnd, int id );
 bool IsDlgButtonON( HWND hwnd, u_int item_id );
@@ -44,6 +45,15 @@ enum WGUTCheckPWMsg
 	CHECKPW_MSG_UNCHANGED,
 };
 WGUTCheckPWMsg GetDlgEditPasswordState( HWND hwnd, u_int item_id, const char *prompt_titlep=NULL );
+
+//==================================================================
+namespace WGUT
+{
+
+HWND OpenModelessDialog( DLGPROC dlg_proc, LPSTR dlg_namep, HWND parent_hwnd, void *mythisp );
+void SafeDestroyWindow( HWND &hwnd );
+
+};
 
 
 #endif

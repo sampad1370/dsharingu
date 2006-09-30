@@ -15,30 +15,49 @@
 //	along with this program; if not, write to the Free Software
 //	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //==================================================================
-//= Creation: Davide Pasca 2002
-//=
-//=
-//=
-//=
+///
+///
+///
 //==================================================================
 
-#ifndef COM_BASEDEF_H
-#define COM_BASEDEF_H
+#ifndef DOWNLOADUPDATE_H
+#define DOWNLOADUPDATE_H
+
+#include <windows.h>
+#include "psys.h"
+#include "pnetlib_httpfile.h"
 
 //==================================================================
-enum
+///
+//==================================================================
+class DownloadUpdate
 {
-	COM_ERR_GENERIC = -1,
-	COM_ERR_INVALID_ADDRESS = -2,
-	COM_ERR_HARD_DISCONNECT = -3,
-	COM_ERR_OUT_OF_MEMORY = -4,
-	COM_ERR_NONE = 0,
-	COM_ERR_SEND_QUEUE_FULL = 1,
-	COM_ERR_GRACEFUL_DISCONNECT,
-	COM_ERR_CONNECTED,
-	COM_ERR_TIMEOUT_CONNECTING,
-	COM_ERR_ALREADY_CONNECTED
+public:
+	const char			*_cur_versionp;
+	const char			*_hostnamep;
+	const char			*_base_exe_pathp;
+	const char			*_message_box_titlep;
+
+	bool				_alive;
+	int					_state;
+	HTTPFile			*_httpfilep;
+	HTTPFile			*_exe_httpfilep;
+	HWND				_dlg_hwnd;
+	char				_donwload_fname[128];
+	std::string			_exe_desk_path_str;
+
+	DownloadUpdate( HWND parent_hwnd,
+					const char *cur_versionp,
+					const char *hostnamep,
+					const char *update_info_pathp,
+					const char *base_exe_pathp,
+					const char *message_box_titlep );
+	~DownloadUpdate();
+
+	bool Idle();
+
+	static BOOL CALLBACK dialogProc_s(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
+	BOOL CALLBACK dialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
 };
 
 #endif
-

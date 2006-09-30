@@ -25,12 +25,20 @@
 #include <stdio.h>
 #include "SHA1.h"
 #include "wingui_utils.h"
+#include "appbase3.h"
 
 //==================================================================
 void DlgEnableItem( HWND hwnd, int id, BOOL onoff )
 {
 	HWND iw = GetDlgItem( hwnd, id );
 	EnableWindow( iw, onoff );
+}
+
+//==================================================================
+void DlgShowItem( HWND hwnd, int id, BOOL onoff )
+{
+	HWND iw = GetDlgItem( hwnd, id );
+	ShowWindow( iw, onoff ? SW_SHOW : SW_HIDE );
 }
 
 //==================================================================
@@ -152,4 +160,28 @@ WGUTCheckPWMsg GetDlgEditPasswordState( HWND hwnd, u_int item_id, const char *pr
 	}
 
 	return CHECKPW_MSG_GOOD;
+}
+
+//=====================================================
+HWND WGUT::OpenModelessDialog( DLGPROC dlg_proc, LPSTR dlg_namep, HWND parent_hwnd, void *mythisp )
+{
+	HWND	hwnd =
+		CreateDialogParam( (HINSTANCE)win_system_getinstance(),
+		dlg_namep, parent_hwnd,
+		dlg_proc, (LPARAM)mythisp );
+
+	appbase_add_modeless_dialog( hwnd );
+	ShowWindow( hwnd, SW_SHOWNORMAL );
+
+	return hwnd;
+}
+
+//=====================================================
+void WGUT::SafeDestroyWindow( HWND &hwnd )
+{
+	if ( hwnd )
+	{
+		DestroyWindow( hwnd );
+		hwnd = NULL;
+	}
 }

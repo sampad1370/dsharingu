@@ -15,24 +15,25 @@
 //	along with this program; if not, write to the Free Software
 //	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //==================================================================
-//==
-//==
-//==
-//==
+///
+///
+///
+///
 //==================================================================
 
 //#define WIN32_LEAN_AND_MEAN
-#include "drtysock.h"
 #include <stdio.h>
 #include <string.h>
 #include <float.h>
 #include <gl/glew.h>
 
 #include "psys.h"
+#include "compak.h"
+#include "pnetlib_socksupport.h"
 #include "appbase3.h"
-#include "socksupport.h"
 #include "dsharingu_protocol.h"
 #include "dsinstance.h"
+#include "resource.h"
 
 //==================================================================
 static bool				_do_quit_flag;
@@ -45,21 +46,27 @@ static DSChannel		*_extrachannel;
 //#define USE_EXTRA_CHANNEL
 
 //==================================================================
-bool main_start()
+bool main_start( void *hinstance )
 {
 	try {
-	// set float 2 int conversion to chop off !
-	_control87( _RC_CHOP, _MCW_RC );
-	ss_init_winsock();
 
-	_basechannel = new DSChannel( "dsharingu.cfg" );
-	_basechannel->Create( true );
-#ifdef USE_EXTRA_CHANNEL
-	_extrachannel = new DSChannel( "dsharingu2.cfg" );
-	_extrachannel->Create( false );
-#endif
+		psys_init();
+		HICON	hicon = LoadIcon( (HINSTANCE)hinstance, MAKEINTRESOURCE(IDI_ICO_APPL) );
+		win_system_init( (HINSTANCE)hinstance, hicon, "DSHARINGU" );
 
-//	FONT_Create();
+		// set float 2 int conversion to chop off !
+		_control87( _RC_CHOP, _MCW_RC );
+		ss_init_winsock();
+
+
+		bool	start_minimized = (strstr( GetCommandLine(), "/minimized" ) != NULL);
+
+		_basechannel = new DSChannel( "dsharingu.cfg" );
+		_basechannel->Create( start_minimized );
+	#ifdef USE_EXTRA_CHANNEL
+		_extrachannel = new DSChannel( "dsharingu2.cfg" );
+		_extrachannel->Create( start_minimized );
+	#endif
 	}
 	catch (...)
 	{

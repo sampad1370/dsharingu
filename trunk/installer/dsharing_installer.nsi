@@ -22,7 +22,7 @@ SetCompressor /SOLID lzma
 
 	!define MY_APP_NAME	"DSharingu"
 	
-	OutFile "${MY_APP_NAME}012a.exe"
+	OutFile "${MY_APP_NAME}013a.exe"
 	
 	;Default installation folder
 	InstallDir "$PROGRAMFILES\${MY_APP_NAME}"
@@ -42,7 +42,33 @@ SetCompressor /SOLID lzma
   !define MUI_ABORTWARNING
 
 ;--------------------------------
-;Pages
+; Kill all instances of DSharingu
+Function .onInit
+    FindWindow $0 "DSHARINGU_CLASS"
+    IntCmp $0 0 not_found
+    
+	MessageBox MB_OKCANCEL "All instances of ${MY_APP_NAME} will now be closed." /SD IDOK IDCANCEL do_quit
+
+kill_loop:
+		FindWindow $0 "DSHARINGU_CLASS"
+		IntCmp $0 0 done_killing
+		IsWindow $0 0 done_killing
+		System::Call 'user32::PostMessageA(i,i,i,i) i($0,${WM_CLOSE},0,0)'
+		Sleep 100
+		Goto kill_loop
+
+do_quit:
+		Quit
+
+done_killing:
+not_found:
+;	MessageBox MB_OK "yoooooooooo !!!!"
+	
+;done:
+FunctionEnd
+  
+;--------------------------------
+;Pages		
 	!insertmacro MUI_PAGE_WELCOME
 	!insertmacro MUI_PAGE_LICENSE "..\manual\license.txt"
 	!insertmacro MUI_PAGE_COMPONENTS
@@ -112,10 +138,14 @@ Section "Desktop Shortcut" SecDesktop
   CreateShortCut "$DESKTOP\${MY_APP_NAME}.lnk" "$INSTDIR\${MY_APP_NAME}.exe" ""
 SectionEnd
 
-
 ; Optional section (can be disabled by the user)
 Section "Quick Launch Shortcut" SecQuick
   CreateShortCut "$QUICKLAUNCH\${MY_APP_NAME}.lnk" "$INSTDIR\${MY_APP_NAME}.exe" ""
+SectionEnd
+
+; Optional section (can be disabled by the user)
+Section "Run After Login" SecRunLogin
+  WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Run" "DSharingu" "$\"$INSTDIR\${MY_APP_NAME}.exe$\" /minimized"
 SectionEnd
 
 ;--------------------------------
@@ -163,5 +193,6 @@ Section "Uninstall"
 	startMenuDeleteLoopDone:
 	
 	DeleteRegKey /ifempty HKCU "Software\${MY_APP_NAME}"
+    DeleteRegValue HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Run" "DSharingu"
 
 SectionEnd

@@ -41,6 +41,8 @@ public:
 	int			_listen_port;
 	bool		_show_my_screen;
 	bool		_share_my_screen;
+	bool		_run_after_login;
+	bool		_start_minimized;
 
 	DataSchema	_schema;
 

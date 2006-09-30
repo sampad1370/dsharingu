@@ -15,10 +15,10 @@
 //	along with this program; if not, write to the Free Software
 //	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //==================================================================
-//==
-//==
-//==
-//==
+///
+///
+///
+///
 //==================================================================
 
 #ifndef DSHARINGU_PROTOCOL_H
@@ -27,7 +27,7 @@
 //==================================================================
 #define DEF_PORT_NUMBER		51112
 #define DEF_PORT_NUMBER_STR	"51112"
-#define PROTOCOL_VERSION	4
+#define PROTOCOL_VERSION	5
 
 enum {
 	TEXT_MSG_PKID = 1,

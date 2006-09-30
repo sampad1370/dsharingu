@@ -37,7 +37,7 @@
 
 #define CHNTAG				"* "
 #define APP_NAME			"DSharingu"
-#define APP_VERSION_STR		"0.12a"
+#define APP_VERSION_STR		"0.13a"
 
 #define WINDOW_TITLE		APP_NAME" " APP_VERSION_STR " by Davide Pasca 2006 ("__DATE__" "__TIME__ ")"
 
@@ -106,8 +106,13 @@ DSChannel::DSChannel( const char *config_fnamep ) :
 	_is_transmitting(false),
 	_is_connected(false),
 	_view_fitwindow(true),
+	_view_scale_x(1),
+	_view_scale_y(1),
 	_about_is_open(false),
 	_connecting_dlg_hwnd(NULL),
+
+	_download_updatep(NULL),
+
 	_session_remotep(NULL),
 	_main_menu(NULL)
 {
@@ -190,15 +195,35 @@ void DSChannel::updateViewMenu()
 }
 
 //==================================================================
+void DSChannel::updateViewScale()
+{
+	if ( _view_fitwindow && _scrreader.GetWidth() > 0 && _scrreader.GetHeight() > 0 )
+	{
+		_view_scale_x = (float)_view_win.GetWidth() / _scrreader.GetWidth();
+		_view_scale_y = (float)_view_win.GetHeight() / _scrreader.GetHeight();
+	}
+	else
+	{
+		_view_scale_x = 1;
+		_view_scale_y = 1;
+	}
+}
+
+//==================================================================
+void DSChannel::changeSessionRemote( RemoteDef *new_remotep )
+{
+	if ( _session_remotep = new_remotep )
+		_tool_win._gget_manager.EnableGadget( BUTT_USEREMOTE, true );
+	else
+		_tool_win._gget_manager.EnableGadget( BUTT_USEREMOTE, false );
+}
+
+//==================================================================
 void DSChannel::onConnect( bool is_connected_as_caller )
 {
 	GGET_Manager	*gmp = &_tool_win._gget_manager;
 
-	if ( _connecting_dlg_hwnd )
-	{
-		DestroyWindow( _connecting_dlg_hwnd );
-		_connecting_dlg_hwnd = NULL;
-	}
+	WGUT::SafeDestroyWindow( _connecting_dlg_hwnd );
 
 	_remote_mng.CloseDialog();
 
@@ -239,7 +264,7 @@ void DSChannel::onConnect( bool is_connected_as_caller )
 	else
 	{
 		// will wait for handshake to findout the name
-		_session_remotep = NULL;
+		changeSessionRemote( NULL );
 		_remote_mng.UnlockRemote();
 	}
 }
@@ -266,11 +291,7 @@ void DSChannel::setState( State state )
 		{
 			GGET_Manager	*gmp = &_tool_win._gget_manager;
 
-			if ( _connecting_dlg_hwnd )
-			{
-				DestroyWindow( _connecting_dlg_hwnd );
-				_connecting_dlg_hwnd = NULL;
-			}
+			WGUT::SafeDestroyWindow( _connecting_dlg_hwnd );
 
 			_scrwriter.StopGrabbing();
 
@@ -281,7 +302,7 @@ void DSChannel::setState( State state )
 
 			_is_connected = false;
 			_is_transmitting = false;
-			_session_remotep = NULL;
+			changeSessionRemote( NULL );
 			_remote_mng.UnlockRemote();
 
 			setInteractiveMode( false );
@@ -381,7 +402,7 @@ void DSChannel::console_line_func_s( void *userp, const char *txtp, int is_cmd )
 }
 
 //==================================================================
-void DSChannel::Create( bool do_send_desk )
+void DSChannel::Create( bool start_minimized )
 {
 	FILE	*fp = fopen( _config_fname, "rt" );
 
@@ -411,7 +432,10 @@ void DSChannel::Create( bool do_send_desk )
 					this, mainEventFilter_s,
 					WIN_ANCH_TYPE_FIXED, 0, WIN_ANCH_TYPE_FIXED, 0,
 					WIN_ANCH_TYPE_THIS_X1, 640, WIN_ANCH_TYPE_THIS_Y1, 512,
-					(win_init_flags)(WIN_INIT_FLG_SYSTEM),
+					(win_init_flags)(WIN_INIT_FLG_SYSTEM |
+									 WIN_INIT_FLG_INVISIBLE |
+									 WIN_INIT_FLG_CLIENTEDGE |
+									 WIN_INTFLG_DONT_CLEAR ),
 					//(win_init_flags)(0*WIN_INIT_FLG_OPENGL | 0*WIN_INIT_FLG_CLIENTEDGE),
 					_main_menu );
 
@@ -419,7 +443,7 @@ void DSChannel::Create( bool do_send_desk )
 					this, toolEventFilter_s,
 					WIN_ANCH_TYPE_FIXED, 0, WIN_ANCH_TYPE_FIXED, 0,
 					WIN_ANCH_TYPE_PARENT_X2, 0, WIN_ANCH_TYPE_PARENT_Y1, 30,
-					(win_init_flags)(WIN_INIT_FLG_OPENGL) );
+					(win_init_flags)(WIN_INIT_FLG_OPENGL | WIN_INTFLG_DONT_CLEAR) );
 
 	win_init_quick( &_view_win, "view win", &_main_win,
 					this, viewEventFilter_s,
@@ -427,16 +451,18 @@ void DSChannel::Create( bool do_send_desk )
 					WIN_ANCH_TYPE_PARENT_Y1, 30,
 					WIN_ANCH_TYPE_PARENT_X2, 0,
 					WIN_ANCH_TYPE_PARENT_Y2, -160,
-					(win_init_flags)(WIN_INIT_FLG_OPENGL | 0*WIN_INIT_FLG_HSCROLL | 0*WIN_INIT_FLG_VSCROLL) );
+					(win_init_flags)(WIN_INIT_FLG_OPENGL | WIN_INTFLG_DONT_CLEAR | 0*WIN_INIT_FLG_HSCROLL | 0*WIN_INIT_FLG_VSCROLL) );
 
 	win_init_quick( &_dbg_win, APP_NAME" Debug Window", NULL,
 					this, dbgEventFilter_s,
 					WIN_ANCH_TYPE_FIXED, 0, WIN_ANCH_TYPE_FIXED, 0,
 					WIN_ANCH_TYPE_THIS_X1, 400, WIN_ANCH_TYPE_THIS_Y1, 256,
-					(win_init_flags)(WIN_INIT_FLG_OPENGL | WIN_INIT_FLG_INVISIBLE | WIN_INIT_FLG_CLIENTEDGE) );
+					(win_init_flags)(WIN_INIT_FLG_OPENGL | WIN_INTFLG_DONT_CLEAR | WIN_INIT_FLG_INVISIBLE | WIN_INIT_FLG_CLIENTEDGE) );
 #ifdef _DEBUG
 	win_show( &_dbg_win, 1 );
 #endif
+	
+	win_show( &_main_win, true, start_minimized || _settings._start_minimized );
 
 	//win_mswin_event_callback_set( &_main_win, windows_event_filter, NULL );
 
@@ -453,6 +479,7 @@ void DSChannel::Create( bool do_send_desk )
 	_console.cons_show( 1 );
 
 	setShellVisibility();
+	changeSessionRemote( NULL );
 
 /*
 	_intsysmsgparser.SetCompak( &_cpk );
@@ -472,14 +499,15 @@ void DSChannel::Create( bool do_send_desk )
 	if ( _settings._username[0] == 0 || _settings._password.IsEmpty() )
 	{
 		if ( MessageBox( _main_win.hwnd,
-			"In order to connect and receive calls, you need to choose a Username and Password in the Settings dialog.\n"
+			"To connect and to receive calls, you need to choose a Username and Password in the Settings dialog.\n"
 			"Do you want to do it now ?",
-			"Calling Problem", MB_YESNO | MB_ICONQUESTION ) == IDYES )
+			"DSharingu - Settings Required", MB_YESNO | MB_ICONQUESTION ) == IDYES )
 		{
 			_settings.OpenDialog( &_main_win, handleChangedSettings_s, this );		
 		}
 	}
 
+	updateViewScale();
 	updateViewMenu();
 }
 
@@ -510,25 +538,16 @@ void DSChannel::gadgetCallback( int gget_id, GGET_Item *itemp )
 		break;
 */
 	case BUTT_USEREMOTE:
-		setInteractiveMode( !getInteractiveMode() );
+		if ( _session_remotep )
+		{
+			_session_remotep->_use_remote_screen = !_session_remotep->_use_remote_screen;
+			setInteractiveMode( _session_remotep->_use_remote_screen );
+		}
 		break;
 
 	case BUTT_SHELL:
 		setShellVisibility( true );
 		break;
-/*
-	case BUTT_HELP:
-		if NOT( _about_is_open )
-		{
-			HWND hwnd = CreateDialogParam( (HINSTANCE)win_system_getinstance(),
-											MAKEINTRESOURCE(IDD_ABOUT), _main_win.hwnd,
-											(DLGPROC)aboutDialogProc_s, (LPARAM)this );
-			appbase_add_modeless_dialog( hwnd );
-			ShowWindow( hwnd, SW_SHOWNORMAL );
-			_about_is_open = true;
-		}
-		break;
-*/
 	}
 }
 
@@ -597,6 +616,20 @@ static void reshape( int w, int h )
 }
 
 //=====================================================
+HWND DSChannel::openModelessDialog( void *mythisp, DLGPROC dlg_proc, LPSTR dlg_namep )
+{
+	HWND	hwnd =
+		CreateDialogParam( (HINSTANCE)win_system_getinstance(),
+							dlg_namep, _main_win.hwnd,
+							dlg_proc, (LPARAM)mythisp );
+
+	appbase_add_modeless_dialog( hwnd );
+	ShowWindow( hwnd, SW_SHOWNORMAL );
+
+	return hwnd;
+}
+
+//=====================================================
 int DSChannel::mainEventFilter( win_event_type etype, win_event_t *eventp )
 {
 	_console.cons_parent_eventfilter( NULL, etype, eventp );
@@ -641,12 +674,14 @@ int DSChannel::mainEventFilter( win_event_type etype, win_event_t *eventp )
 
 		case ID_VIEW_FITWINDOW:
 			_view_fitwindow = true;
+			updateViewScale();
 			updateViewMenu();
 			_view_win.Invalidate();
 			break;
 
 		case ID_VIEW_ACTUALSIZE:
 			_view_fitwindow = false;
+			updateViewScale();
 			updateViewMenu();
 			_view_win.Invalidate();
 			break;
@@ -655,14 +690,23 @@ int DSChannel::mainEventFilter( win_event_type etype, win_event_t *eventp )
 			setShellVisibility( true );
 			break;
 
+
+		case ID_HELP_CHECKFORUPDATES:
+			if NOT( _download_updatep )
+			{
+				_download_updatep = new DownloadUpdate( _main_win.hwnd,
+											APP_VERSION_STR,
+											"kazzuya.com",
+											"/dsharingu_data/update_info.txt",
+											"/dsharingu_data/",
+											"DSharingu - Download Update" );
+			}
+			break;
+
 		case ID_HELP_ABOUT:
 			if NOT( _about_is_open )
 			{
-				HWND hwnd = CreateDialogParam( (HINSTANCE)win_system_getinstance(),
-					MAKEINTRESOURCE(IDD_ABOUT), _main_win.hwnd,
-					(DLGPROC)aboutDialogProc_s, (LPARAM)this );
-				appbase_add_modeless_dialog( hwnd );
-				ShowWindow( hwnd, SW_SHOWNORMAL );
+				WGUT::OpenModelessDialog( (DLGPROC)aboutDialogProc_s, MAKEINTRESOURCE(IDD_ABOUT), _main_win.hwnd, this );
 				_about_is_open = true;
 			}
 			break;
@@ -713,7 +757,9 @@ int DSChannel::viewEventFilter( win_event_type etype, win_event_t *eventp )
 								   eventp->ms_lparam,
 								   eventp->ms_wparam,
 								   _disp_off_x,
-								   _disp_off_y );
+								   _disp_off_y,
+								   _view_scale_x,
+								   _view_scale_y );
 
 			_disp_curs_x = eventp->mouse_x;
 			_disp_curs_y = eventp->mouse_y;
@@ -737,7 +783,9 @@ int DSChannel::viewEventFilter( win_event_type etype, win_event_t *eventp )
 								   eventp->ms_lparam,
 								   eventp->ms_wparam,
 								   _disp_off_x,
-								   _disp_off_y );
+								   _disp_off_y,
+								   _view_scale_x,
+								   _view_scale_y );
 
 			_disp_curs_x = eventp->mouse_x;
 			_disp_curs_y = eventp->mouse_y;
@@ -776,6 +824,7 @@ int DSChannel::viewEventFilter( win_event_type etype, win_event_t *eventp )
 					_disp_off_y = 0;
 			}
 		}
+		updateViewScale();
 		//reshape( eventp->win_w, eventp->win_h );
 		break;
 
@@ -954,7 +1003,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 						return;
 					}
 
-					_session_remotep = _remote_mng.FindOrAddRemoteDefAndSelect( msg._caller_username );
+					changeSessionRemote( _remote_mng.FindOrAddRemoteDefAndSelect( msg._caller_username ) );
 					_remote_mng.LockRemote( _session_remotep );
 
 					_console.cons_line_printf( CHNTAG"OK ! Successfully connected to '%s'", msg._caller_username );
@@ -1062,6 +1111,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 
 		case DESK_IMG_PKID:
 			_scrreader.ParseFrame( datap, data_size );
+			updateViewScale();
 			win_invalidate( &_view_win );
 			break;
 
@@ -1073,7 +1123,10 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 		case USAGE_ABILITY_PKID:
 			_remote_allows_view  = ((UsageAbilityMsg *)datap)->_see_remote_screen;
 			_remote_allows_share = ((UsageAbilityMsg *)datap)->_use_remote_screen;
-			if ( _remote_allows_share && _remote_allows_view )
+			PSYS_ASSERT( _session_remotep != NULL );
+			if ( _remote_allows_share && _remote_allows_view &&
+				 _session_remotep &&
+				 _session_remotep->_see_remote_screen )
 			{
 				_tool_win._gget_manager.EnableGadget( BUTT_USEREMOTE, true );
 			}
@@ -1194,6 +1247,8 @@ void DSChannel::handleChangedRemoteManager()
 
 	if ( _is_transmitting )
 	{
+		setInteractiveMode( _session_remotep->_use_remote_screen );
+
 		UsageWishMsg	msg(
 			_session_remotep->_see_remote_screen,
 			_session_remotep->_use_remote_screen );
@@ -1224,7 +1279,7 @@ void DSChannel::handleCallRemoteManager( RemoteDef *remotep )
 		return;
 	}
 
-	_session_remotep = remotep;
+	changeSessionRemote( remotep );
 	_remote_mng.LockRemote( _session_remotep );
 
 	if ERR_NULL( _session_remotep )
@@ -1251,8 +1306,8 @@ void DSChannel::handleCallRemoteManager( RemoteDef *remotep )
 		setState( STATE_CONNECTING );
 		_connecting_dlg_hwnd =
 			CreateDialogParam( (HINSTANCE)win_system_getinstance(),
-			MAKEINTRESOURCE(IDD_CONNECTING), _main_win.hwnd,
-			(DLGPROC)connectingDialogProc_s, (LPARAM)this );
+								MAKEINTRESOURCE(IDD_CONNECTING), _main_win.hwnd,
+								(DLGPROC)connectingDialogProc_s, (LPARAM)this );
 		appbase_add_modeless_dialog( _connecting_dlg_hwnd );
 		ShowWindow( _connecting_dlg_hwnd, SW_SHOWNORMAL );
 		break;
@@ -1344,7 +1399,7 @@ void DSChannel::handleConnectedFlow()
 		{
 			{
 				UsageWishMsg	msg(_session_remotep->_see_remote_screen,
-					_session_remotep->_use_remote_screen );
+									_session_remotep->_use_remote_screen );
 
 				if ERR_ERROR( _cpk.SendPacket( USAGE_WISH_PKID, &msg, sizeof(msg), NULL ) )
 					return;
@@ -1361,17 +1416,13 @@ void DSChannel::handleConnectedFlow()
 	}
 
 
-	bool	do_share = (_remote_wants_view && _settings._show_my_screen);
+	bool	do_show = (_remote_wants_view && _settings._show_my_screen);
 
-	if ( _scrwriter.IsGrabbing() != do_share )
+	if ( _scrwriter.IsGrabbing() != do_show )
 	{
-		if ( _settings._show_my_screen )
+		if ( do_show )
 		{
-			if NOT( _scrwriter.StartGrabbing( (HWND)_main_win.hwnd ) )
-			{
-				PSYS_ASSERT( 0 );
-				return;
-			}
+			_scrwriter.StartGrabbing( (HWND)_main_win.hwnd );
 		}
 		else
 		{
@@ -1392,6 +1443,9 @@ void DSChannel::handleConnectedFlow()
 	}
 
 	++_frame_since_transmission;
+
+	if ( (_frame_since_transmission & 7) == 0 )
+		_dbg_win.Invalidate();
 }
 
 //==================================================================
@@ -1400,6 +1454,12 @@ DSChannel::State DSChannel::Idle()
 	if ( _console.cons_is_showing() )
 	{
 //		win_focus( &_console._win, 1 );
+	}
+
+	if ( _download_updatep )
+	{
+		if NOT( _download_updatep->Idle() )
+			SAFE_DELETE( _download_updatep );
 	}
 
 	handleAutoScroll();
@@ -1480,10 +1540,12 @@ DSChannel::State DSChannel::Idle()
 		break;
 	}
 
-	win_invalidate( &_dbg_win );
-
 	State tmp = _new_state;
 	_new_state = STATE_NULL;
 
 	return tmp;
 }
+
+//==================================================================
+///
+//==================================================================
