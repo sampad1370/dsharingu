@@ -35,6 +35,11 @@
 #include "remotemng.h"
 #include "pnetlib_httpfile.h"
 #include "download_update.h"
+#include "dschannel_manager.h"
+
+#define CHNTAG				"* "
+#define APP_NAME			"DSharingu"
+#define APP_VERSION_STR		"0.13a"
 
 /*
 //==================================================================
@@ -68,21 +73,12 @@ public:
 */
 
 //==================================================================
-class DSChannel
+class DSharinguApp
 {
-public:
-	enum State
-	{
-		STATE_NULL,
-		STATE_IDLE,
-		STATE_CONNECTING,
-		STATE_CONNECTED,
-		STATE_DISCONNECT_START,
-		STATE_DISCONNECTING,
-		STATE_DISCONNECTED,
-		STATE_QUIT
-	};
+	friend class	DSChannel;
+	friend class	ChannelManager;
 
+public:
 	enum 
 	{
 		STEXT_TOOLBARBASE,
@@ -96,92 +92,53 @@ public:
 	};
 
 private:
+
+
+	//==================================================================
+	DSChannel			*_cur_chanp;
+	ChannelManager		*_chmanagerp;
+
 	static const int	INPACK_BUFF_SIZE = 1024*1024;
 	char				_config_fname[256];
 
-	State				_state;
-	State				_new_state;
-	Compak				_cpk;
+	ComListener			_com_listener;
 	ScrShare::Writer	_scrwriter;
-	ScrShare::Reader	_scrreader;
 	Settings			_settings;
 	RemoteMng			_remote_mng;
-	RemoteDef			*_session_remotep;	// $$$ this one may become deleted and then.. boom crash !!!
-	console_t			_console;
-	int					_flow_cnt;
-	bool				_is_connected;
-	bool				_is_transmitting;
-
-	bool				_remote_wants_view;
-	bool				_remote_wants_share;
-	bool				_remote_allows_view;
-	bool				_remote_allows_share;
-
-	bool				_view_fitwindow;
-	float				_view_scale_x;
-	float				_view_scale_y;
 
 	u_char				*_inpack_buffp;
 
-	static cons_cmd_def_t	_cmd_defs[3];
-
 	win_t				_main_win;
-	win_t				_tool_win;
-	win_t				_view_win;
 	win_t				_dbg_win;
-	HWND				_connecting_dlg_hwnd;
-	int					_connecting_dlg_timer;
 
-	DownloadUpdate		*_download_updatep;
-	
+	DownloadUpdate		*_download_updatep;	
 	HMENU				_main_menu;
-
-	InteractiveSystem	_intersys;
-
-	int					_disp_off_x;
-	int					_disp_off_y;
-	int					_disp_curs_x;
-	int					_disp_curs_y;
-
-	u_int				_frame_since_transmission;
 
 //	IntSysMessageParser	_intsysmsgparser;
 public:
-	DSChannel( const char *config_fnamep );
-	~DSChannel();
+	DSharinguApp( const char *config_fnamep );
+	~DSharinguApp();
 
-	void	Create( bool start_minimized );
-	void	StartListening( int port_listen );
-	State	Idle();
-	win_t	*GetWindowPtr()
+	void			Create( bool start_minimized );
+	void			StartListening( int port_listen );
+	DSChannel::State	Idle();
+	win_t			*GetWindowPtr()
 	{
 		return &_main_win;
 	}
 
 private:
-	void		onConnect( bool is_connected_as_caller );
-	void		setInteractiveMode( bool onoff );
-	bool		getInteractiveMode();
-	void		setShellVisibility( bool do_switch=false );
-	void		updateViewMenu();
-	void		updateViewScale();
-	void		changeSessionRemote( RemoteDef *new_remotep );
-	BOOL CALLBACK connectingDialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
-	static BOOL CALLBACK connectingDialogProc_s(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
-	void		setState( State state );
-	void		processInputPacket( u_int pack_id, const u_char *datap, u_int data_size );
-	void		doDisconnect( const char *messagep, bool is_error=0 );
+	void		switchChannel( DSChannel *chanp )
+	{
+		_cur_chanp = chanp;
+		updateViewMenu( chanp );
+	}
+	void		updateViewMenu( DSChannel *chanp );
 
 	HWND		openModelessDialog( void *mythisp, DLGPROC dlg_proc, LPSTR dlg_namep );
 
 	int			mainEventFilter( win_event_type etype, win_event_t *eventp );
 	static int	mainEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );
-	int			viewEventFilter( win_event_type etype, win_event_t *eventp );
-	static int	viewEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );
-	int			toolEventFilter( win_event_type etype, win_event_t *eventp );
-	static int	toolEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );
-	void		drawDispOffArrows();
-	void		doViewPaint();
 
 	int			dbgEventFilter( win_event_type etype, win_event_t *eventp );
 	static int	dbgEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );
@@ -190,23 +147,11 @@ private:
 	void		cmd_debug( char *params[], int n_params );
 	static void cmd_debug_s( void *userp, char *params[], int n_params );
 
-	void		console_line_func( const char *txtp, int is_cmd );
-	static void console_line_func_s( void *userp, const char *txtp, int is_cmd );
-
-	void		gadgetCallback( int gget_id, GGET_Item *itemp );
-	static void	gadgetCallback_s( int gget_id, GGET_Item *itemp, void *userdatap );
-	void		rebuildButtons();
-	void		reshapeButtons();
-
-	void		handleAutoScroll();
-
-	void		handleConnectedFlow();
-
 	static void	handleChangedSettings_s( void *mythis );
 	void		handleChangedSettings();
 
-	static void	handleChangedRemoteManager_s( void *mythis );
-	void		handleChangedRemoteManager();
+	static void	handleChangedRemoteManager_s( void *mythis, RemoteDef *changed_remotep );
+	void		handleChangedRemoteManager( RemoteDef *changed_remotep );
 
 	static void	handleCallRemoteManager_s( void *mythis, RemoteDef *remotep );
 	void		handleCallRemoteManager( RemoteDef *remotep );

@@ -37,8 +37,8 @@
 
 //==================================================================
 static bool				_do_quit_flag;
-static DSChannel		*_basechannel;
-static DSChannel		*_extrachannel;
+static DSharinguApp		*_basechannel;
+static DSharinguApp		*_extrachannel;
 
 #ifdef _DEBUG
 #define USE_EXTRA_CHANNEL
@@ -61,10 +61,10 @@ bool main_start( void *hinstance )
 
 		bool	start_minimized = (strstr( GetCommandLine(), "/minimized" ) != NULL);
 
-		_basechannel = new DSChannel( "dsharingu.cfg" );
+		_basechannel = new DSharinguApp( "dsharingu.cfg" );
 		_basechannel->Create( start_minimized );
 	#ifdef USE_EXTRA_CHANNEL
-		_extrachannel = new DSChannel( "dsharingu2.cfg" );
+		_extrachannel = new DSharinguApp( "dsharingu2.cfg" );
 		_extrachannel->Create( start_minimized );
 	#endif
 	}
@@ -77,20 +77,17 @@ bool main_start( void *hinstance )
 }
 
 //==================================================================
-static void handleChannel( DSChannel *chanp )
+static void handleChannel( DSharinguApp *appp )
 {
+	appp->Idle();
+	/*
 	switch ( chanp->Idle() )
 	{
-	case DSChannel::STATE_IDLE:
-		break;
-	case DSChannel::STATE_CONNECTED:
-		break;
-	case DSChannel::STATE_DISCONNECTED:
-		break;
 	case DSChannel::STATE_QUIT:
 		_do_quit_flag = 1;
 		break;
 	}
+	*/
 }
 
 //==================================================================

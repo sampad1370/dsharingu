@@ -35,7 +35,9 @@ static const char _emptyname_string[] = "<Choose a Name>";
 ///
 //==================================================================
 RemoteDef::RemoteDef() :
-	_schema("RemoteDef")
+	_schema("RemoteDef"),
+	_is_locked(false),
+	_userdatap(NULL)
 {
 	_rm_username[0] = 0;
 	_rm_ip_address[0] = 0;
@@ -56,8 +58,7 @@ RemoteDef::RemoteDef() :
 //==================================================================
 RemoteMng::RemoteMng() :
 	_hwnd(NULL),
-	_cur_remotep(NULL),
-	_locked_remotep(NULL)
+	_cur_remotep(NULL)
 {
 }
 
@@ -209,7 +210,7 @@ void RemoteMng::updateRemote( HWND hwnd )
 		return;
 
 	if ( _onRemoteChange )
-		_onRemoteChange( _cb_userdatap );
+		_onRemoteChange( _cb_userdatap, _cur_remotep );
 
 	refreshEnabledStatus( hwnd );
 }
@@ -486,7 +487,7 @@ BOOL CALLBACK RemoteMng::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM 
 
 //==================================================================
 void RemoteMng::OpenDialog( win_t *parent_winp,
-							void (*onChangedSettingsCB)( void *userdatap ),
+							void (*onChangedSettingsCB)( void *userdatap, RemoteDef *changed_remotep ),
 							void (*onCallCB)( void *userdatap, RemoteDef *remotep ),
 							void *cb_userdatap )
 {

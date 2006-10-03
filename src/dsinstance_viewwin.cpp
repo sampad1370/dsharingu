@@ -208,14 +208,14 @@ void DSChannel::drawDispOffArrows()
 	if ( _disp_off_y < 0 )
 		dirs |= DIR_TOP;
 
-	if ( _disp_off_x+_scrreader.GetWidth() >= _view_win.w )
+	if ( _disp_off_x+_scrreader.GetWidth() >= _view_winp->w )
 		dirs |= DIR_RIGHT;
 
-	if ( _disp_off_y+_scrreader.GetHeight() >= _view_win.h )
+	if ( _disp_off_y+_scrreader.GetHeight() >= _view_winp->h )
 		dirs |= DIR_BOTTOM;
 
 	glColor4f( 1.0f, 0.2f, 0.2f, 0.6f );
-	drawArrows( _view_win.w, _view_win.h, dirs );
+	drawArrows( _view_winp->w, _view_winp->h, dirs );
 }
 
 //==================================================================
@@ -236,7 +236,7 @@ void DSChannel::doViewPaint()
 			//glScalef( 0.5f, 0.5f, 1 );
 
 			glPushMatrix();
-			
+
 			if NOT( _view_fitwindow )
 				glTranslatef( _disp_off_x, _disp_off_y, 0 );
 
@@ -255,7 +255,7 @@ void DSChannel::doViewPaint()
 				glColor4f( 0.3f, 0.3f, 0.3f, 0.3f );
 			}
 
-			//drawFrame( _view_win.w, _view_win.h );
+			//drawFrame( _view_winp->w, _view_winp->h );
 
 			if NOT( _view_fitwindow )
 				drawDispOffArrows();

@@ -51,18 +51,18 @@ struct HandShakeMsg
 {
 	u_int	_protocol_version;
 	char	_caller_username[32];
-	char	_receiver_username[32];
-	u_char	_receiver_password[20];
+	char	_communicating_username[32];
+	u_char	_communicating_password[20];
 
 	HandShakeMsg(	u_int protocol_version,
 					const char caller_username[32],
-					const char receiver_username[32],
-					const u_char receiver_password[20] ) :
+					const char communicating_username[32],
+					const u_char communicating_password[20] ) :
 		_protocol_version(protocol_version)
 	{
 		memcpy( _caller_username, caller_username, 32 );
-		memcpy( _receiver_username, receiver_username, 32 );
-		memcpy( _receiver_password, receiver_password, 20 );
+		memcpy( _communicating_username, communicating_username, 32 );
+		memcpy( _communicating_password, communicating_password, 20 );
 	}
 };
 

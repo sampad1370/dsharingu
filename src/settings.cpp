@@ -25,11 +25,10 @@
 #include "settings.h"
 #include "SHA1.h"
 #include "dsharingu_protocol.h"
+#include "dsinstance.h"
 #include "resource.h"
 #include "wingui_utils.h"
 #include "appbase3.h"
-
-#define APP_NAME	"DSharingu"
 
 //==================================================================
 static bool GetApplicationInstallDir( const char *appnamep, char *out_instdirp )
@@ -195,8 +194,8 @@ BOOL CALLBACK Settings::DialogProc_s(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM
 WGUTCheckPWMsg Settings::checkPasswords( HWND hwnd )
 {
 	// if we aren't showing or sharing the screen, then passwords are a non-issue
-	if NOT( IsDlgButtonON( hwnd, IDC_SHOW_MY_SCREEN_CHECK ) || IsDlgButtonON( hwnd, IDC_SHARE_MY_SCREEN_CHECK ) )
-		return CHECKPW_MSG_UNCHANGED;
+//	if NOT( IsDlgButtonON( hwnd, IDC_SHOW_MY_SCREEN_CHECK ) || IsDlgButtonON( hwnd, IDC_SHARE_MY_SCREEN_CHECK ) )
+//		return CHECKPW_MSG_UNCHANGED;
 
 
 	char	buff1[128];
