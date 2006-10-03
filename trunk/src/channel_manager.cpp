@@ -45,11 +45,11 @@ enum {
 };
 
 //==================================================================
-ChannelManager::ChannelManager( win_t *parent_winp, void *userdatap/*,
-							    void (*onChannelSwitchCB)( void *userdatap, DSChannel *chanp )*/ ) :
+DSChannelManager::DSChannelManager( win_t *parent_winp, void *superp,
+							    void (*onChannelSwitchCB)( void *superp, Channel *chanp ) ) :
 	_parent_winp(parent_winp),
-	_userdatap(userdatap),
-	//_onChannelSwitchCB(onChannelSwitchCB),
+	_superp(superp),
+	_onChannelSwitchCB(onChannelSwitchCB),
 	_tabs_winp(NULL),
 	_n_channels(0),
 	_cur_chanp(NULL)
@@ -86,12 +86,12 @@ ChannelManager::ChannelManager( win_t *parent_winp, void *userdatap/*,
 }
 
 //==================================================================
-void ChannelManager::gadgetCallback_s( int gget_id, GGET_Item *itemp, void *userdatap )
+void DSChannelManager::gadgetCallback_s( int gget_id, GGET_Item *itemp, void *superp )
 {
-	((ChannelManager *)userdatap)->gadgetCallback( gget_id, itemp );
+	((DSChannelManager *)superp)->gadgetCallback( gget_id, itemp );
 }
 //==================================================================
-void ChannelManager::gadgetCallback( int gget_id, GGET_Item *itemp )
+void DSChannelManager::gadgetCallback( int gget_id, GGET_Item *itemp )
 {
 	GGET_Manager	&gam = itemp->GetManager();
 
@@ -115,15 +115,15 @@ void ChannelManager::gadgetCallback( int gget_id, GGET_Item *itemp )
 }
 
 //==================================================================
-DSChannel *ChannelManager::NewChannel( RemoteDef *remotep )
+Channel *DSChannelManager::NewChannel( RemoteDef *remotep )
 {
 	if PTRAP_FALSE( _n_channels < MAX_CHANNELS )
 	{
-		DSChannel	*chanp = new DSChannel( _userdatap, remotep );
+		Channel	*chanp = new Channel( remotep );
 		_channelsp[ _n_channels++ ] = chanp;
 		_cur_chanp = chanp;
-//		if ( _onChannelSwitchCB )
-//			_onChannelSwitchCB( _userdatap, chanp );
+		if ( _onChannelSwitchCB )
+			_onChannelSwitchCB( _superp, chanp );
 		return chanp;
 	}
 	else
@@ -131,15 +131,15 @@ DSChannel *ChannelManager::NewChannel( RemoteDef *remotep )
 }
 
 //==================================================================
-DSChannel *ChannelManager::NewChannel( int accepted_fd )
+Channel *DSChannelManager::NewChannel( int accepted_fd )
 {
 	if PTRAP_FALSE( _n_channels < MAX_CHANNELS )
 	{
-		DSChannel	*chanp = new DSChannel( _userdatap, accepted_fd );
+		Channel	*chanp = new Channel( accepted_fd );
 		_channelsp[ _n_channels++ ] = chanp;
-		c = chanp;
-//		if ( _onChannelSwitchCB )
-//			_onChannelSwitchCB( _userdatap, chanp );
+		_cur_chanp = chanp;
+		if ( _onChannelSwitchCB )
+			_onChannelSwitchCB( _superp, chanp );
 		return chanp;
 	}
 	else
@@ -147,22 +147,22 @@ DSChannel *ChannelManager::NewChannel( int accepted_fd )
 }
 
 //==================================================================
-void ChannelManager::Idle()
+void DSChannelManager::Idle()
 {
 	for (int i=0; i < _n_channels; ++i)
 	{
-		DSChannel	*chanp = _channelsp[i];
+		Channel	*chanp = _channelsp[i];
 
 		chanp->Idle();
 	}
 }
 
 //==================================================================
-void ChannelManager::Quit()
+void DSChannelManager::Quit()
 {
 	for (int i=0; i < _n_channels; ++i)
 	{
-		DSChannel	*chanp = _channelsp[i];
+		Channel	*chanp = _channelsp[i];
 
 		chanp->Quit();
 	}

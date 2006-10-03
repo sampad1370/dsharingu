@@ -230,7 +230,7 @@ void DSharinguApp::Create( bool start_minimized )
 
 	win_show( &_main_win, true, start_minimized || _settings._start_minimized );
 
-	_chmanagerp = new ChannelManager( &_main_win, this );
+	_chmanagerp = new DSChannelManager( &_main_win, this, channelSwitch_s );
 
 
 	if ( _settings._username[0] == 0 || _settings._password.IsEmpty() )
@@ -309,7 +309,7 @@ int DSharinguApp::mainEventFilter( win_event_type etype, win_event_t *eventp )
 
 		case ID_FILE_HANGUP:
 			if ( _cur_chanp )
-				_cur_chanp->doDisconnect( "Successfully disconnected." );
+				_cur_chanp->DoDisconnect( "Successfully disconnected." );
 			break;
 
 		case ID_FILE_SETTINGS:
@@ -318,7 +318,7 @@ int DSharinguApp::mainEventFilter( win_event_type etype, win_event_t *eventp )
 
 		case ID_FILE_EXIT:
 			if ( _cur_chanp )
-				_cur_chanp->setState( DSChannel::STATE_QUIT );
+				_cur_chanp->Quit();
 			break;
 
 		case ID_VIEW_FITWINDOW:
@@ -432,7 +432,7 @@ void DSharinguApp::handleCallRemoteManager( RemoteDef *remotep )
 		return;
 	}
 
-	switchChannel( _chmanagerp->NewChannel( remotep ) );
+	_chmanagerp->NewChannel( remotep );
 }
 
 //==================================================================
@@ -557,7 +557,7 @@ void DSharinguApp::handleChangedSettings()
 
 	for (int i=0; i < _chmanagerp->_n_channels; ++i)
 	{
-		DSChannel	*chanp = _chmanagerp->_channelsp[i];
+		DSChannel	*chanp = (DSChannel *)_chmanagerp->_channelsp[i];
 
 		chanp->_intersys.ActivateExternalInput( _settings._share_my_screen && _settings._show_my_screen );
 
@@ -572,7 +572,7 @@ void DSharinguApp::handleChangedSettings()
 }
 
 //==================================================================
-DSChannel::State DSharinguApp::Idle()
+int DSharinguApp::Idle()
 {
 	if ( _download_updatep )
 	{
@@ -583,8 +583,7 @@ DSChannel::State DSharinguApp::Idle()
 	int	accepted_fd;
 	if ( _com_listener.Idle( accepted_fd ) == COM_ERR_CONNECTED )
 	{
-		switchChannel( _chmanagerp->NewChannel( accepted_fd ) );
-		
+		_chmanagerp->NewChannel( accepted_fd );
 	}
 
 	_chmanagerp->Idle();

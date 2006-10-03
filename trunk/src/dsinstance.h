@@ -35,7 +35,7 @@
 #include "remotemng.h"
 #include "pnetlib_httpfile.h"
 #include "download_update.h"
-#include "dschannel_manager.h"
+#include "dschannel.h"
 
 #define CHNTAG				"* "
 #define APP_NAME			"DSharingu"
@@ -76,7 +76,7 @@ public:
 class DSharinguApp
 {
 	friend class	DSChannel;
-	friend class	ChannelManager;
+	friend class	DSChannelManager;
 
 public:
 	enum 
@@ -91,12 +91,12 @@ public:
 //		BUTT_QUIT,
 	};
 
-private:
-
+//private:
+public:
 
 	//==================================================================
 	DSChannel			*_cur_chanp;
-	ChannelManager		*_chmanagerp;
+	DSChannelManager		*_chmanagerp;
 
 	static const int	INPACK_BUFF_SIZE = 1024*1024;
 	char				_config_fname[256];
@@ -121,18 +121,23 @@ public:
 
 	void			Create( bool start_minimized );
 	void			StartListening( int port_listen );
-	DSChannel::State	Idle();
+	int				Idle();
 	win_t			*GetWindowPtr()
 	{
 		return &_main_win;
 	}
 
 private:
-	void		switchChannel( DSChannel *chanp )
+	static void		channelSwitch_s( void *superp, Channel *chanp )
 	{
-		_cur_chanp = chanp;
-		updateViewMenu( chanp );
+		((DSharinguApp *)superp)->channelSwitch( chanp );
 	}
+	void			channelSwitch( Channel *chanp )
+	{
+		_cur_chanp = (DSChannel *)chanp;
+		updateViewMenu( (DSChannel *)chanp );
+	}
+
 	void		updateViewMenu( DSChannel *chanp );
 
 	HWND		openModelessDialog( void *mythisp, DLGPROC dlg_proc, LPSTR dlg_namep );
