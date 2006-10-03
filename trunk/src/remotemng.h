@@ -33,6 +33,9 @@
 //==================================================================
 class RemoteDef
 {
+	bool		_is_locked;
+	void		*_userdatap;
+
 public:
 	char		_rm_username[32];
 	sha1_t		_rm_password;
@@ -49,6 +52,31 @@ public:
 	{
 		return _call_port;
 	}
+
+	void	Lock()
+	{
+		_is_locked = true;
+	}
+
+	void	Unlock()
+	{
+		_is_locked = false;
+	}
+
+	bool	IsLocked() const
+	{
+		return _is_locked;
+	}
+
+	void SetUserData( void *userdatap )
+	{
+		_userdatap = userdatap;
+	}
+
+	void *GetUserData()
+	{
+		return _userdatap;
+	}
 };
 
 //==================================================================
@@ -63,7 +91,7 @@ public:
 	RemoteMng();
 	~RemoteMng();
 	void	OpenDialog( win_t *parent_winp,
-						void (*onChangedSettingsCB)( void *userdatap ),
+						void (*onChangedSettingsCB)( void *userdatap, RemoteDef *changed_remotep ),
 						void (*onCallCB)( void *userdatap, RemoteDef *remotep ),
 						void *cb_userdatap );
 	void	CloseDialog();
@@ -88,7 +116,7 @@ public:
 		if ( _hwnd )
 			refreshEnabledStatus( _hwnd );
 	}
-	void	UnlockRemote()
+	void	UnlockRemote( RemoteDef *remotep )
 	{
 		_locked_remotep = NULL;
 		if ( _hwnd )
@@ -106,7 +134,7 @@ private:
 	void	setRemoteToForm( RemoteDef *remotep, HWND hwnd );
 	void	loadRemoteFromForm( RemoteDef *remotep, HWND hwnd );
 	void	loadRemoteNameFromForm( RemoteDef *remotep, HWND hwnd );
-	void	(*_onRemoteChange)( void *userdatap );
+	void	(*_onRemoteChange)( void *userdatap, RemoteDef *changed_remotep );
 	void	(*_onCallCB)( void *userdatap, RemoteDef *remotep );
 	void	*_cb_userdatap;
 	void	onEmptyList( HWND hwnd );

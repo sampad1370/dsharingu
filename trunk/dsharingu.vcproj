@@ -209,6 +209,18 @@
 				RelativePath=".\src\download_update.h">
 			</File>
 			<File
+				RelativePath=".\src\dschannel.cpp">
+			</File>
+			<File
+				RelativePath=".\src\dschannel.h">
+			</File>
+			<File
+				RelativePath=".\src\dschannel_manager.cpp">
+			</File>
+			<File
+				RelativePath=".\src\dschannel_manager.h">
+			</File>
+			<File
 				RelativePath=".\src\dsharingu.cpp">
 			</File>
 			<File

@@ -15,11 +15,10 @@
 //	along with this program; if not, write to the Free Software
 //	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //==================================================================
-//= Creation: Davide Pasca 2006
-//=
-//=
-//=
-//=
+/// Creation: Davide Pasca 2006
+///
+///
+///
 //==================================================================
 
 #ifndef SCREEN_SHARING_H
@@ -48,7 +47,7 @@ const static int	MAX_BLOCKS		= ((MAX_SCREEN_WD + BLOCK_WD-1) / BLOCK_WD) *
 										((MAX_SCREEN_HE + BLOCK_HE-1) / BLOCK_HE);
 
 //==================================================================
-//= W R I T E R
+/// W R I T E R
 //==================================================================
 class Writer
 {
@@ -89,7 +88,7 @@ private:
 };
 
 //==================================================================
-//= R E A D E R
+/// R E A D E R
 //==================================================================
 class Reader
 {
