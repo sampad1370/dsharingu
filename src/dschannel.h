@@ -36,14 +36,18 @@
 #include "SHA1.h"
 #include "data_schema.h"
 #include "appbase3.h"
+#include "channel.h"
+#include "channel_manager.h"
+
+//==================================================================
+class DSharinguApp;
 
 //==================================================================
 ///
 //==================================================================
 class DSChannel
 {
-	friend class DSharinguApp;
-	friend class ChannelManager;
+	friend class DSChannelManager;
 
 public:
 	enum State
@@ -58,7 +62,7 @@ public:
 		STATE_QUIT
 	};
 
-public:		
+public:
 	DSharinguApp			*_superp;
 
 	State					_state;
@@ -102,20 +106,21 @@ public:
 	DSChannel( DSharinguApp *superp, RemoteDef *remotep );
 	~DSChannel();
 
-	State		Idle();
+	int			Idle();
 	void		Quit()
 	{
 		setState( DSChannel::STATE_QUIT );
 	}
 
-private:
+	void		DoDisconnect( const char *messagep, bool is_error=0 );
 
+//private:
+public:
 	void		create( DSharinguApp *superp );
 
 
 	void		setState( State state );
 	void		onConnect( bool is_connected_as_caller );
-	void		doDisconnect( const char *messagep, bool is_error=0 );
 
 	void		changeSessionRemote( RemoteDef *new_remotep );
 

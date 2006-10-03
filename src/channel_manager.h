@@ -20,8 +20,8 @@
 ///
 //==================================================================
 
-#ifndef DSCHANNEL_MANAGER_H
-#define DSCHANNEL_MANAGER_H
+#ifndef CHANNEL_MANAGER_H
+#define CHANNEL_MANAGER_H
 
 #include "kwindow.h"
 #include "dsinstance.h"
@@ -30,28 +30,28 @@
 //==================================================================
 ///
 //==================================================================
-class ChannelManager
+class DSChannelManager
 {
 public:
 	static const int	MAX_CHANNELS = 16;
-	DSChannel			*_channelsp[ MAX_CHANNELS ];
+	Channel				*_channelsp[ MAX_CHANNELS ];
 	int					_n_channels;
-	DSChannel			*_cur_chanp;
+	Channel				*_cur_chanp;
 
 private:
-	void				*_userdatap;
-	void				(*_onChannelSwitchCB)( void *userdatap, DSChannel *chanp );
+	void				*_superp;
+	void				(*_onChannelSwitchCB)( void *superp, Channel *chanp );
 	win_t				*_parent_winp;
 	win_t				*_tabs_winp;
 
 public:
 	//==================================================================
-	ChannelManager( win_t *parent_winp, void *userdatap/*,
-					void (*onChannelSwitchCB)( void *userdatap, DSChannel *chanp )*/ );
+	DSChannelManager( win_t *parent_winp, void *superp,
+					void (*onChannelSwitchCB)( void *superp, Channel *chanp ) );
 
-	DSChannel	*NewChannel( RemoteDef *remotep );
-	DSChannel	*NewChannel( int accepted_fd );
-	DSChannel	*GetCurChannel()
+	Channel	*NewChannel( RemoteDef *remotep );
+	Channel	*NewChannel( int accepted_fd );
+	Channel	*GetCurChannel()
 	{
 		return	_cur_chanp;
 	}

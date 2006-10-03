@@ -72,22 +72,22 @@ DSChannel::DSChannel( DSharinguApp *superp, RemoteDef *remotep ) :
 		setState( STATE_CONNECTING );
 		_connecting_dlg_hwnd =
 			CreateDialogParam( (HINSTANCE)win_system_getinstance(),
-			MAKEINTRESOURCE(IDD_CONNECTING), _superp->_main_win.hwnd,
+			MAKEINTRESOURCE(IDD_CONNECTING), ((DSharinguApp *)_superp)->_main_win.hwnd,
 			(DLGPROC)connectingDialogProc_s, (LPARAM)this );
 		appbase_add_modeless_dialog( _connecting_dlg_hwnd );
 		ShowWindow( _connecting_dlg_hwnd, SW_SHOWNORMAL );
 		break;
 
 	case COM_ERR_INVALID_ADDRESS:
-		MessageBox( _superp->_main_win.hwnd, "The Internet Address seems to be invalid.\nPlease, review it.",
+		MessageBox( ((DSharinguApp *)_superp)->_main_win.hwnd, "The Internet Address seems to be invalid.\nPlease, review it.",
 									"Connection Problem", MB_OK | MB_ICONSTOP );
 
 		_session_remotep->Unlock();
-		_superp->_remote_mng.InvalidAddressOnCall();
+		((DSharinguApp *)_superp)->_remote_mng.InvalidAddressOnCall();
 		break;
 
 	default:
-		MessageBox( _superp->_main_win.hwnd, "Error occurred while trying to call.",
+		MessageBox( ((DSharinguApp *)_superp)->_main_win.hwnd, "Error occurred while trying to call.",
 									"Connection Problem", MB_OK | MB_ICONSTOP );
 
 		_session_remotep->Unlock();
@@ -114,13 +114,13 @@ void DSChannel::create( DSharinguApp *superp )
 
 	_intersys.Activate( false );
 /*
-	_tool_winp = new win_t( "tool win", &_superp->_main_win,
+	_tool_winp = new win_t( "tool win", &((DSharinguApp *)_superp)->_main_win,
 							this, toolEventFilter_s,
 							WIN_ANCH_TYPE_FIXED, 0, WIN_ANCH_TYPE_FIXED, 0,
 							WIN_ANCH_TYPE_PARENT_X2, 0, WIN_ANCH_TYPE_PARENT_Y1, 30,
 							(win_init_flags)(WIN_INIT_FLG_OPENGL | WIN_INTFLG_DONT_CLEAR) );
 */
-	_view_winp = new win_t( "view win", &_superp->_main_win,
+	_view_winp = new win_t( "view win", &((DSharinguApp *)_superp)->_main_win,
 							this, viewEventFilter_s,
 							WIN_ANCH_TYPE_FIXED, 0,
 							WIN_ANCH_TYPE_PARENT_Y1, 22,
@@ -129,7 +129,7 @@ void DSChannel::create( DSharinguApp *superp )
 							(win_init_flags)(WIN_INIT_FLG_OPENGL | WIN_INTFLG_DONT_CLEAR | 0*WIN_INIT_FLG_HSCROLL | 0*WIN_INIT_FLG_VSCROLL) );
 
 	//-----------------------------------------------
-	_console.cons_init( &_superp->_main_win, (void *)this );
+	_console.cons_init( &((DSharinguApp *)_superp)->_main_win, (void *)this );
 	_console.cons_line_cb_set( console_line_func_s );
 	_console.cons_line_printf( "%s -- %s, %s", APP_NAME" "APP_VERSION_STR, __DATE__, __TIME__ );
 	_console.cons_line_printf( "by Davide Pasca - http://kazzuya.com/dsharingu" );
@@ -142,7 +142,7 @@ void DSChannel::create( DSharinguApp *superp )
 	changeSessionRemote( NULL );
 
 	// we need to initialize this after loading the settings
-	_intersys.ActivateExternalInput( _superp->_settings._share_my_screen && _superp->_settings._show_my_screen );
+	_intersys.ActivateExternalInput( ((DSharinguApp *)_superp)->_settings._share_my_screen && ((DSharinguApp *)_superp)->_settings._show_my_screen );
 	_cpk.SetOnPackCallback( REMOCON_ARRAY_PKID, InteractiveSystem::OnPackCallback_s, &_intersys );
 
 	updateViewScale();
@@ -158,7 +158,7 @@ void DSChannel::setState( State state )
 	case STATE_CONNECTING:
 		//gam.EnableGadget( DSharinguApp::BUTT_CONNECTIONS, false );
 //		gam.EnableGadget( DSharinguApp::BUTT_HANGUP, true );
-		EnableMenuItem( _superp->_main_menu, ID_FILE_HANGUP, MF_BYCOMMAND | MF_ENABLED );
+		EnableMenuItem( ((DSharinguApp *)_superp)->_main_menu, ID_FILE_HANGUP, MF_BYCOMMAND | MF_ENABLED );
 		//gam.SetGadgetText( DSharinguApp::BUTT_CONNECTIONS, "[ ] Calling..." );
 		break;
 
@@ -172,11 +172,11 @@ void DSChannel::setState( State state )
 
 			WGUT::SafeDestroyWindow( _connecting_dlg_hwnd );
 
-			_superp->_scrwriter.StopGrabbing();
+			((DSharinguApp *)_superp)->_scrwriter.StopGrabbing();
 
 //			gam.EnableGadget( DSharinguApp::BUTT_CONNECTIONS, false );
 //			gam.EnableGadget( DSharinguApp::BUTT_HANGUP, false );
-			EnableMenuItem( _superp->_main_menu, ID_FILE_HANGUP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED );
+			EnableMenuItem( ((DSharinguApp *)_superp)->_main_menu, ID_FILE_HANGUP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED );
 			//gam.SetGadgetText( DSharinguApp::BUTT_CONNECTIONS, "[ ] Connections..." );
 
 			_is_connected = false;
@@ -273,7 +273,7 @@ void DSChannel::setShellVisibility( bool do_switch )
 //		gam.SetGadgetText( DSharinguApp::BUTT_SHELL, "[ ] Shell" );
 	}
 
-	_superp->updateViewMenu( this );
+	((DSharinguApp *)_superp)->updateViewMenu( this );
 }
 
 //==================================================================
@@ -283,7 +283,7 @@ void DSChannel::onConnect( bool is_connected_as_caller )
 
 	WGUT::SafeDestroyWindow( _connecting_dlg_hwnd );
 
-	_superp->_remote_mng.CloseDialog();
+	((DSharinguApp *)_superp)->_remote_mng.CloseDialog();
 
 	if ( is_connected_as_caller )
 	{
@@ -296,7 +296,7 @@ void DSChannel::onConnect( bool is_connected_as_caller )
 
 	//gam.EnableGadget( DSharinguApp::BUTT_CONNECTIONS, false );
 //	gam.EnableGadget( DSharinguApp::BUTT_HANGUP, true );
-	EnableMenuItem( _superp->_main_menu, ID_FILE_HANGUP, MF_BYCOMMAND | MF_ENABLED );
+	EnableMenuItem( ((DSharinguApp *)_superp)->_main_menu, ID_FILE_HANGUP, MF_BYCOMMAND | MF_ENABLED );
 	//gam.SetGadgetText( DSharinguApp::BUTT_CONNECTIONS, "[O] Connected" );
 
 	_is_connected = true;
@@ -312,7 +312,7 @@ void DSChannel::onConnect( bool is_connected_as_caller )
 		PSYS_ASSERT( _session_remotep != NULL );
 
 		HandShakeMsg	msg( PROTOCOL_VERSION,
-							_superp->_settings._username,
+							((DSharinguApp *)_superp)->_settings._username,
 							_session_remotep->_rm_username,
 							_session_remotep->_rm_password._data );
 
@@ -322,7 +322,7 @@ void DSChannel::onConnect( bool is_connected_as_caller )
 }
 
 //==================================================================
-void DSChannel::doDisconnect( const char *messagep, bool is_error )
+void DSChannel::DoDisconnect( const char *messagep, bool is_error )
 {
 	if ( messagep )
 		_console.cons_line_printf( CHNTAG"%s", messagep );
@@ -390,7 +390,7 @@ void DSChannel::handleAutoScroll()
 }
 
 //==================================================================
-DSChannel::State DSChannel::Idle()
+int DSChannel::Idle()
 {
 	if ( _console.cons_is_showing() )
 	{
@@ -414,27 +414,27 @@ DSChannel::State DSChannel::Idle()
 		break;
 
 	case COM_ERR_HARD_DISCONNECT:
-		doDisconnect( "Connection Lost." );
+		DoDisconnect( "Connection Lost." );
 		break;
 
 	case COM_ERR_INVALID_ADDRESS:
-		doDisconnect( "Call Failed. Invalid Address." );
+		DoDisconnect( "Call Failed. Invalid Address." );
 		break;
 
 	case COM_ERR_GRACEFUL_DISCONNECT:
-		doDisconnect( "Connection Closed." );
+		DoDisconnect( "Connection Closed." );
 		break;
 
 	case COM_ERR_GENERIC:
-		doDisconnect( "Connection Lost (generic error)" );
+		DoDisconnect( "Connection Lost (generic error)" );
 		break;
 
 	case COM_ERR_TIMEOUT_CONNECTING:
-		MessageBox( _superp->_main_win.hwnd, "Timed out while trying to connect.\n"
+		MessageBox( ((DSharinguApp *)_superp)->_main_win.hwnd, "Timed out while trying to connect.\n"
 			"Please, make sure that the Internet Address and the Port are correct.",
 			"Connection Problem", MB_OK | MB_ICONSTOP );
 
-		doDisconnect( "Timed out trying to connect." );
+		DoDisconnect( "Timed out trying to connect." );
 		break;
 
 	case COM_ERR_NONE:
@@ -448,9 +448,9 @@ DSChannel::State DSChannel::Idle()
 
 	u_int	pack_id;
 	u_int	data_size;
-	if ( _cpk.GetInputPack( &pack_id, &data_size, _superp->_inpack_buffp, DSharinguApp::INPACK_BUFF_SIZE ) )
+	if ( _cpk.GetInputPack( &pack_id, &data_size, ((DSharinguApp *)_superp)->_inpack_buffp, DSharinguApp::INPACK_BUFF_SIZE ) )
 	{
-		processInputPacket( pack_id, _superp->_inpack_buffp, data_size );
+		processInputPacket( pack_id, ((DSharinguApp *)_superp)->_inpack_buffp, data_size );
 		_cpk.DisposeINPacket();
 	}
 
@@ -492,25 +492,25 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 
 				if ( msg._protocol_version == PROTOCOL_VERSION )
 				{
-					if ( stricmp( msg._communicating_username, _superp->_settings._username ) )
+					if ( stricmp( msg._communicating_username, ((DSharinguApp *)_superp)->_settings._username ) )
 					{
 						_console.cons_line_printf( CHNTAG"PROBLEM: Rejected connection from '%s'. The wrong username was provided.",
 													msg._caller_username );
 						_cpk.SendPacket( HS_BAD_USERNAME_PKID );
-						doDisconnect( "Connection Failed." );
+						DoDisconnect( "Connection Failed." );
 						return;
 					}
 
-					if NOT( sha1_t::AreEqual( msg._communicating_password, _superp->_settings._password._data ) )
+					if NOT( sha1_t::AreEqual( msg._communicating_password, ((DSharinguApp *)_superp)->_settings._password._data ) )
 					{
 						_console.cons_line_printf( CHNTAG"PROBLEM: Rejected connection for '%s'. The wrong password was provided.",
 													msg._caller_username );
 						_cpk.SendPacket( HS_BAD_PASSWORD_PKID );
-						doDisconnect( "Connection Failed." );
+						DoDisconnect( "Connection Failed." );
 						return;
 					}
 
-					changeSessionRemote( _superp->_remote_mng.FindOrAddRemoteDefAndSelect( msg._caller_username ) );
+					changeSessionRemote( ((DSharinguApp *)_superp)->_remote_mng.FindOrAddRemoteDefAndSelect( msg._caller_username ) );
 					_session_remotep->Lock();
 
 					_console.cons_line_printf( CHNTAG"OK ! Successfully connected to '%s'", msg._caller_username );
@@ -524,21 +524,21 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 					if ( msg._protocol_version > PROTOCOL_VERSION )
 					{
 						_cpk.SendPacket( HS_NEW_PROTOCOL_PKID );
-						doDisconnect( "Connection Failed." );
-						if ( MessageBox( _superp->_main_win.hwnd,
+						DoDisconnect( "Connection Failed." );
+						if ( MessageBox( ((DSharinguApp *)_superp)->_main_win.hwnd,
 									"Cannot communicate because the other party has a newer version of the program !\n"
 									"Do you want to download the latest version ?",
 									"Incompatible Versions",
 									MB_YESNO | MB_ICONERROR ) == IDYES )
 						{
-							ShellExecute( _superp->_main_win.hwnd, "open", "http://kazzuya.com/dsharingu", NULL, NULL, SW_SHOWNORMAL );
+							ShellExecute( ((DSharinguApp *)_superp)->_main_win.hwnd, "open", "http://kazzuya.com/dsharingu", NULL, NULL, SW_SHOWNORMAL );
 						}
 					}
 					else
 					{
 						_cpk.SendPacket( HS_OLD_PROTOCOL_PKID );
-						doDisconnect( "Connection Failed." );
-						MessageBox( _superp->_main_win.hwnd,
+						DoDisconnect( "Connection Failed." );
+						MessageBox( ((DSharinguApp *)_superp)->_main_win.hwnd,
 									"Cannot communicate because the other party has an older version of the program !\n",
 									"Incompatible Versions",
 									MB_OK | MB_ICONERROR );
@@ -554,7 +554,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 			{
 				PSYS_ASSERT( _session_remotep != NULL );
 			}
-			doDisconnect( "Connection Failed." );
+			DoDisconnect( "Connection Failed." );
 			break;
 
 		case HS_BAD_PASSWORD_PKID:
@@ -565,27 +565,27 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 			{
 				PSYS_ASSERT( _session_remotep != NULL );
 			}
-			doDisconnect( "Connection Failed." );
+			DoDisconnect( "Connection Failed." );
 			break;
 
 
 		case HS_NEW_PROTOCOL_PKID:
-			doDisconnect( "Connection Failed." );
-			MessageBox( _superp->_main_win.hwnd,
+			DoDisconnect( "Connection Failed." );
+			MessageBox( ((DSharinguApp *)_superp)->_main_win.hwnd,
 				"Cannot communicate because the other party has an older version of the program !\n",
 				"Incompatible Versions",
 				MB_OK | MB_ICONERROR );
 			break;
 
 		case HS_OLD_PROTOCOL_PKID:
-			doDisconnect( "Connection Failed." );
-			if ( MessageBox( _superp->_main_win.hwnd,
+			DoDisconnect( "Connection Failed." );
+			if ( MessageBox( ((DSharinguApp *)_superp)->_main_win.hwnd,
 				"Cannot communicate because the other party has a newer version of the program !\n"
 				"Do you want to download the latest version ?",
 				"Incompatible Versions",
 				MB_YESNO | MB_ICONERROR ) == IDYES )
 			{
-				ShellExecute( _superp->_main_win.hwnd, "open", "http://kazzuya.com/dsharingu", NULL, NULL, SW_SHOWNORMAL );
+				ShellExecute( ((DSharinguApp *)_superp)->_main_win.hwnd, "open", "http://kazzuya.com/dsharingu", NULL, NULL, SW_SHOWNORMAL );
 			}
 			break;
 
@@ -600,7 +600,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 			else
 			{
 				PSYS_ASSERT( _session_remotep != NULL );
-				doDisconnect( "Connection Failed." );
+				DoDisconnect( "Connection Failed." );
 			}
 			break;
 		}
@@ -667,8 +667,8 @@ void DSChannel::handleConnectedFlow()
 			}
 
 			{
-				UsageAbilityMsg	msg(_superp->_settings._show_my_screen,
-					_superp->_settings._share_my_screen );
+				UsageAbilityMsg	msg(((DSharinguApp *)_superp)->_settings._show_my_screen,
+					((DSharinguApp *)_superp)->_settings._share_my_screen );
 				if ERR_ERROR( _cpk.SendPacket( USAGE_ABILITY_PKID, &msg, sizeof(msg), NULL ) )
 					return;
 
@@ -677,36 +677,36 @@ void DSChannel::handleConnectedFlow()
 	}
 
 
-	bool	do_show = (_remote_wants_view && _superp->_settings._show_my_screen);
+	bool	do_show = (_remote_wants_view && ((DSharinguApp *)_superp)->_settings._show_my_screen);
 
-	if ( _superp->_scrwriter.IsGrabbing() != do_show )
+	if ( ((DSharinguApp *)_superp)->_scrwriter.IsGrabbing() != do_show )
 	{
 		if ( do_show )
 		{
-			_superp->_scrwriter.StartGrabbing( (HWND)_superp->_main_win.hwnd );
+			((DSharinguApp *)_superp)->_scrwriter.StartGrabbing( (HWND)((DSharinguApp *)_superp)->_main_win.hwnd );
 		}
 		else
 		{
-			_superp->_scrwriter.StopGrabbing();
+			((DSharinguApp *)_superp)->_scrwriter.StopGrabbing();
 		}
 	}
 
-	if ( _superp->_scrwriter.IsGrabbing() )
+	if ( ((DSharinguApp *)_superp)->_scrwriter.IsGrabbing() )
 	{
 		int cnt = _cpk.SearchOUTQueue( DESK_IMG_PKID );
 		if ( cnt <= 2 )
 		{
-			bool has_grabbed = _superp->_scrwriter.UpdateWriter();
+			bool has_grabbed = ((DSharinguApp *)_superp)->_scrwriter.UpdateWriter();
 
 			if ( has_grabbed )
-				_superp->_scrwriter.SendFrame( DESK_IMG_PKID, &_cpk );
+				((DSharinguApp *)_superp)->_scrwriter.SendFrame( DESK_IMG_PKID, &_cpk );
 		}
 	}
 
 	++_frame_since_transmission;
 
 	if ( (_frame_since_transmission & 7) == 0 )
-		_superp->_dbg_win.Invalidate();
+		((DSharinguApp *)_superp)->_dbg_win.Invalidate();
 }
 
 //==================================================================
@@ -752,18 +752,18 @@ void DSChannel::gadgetCallback( int gget_id, GGET_Item *itemp )
 	switch ( gget_id )
 	{
 	case DSharinguApp::BUTT_CONNECTIONS:
-		_superp->_remote_mng.OpenDialog( &_superp->_main_win,
+		((DSharinguApp *)_superp)->_remote_mng.OpenDialog( &((DSharinguApp *)_superp)->_main_win,
 								DSharinguApp::handleChangedRemoteManager_s,
 								DSharinguApp::handleCallRemoteManager_s,
 								_superp );
 		break;
 
 	case DSharinguApp::BUTT_HANGUP:
-		doDisconnect( "Successfully disconnected." );
+		DoDisconnect( "Successfully disconnected." );
 		break;
 
 //	case DSharinguApp::BUTT_superp->_settings:
-//		_superp->_settings.OpenDialog( &_superp->_main_win, handleChangedSettings_s, this );
+//		((DSharinguApp *)_superp)->_settings.OpenDialog( &((DSharinguApp *)_superp)->_main_win, handleChangedSettings_s, this );
 //		break;
 /*
 	case DSharinguApp::BUTT_QUIT:
@@ -949,7 +949,7 @@ void DSChannel::rebuildButtons( win_t *winp )
 	gam.AddButton( DSharinguApp::BUTT_CONNECTIONS, x, y, 98, h, "Connections..." );		x += 98 + x_margin;
 	gam.AddButton( DSharinguApp::BUTT_HANGUP, x, y, 85, h, "Hang-up" );			x += 85 + x_margin;
 	gam.EnableGadget( DSharinguApp::BUTT_HANGUP, false );
-	EnableMenuItem( _superp->_main_menu, ID_FILE_HANGUP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED );
+	EnableMenuItem( ((DSharinguApp *)_superp)->_main_menu, ID_FILE_HANGUP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED );
 //	x += x_margin;
 //	x += x_margin;
 //	gam.AddButton( DSharinguApp::BUTT_SETTINGS, x, y, 98, h, "Settings..." );	x += 98 + x_margin;
@@ -1005,7 +1005,7 @@ BOOL CALLBACK DSChannel::connectingDialogProc(HWND hwnd, UINT umsg, WPARAM wpara
 		{
 		case IDOK:
 		case IDCANCEL:
-			doDisconnect( "Connection aborted." );
+			DoDisconnect( "Connection aborted." );
 			PostMessage(hwnd, WM_CLOSE, 0, 0);
 			break;
 		}
