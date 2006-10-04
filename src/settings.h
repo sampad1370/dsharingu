@@ -25,7 +25,7 @@
 #define SETTINGS_H
 
 #include <windows.h>
-#include "kwindow.h"
+#include "pwindow.h"
 #include "psys.h"
 #include "data_schema.h"
 #include "wingui_utils.h"

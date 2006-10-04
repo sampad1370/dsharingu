@@ -24,7 +24,7 @@
 #define INTERACTIVE_SYSTEM_H
 
 #include "psys.h"
-#include "kwindow.h"
+#include "pwindow.h"
 #include "compak.h"
 #include "dsharingu_protocol.h"
 

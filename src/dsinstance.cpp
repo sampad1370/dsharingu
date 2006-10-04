@@ -34,10 +34,9 @@
 #include "SHA1.h"
 #include "data_schema.h"
 #include "appbase3.h"
+#include "dschannel_manager.h"
 
-
-#define WINDOW_TITLE		APP_NAME" " APP_VERSION_STR " by Davide Pasca 2006 ("__DATE__" "__TIME__ ")"
-
+#define WINDOW_TITLE		APP_NAME" " APP_VERSION_STR
 
 //===============================================================
 BOOL CALLBACK DSharinguApp::aboutDialogProc_s(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)
@@ -103,7 +102,8 @@ DSharinguApp::DSharinguApp( const char *config_fnamep ) :
 	_about_is_open(false),
 	_download_updatep(NULL),
 	_main_menu(NULL),
-	_chmanagerp(NULL)
+	_chmanagerp(NULL),
+	_home_winp(NULL)
 {
 	psys_strcpy( _config_fname, config_fnamep, sizeof(_config_fname) );
 }
@@ -121,12 +121,16 @@ void DSharinguApp::updateViewMenu( DSChannel *chanp )
 {
 	if NOT( chanp )
 	{
-		EnableMenuItem( _main_menu, ID_VIEW_SHELL, FALSE );
-		EnableMenuItem( _main_menu, ID_VIEW_FITWINDOW, FALSE );
-		EnableMenuItem( _main_menu, ID_VIEW_ACTUALSIZE, FALSE );
+		EnableMenuItem( _main_menu, ID_VIEW_SHELL,		MF_BYCOMMAND | MF_GRAYED );
+		EnableMenuItem( _main_menu, ID_VIEW_FITWINDOW,	MF_BYCOMMAND | MF_GRAYED );
+		EnableMenuItem( _main_menu, ID_VIEW_ACTUALSIZE, MF_BYCOMMAND | MF_GRAYED );
 	}
 	else
 	{
+		EnableMenuItem( _main_menu, ID_VIEW_SHELL,		MF_BYCOMMAND | MF_ENABLED );
+		EnableMenuItem( _main_menu, ID_VIEW_FITWINDOW,	MF_BYCOMMAND | MF_ENABLED );
+		EnableMenuItem( _main_menu, ID_VIEW_ACTUALSIZE, MF_BYCOMMAND | MF_ENABLED );
+
 		if ( chanp->_console.cons_is_showing() )
 			CheckMenuItem( _main_menu, ID_VIEW_SHELL, MF_BYCOMMAND | MF_CHECKED );
 		else
@@ -171,10 +175,7 @@ char	*s, *d;
 //==================================================================
 void DSharinguApp::cmd_debug( char *params[], int n_params )
 {
-	if ( win_is_showing( &_dbg_win ) )
-		win_show( &_dbg_win, 0 );
-	else
-		win_show( &_dbg_win, 1 );
+	_dbg_win.Show( !win_is_showing( &_dbg_win ) );
 }
 
 //==================================================================
@@ -224,18 +225,20 @@ void DSharinguApp::Create( bool start_minimized )
 					WIN_ANCH_TYPE_THIS_X1, 400, WIN_ANCH_TYPE_THIS_Y1, 256,
 					(win_init_flags)(WIN_INIT_FLG_OPENGL | WIN_INTFLG_DONT_CLEAR | WIN_INIT_FLG_INVISIBLE | WIN_INIT_FLG_CLIENTEDGE) );
 
+	homeWinCreate();
+
 #ifdef _DEBUG
-	win_show( &_dbg_win, 0 );
+	_dbg_win.Show( false );
 #endif
 
-	win_show( &_main_win, true, start_minimized || _settings._start_minimized );
+	_main_win.Show( true, start_minimized || _settings._start_minimized );
 
 	_chmanagerp = new DSChannelManager( &_main_win, this, channelSwitch_s );
 
 
 	if ( _settings._username[0] == 0 || _settings._password.IsEmpty() )
 	{
-		if ( MessageBox( _main_win.hwnd,
+		if ( MessageBox( _main_win._hwnd,
 			"To connect and to receive calls, you need to choose a Username and Password in the Settings dialog.\n"
 			"Do you want to do it now ?",
 			"DSharingu - Settings Required", MB_YESNO | MB_ICONQUESTION ) == IDYES )
@@ -265,7 +268,7 @@ HWND DSharinguApp::openModelessDialog( void *mythisp, DLGPROC dlg_proc, LPSTR dl
 {
 	HWND	hwnd =
 		CreateDialogParam( (HINSTANCE)win_system_getinstance(),
-							dlg_namep, _main_win.hwnd,
+							dlg_namep, _main_win._hwnd,
 							dlg_proc, (LPARAM)mythisp );
 
 	appbase_add_modeless_dialog( hwnd );
@@ -284,7 +287,7 @@ int DSharinguApp::mainEventFilter( win_event_type etype, win_event_t *eventp )
 	{
 	case WIN_ETYPE_ACTIVATE:
 		if ( _cur_chanp )
-			win_focus( &_cur_chanp->_console._win, true );
+			_cur_chanp->_console._win.SetFocus();
 		break;
 
 	case WIN_ETYPE_CREATE:
@@ -317,8 +320,7 @@ int DSharinguApp::mainEventFilter( win_event_type etype, win_event_t *eventp )
 			break;
 
 		case ID_FILE_EXIT:
-			if ( _cur_chanp )
-				_cur_chanp->Quit();
+			PostMessage( _main_win._hwnd, WM_CLOSE, 0, 0 );
 			break;
 
 		case ID_VIEW_FITWINDOW:
@@ -352,7 +354,7 @@ int DSharinguApp::mainEventFilter( win_event_type etype, win_event_t *eventp )
 		case ID_HELP_CHECKFORUPDATES:
 			if NOT( _download_updatep )
 			{
-				_download_updatep = new DownloadUpdate( _main_win.hwnd,
+				_download_updatep = new DownloadUpdate( _main_win._hwnd,
 											APP_VERSION_STR,
 											"kazzuya.com",
 											"/dsharingu_data/update_info.txt",
@@ -364,7 +366,7 @@ int DSharinguApp::mainEventFilter( win_event_type etype, win_event_t *eventp )
 		case ID_HELP_ABOUT:
 			if NOT( _about_is_open )
 			{
-				WGUT::OpenModelessDialog( (DLGPROC)aboutDialogProc_s, MAKEINTRESOURCE(IDD_ABOUT), _main_win.hwnd, this );
+				WGUT::OpenModelessDialog( (DLGPROC)aboutDialogProc_s, MAKEINTRESOURCE(IDD_ABOUT), _main_win._hwnd, this );
 				_about_is_open = true;
 			}
 			break;
@@ -402,10 +404,10 @@ void DSharinguApp::handleChangedRemoteManager( RemoteDef *changed_remotep )
 
 	if ( chanp && chanp->_is_transmitting )
 	{
-		chanp->setInteractiveMode( changed_remotep->_use_remote_screen );
+		chanp->setViewMode( changed_remotep->_see_remote_screen );
 
 		UsageWishMsg	msg( changed_remotep->_see_remote_screen,
-							 changed_remotep->_use_remote_screen );
+							 chanp->_is_using_remote );
 
 		if ERR_ERROR( chanp->_cpk.SendPacket( USAGE_WISH_PKID, &msg, sizeof(msg), NULL ) )
 			return;
@@ -422,7 +424,7 @@ void DSharinguApp::handleCallRemoteManager( RemoteDef *remotep )
 {
 	if ( _settings._username[0] == 0 || _settings._password.IsEmpty() )
 	{
-		if ( MessageBox( _main_win.hwnd,
+		if ( MessageBox( _main_win._hwnd,
 				"Please choose a Username and Password in the Settings dialog before trying to connect.\n"
 				"Do you want to do it now ?",
 				"Calling Problem", MB_YESNO | MB_ICONQUESTION ) == IDYES )
@@ -544,6 +546,8 @@ void DSharinguApp::handleChangedSettings()
 {
 	saveConfig();
 
+	homeWinOnChangedSettings();
+
 	if ( _settings._listen_for_connections )
 	{	// only restart listening if the port has changed
 		if ( _com_listener.GetListenPort() != _settings._listen_port )
@@ -559,14 +563,17 @@ void DSharinguApp::handleChangedSettings()
 	{
 		DSChannel	*chanp = (DSChannel *)_chmanagerp->_channelsp[i];
 
-		chanp->_intersys.ActivateExternalInput( _settings._share_my_screen && _settings._show_my_screen );
-
-		if ( chanp->_is_transmitting )
+		if ( chanp )
 		{
-			UsageAbilityMsg	msg(_settings._show_my_screen,
-								_settings._share_my_screen );
-			if ERR_ERROR( chanp->_cpk.SendPacket( USAGE_ABILITY_PKID, &msg, sizeof(msg), NULL ) )
-				return;
+			chanp->_intersys.ActivateExternalInput( _settings._share_my_screen && _settings._show_my_screen );
+
+			if ( chanp->_is_transmitting )
+			{
+				UsageAbilityMsg	msg(_settings._show_my_screen,
+					_settings._share_my_screen );
+				if ERR_ERROR( chanp->_cpk.SendPacket( USAGE_ABILITY_PKID, &msg, sizeof(msg), NULL ) )
+					return;
+			}
 		}
 	}
 }
@@ -589,4 +596,26 @@ int DSharinguApp::Idle()
 	_chmanagerp->Idle();
 
 	return DSChannel::STATE_IDLE;
+}
+
+//==================================================================
+void DSharinguApp::channelSwitch_s( DSharinguApp *superp, DSChannel *new_sel_chanp, DSChannel *old_sel_chanp )
+{
+	((DSharinguApp *)superp)->channelSwitch( new_sel_chanp, old_sel_chanp );
+}
+//==================================================================
+void DSharinguApp::channelSwitch( DSChannel *new_sel_chanp, DSChannel *old_sel_chanp )
+{
+	if ( old_sel_chanp )
+		old_sel_chanp->Show( false );
+	else
+		_home_winp->Show( false );
+
+	if ( new_sel_chanp )
+		new_sel_chanp->Show( true );
+	else
+		_home_winp->Show( true );
+
+	_cur_chanp = (DSChannel *)new_sel_chanp;
+	updateViewMenu( (DSChannel *)new_sel_chanp );
 }

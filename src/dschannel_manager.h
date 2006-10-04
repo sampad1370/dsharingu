@@ -23,7 +23,7 @@
 #ifndef CHANNEL_MANAGER_H
 #define CHANNEL_MANAGER_H
 
-#include "kwindow.h"
+#include "pwindow.h"
 #include "dsinstance.h"
 #include "dschannel.h"
 
@@ -33,34 +33,44 @@
 class DSChannelManager
 {
 public:
+	typedef void		(*OnChannelSwitchCBType)( DSharinguApp *superp, DSChannel *new_sel_chanp, DSChannel *old_sel_chanp );
+
+public:
 	static const int	MAX_CHANNELS = 16;
-	Channel				*_channelsp[ MAX_CHANNELS ];
+	DSChannel			*_channelsp[ MAX_CHANNELS ];
 	int					_n_channels;
-	Channel				*_cur_chanp;
+	DSChannel			*_cur_chanp;
 
 private:
-	void				*_superp;
-	void				(*_onChannelSwitchCB)( void *superp, Channel *chanp );
-	win_t				*_parent_winp;
-	win_t				*_tabs_winp;
+	DSharinguApp			*_superp;
+	OnChannelSwitchCBType	_onChannelSwitchCB;
+	win_t					*_parent_winp;
+	win_t					*_tabs_winp;
 
 public:
 	//==================================================================
-	DSChannelManager( win_t *parent_winp, void *superp,
-					void (*onChannelSwitchCB)( void *superp, Channel *chanp ) );
+	DSChannelManager( win_t *parent_winp, DSharinguApp *superp,
+					  OnChannelSwitchCBType onChannelSwitchCB );
 
-	Channel	*NewChannel( RemoteDef *remotep );
-	Channel	*NewChannel( int accepted_fd );
-	Channel	*GetCurChannel()
+	DSChannel	*NewChannel( RemoteDef *remotep );
+	DSChannel	*NewChannel( int accepted_fd );
+	DSChannel	*GetCurChannel()
 	{
 		return	_cur_chanp;
 	}
+	void		SetChannelName( DSChannel *chanp, const char *namep );
 	void		Idle();
 	void		Quit();
 
 private:
 	static void	gadgetCallback_s( int gget_id, GGET_Item *itemp, void *userdatap );
 	void		gadgetCallback( int gget_id, GGET_Item *itemp );
+
+	void		addTab( int idx, const char *namep );
+	void		toggleOne( GGET_Manager &gam, int gget_id );
+	
+	static int	eventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );
+	int			eventFilter( win_event_type etype, win_event_t *eventp );
 };
 
 #endif

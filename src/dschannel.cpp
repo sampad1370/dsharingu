@@ -33,8 +33,21 @@
 #include "SHA1.h"
 #include "data_schema.h"
 #include "appbase3.h"
+#include "dschannel_manager.h"
 
 #define CHNTAG				"* "
+
+//==================================================================
+enum
+{
+	VIEW_WIN_VIEWEMOTE_BUTT = 1,
+	VIEW_WIN_VIEWEMOTE_STEXT,
+	VIEW_WIN_USEREMOTE_BUTT,
+	VIEW_WIN_USEREMOTE_STEXT,
+};
+
+static const int	BUTT_WD	= 110;
+static const int	BUTT_HE	= 22;
 
 //==================================================================
 ///
@@ -60,7 +73,7 @@ DSChannel::DSChannel( DSharinguApp *superp, RemoteDef *remotep ) :
 {
 	create( superp );
 
-	_session_remotep = remotep;
+	changeSessionRemote( remotep );
 
 	remotep->SetUserData( this );
 	remotep->Lock();
@@ -72,14 +85,14 @@ DSChannel::DSChannel( DSharinguApp *superp, RemoteDef *remotep ) :
 		setState( STATE_CONNECTING );
 		_connecting_dlg_hwnd =
 			CreateDialogParam( (HINSTANCE)win_system_getinstance(),
-			MAKEINTRESOURCE(IDD_CONNECTING), ((DSharinguApp *)_superp)->_main_win.hwnd,
+			MAKEINTRESOURCE(IDD_CONNECTING), ((DSharinguApp *)_superp)->_main_win._hwnd,
 			(DLGPROC)connectingDialogProc_s, (LPARAM)this );
 		appbase_add_modeless_dialog( _connecting_dlg_hwnd );
 		ShowWindow( _connecting_dlg_hwnd, SW_SHOWNORMAL );
 		break;
 
 	case COM_ERR_INVALID_ADDRESS:
-		MessageBox( ((DSharinguApp *)_superp)->_main_win.hwnd, "The Internet Address seems to be invalid.\nPlease, review it.",
+		MessageBox( ((DSharinguApp *)_superp)->_main_win._hwnd, "The Internet Address seems to be invalid.\nPlease, review it.",
 									"Connection Problem", MB_OK | MB_ICONSTOP );
 
 		_session_remotep->Unlock();
@@ -87,7 +100,7 @@ DSChannel::DSChannel( DSharinguApp *superp, RemoteDef *remotep ) :
 		break;
 
 	default:
-		MessageBox( ((DSharinguApp *)_superp)->_main_win.hwnd, "Error occurred while trying to call.",
+		MessageBox( ((DSharinguApp *)_superp)->_main_win._hwnd, "Error occurred while trying to call.",
 									"Connection Problem", MB_OK | MB_ICONSTOP );
 
 		_session_remotep->Unlock();
@@ -110,7 +123,10 @@ void DSChannel::create( DSharinguApp *superp )
 	_intersys =  &_cpk;
 	_is_transmitting = false;
 	_is_connected = false;
+	_is_using_remote = false;
 	_connecting_dlg_hwnd = NULL;
+	
+	_view_winp = NULL;
 
 	_intersys.Activate( false );
 /*
@@ -131,10 +147,6 @@ void DSChannel::create( DSharinguApp *superp )
 	//-----------------------------------------------
 	_console.cons_init( &((DSharinguApp *)_superp)->_main_win, (void *)this );
 	_console.cons_line_cb_set( console_line_func_s );
-	_console.cons_line_printf( "%s -- %s, %s", APP_NAME" "APP_VERSION_STR, __DATE__, __TIME__ );
-	_console.cons_line_printf( "by Davide Pasca - http://kazzuya.com/dsharingu" );
-	_console.cons_line_printf( "This software is a TEST release of a work in progress !!!" );
-	_console.cons_line_printf( "Type /help for help" );
 	_console.cons_cmd_add_defs( _cmd_defs );
 	_console.cons_show( 1 );
 
@@ -146,6 +158,8 @@ void DSChannel::create( DSharinguApp *superp )
 	_cpk.SetOnPackCallback( REMOCON_ARRAY_PKID, InteractiveSystem::OnPackCallback_s, &_intersys );
 
 	updateViewScale();
+
+	_view_winp->PostResize();
 }
 
 //==================================================================
@@ -186,6 +200,7 @@ void DSChannel::setState( State state )
 				_session_remotep->Unlock();
 
 			setInteractiveMode( false );
+			setViewMode( false );
 
 			_state = STATE_DISCONNECTING;
 		}
@@ -211,10 +226,34 @@ void DSChannel::setState( State state )
 void DSChannel::changeSessionRemote( RemoteDef *new_remotep )
 {
 	_session_remotep = new_remotep;
-//	if ( _session_remotep )
-//		_tool_winp->GetGGETManager().EnableGadget( DSharinguApp::BUTT_USEREMOTE, true );
-//	else
-//		_tool_winp->GetGGETManager().EnableGadget( DSharinguApp::BUTT_USEREMOTE, false );
+
+	updateViewButt();
+	updateUserButt();
+}
+
+//==================================================================
+void DSChannel::updateViewButt()
+{
+	if ( _session_remotep )
+	{
+		GGET_Manager	&gam = _view_winp->GetGGETManager();
+
+		if ( _session_remotep->_see_remote_screen )
+			gam.FindGadget( VIEW_WIN_VIEWEMOTE_BUTT )->SetText( "[/] View Remote" );
+		else
+			gam.FindGadget( VIEW_WIN_VIEWEMOTE_BUTT )->SetText( "[ ] View Remote" );
+	}
+}
+
+//==================================================================
+void DSChannel::updateUserButt()
+{
+	GGET_Manager	&gam = _view_winp->GetGGETManager();
+
+	if ( _is_using_remote )
+		gam.FindGadget( VIEW_WIN_USEREMOTE_BUTT )->SetText( "[/] Use Remote" );
+	else
+		gam.FindGadget( VIEW_WIN_USEREMOTE_BUTT )->SetText( "[ ] Use Remote" );
 }
 
 //==================================================================
@@ -370,19 +409,19 @@ void DSChannel::handleAutoScroll()
 			win_invalidate( _view_winp );
 		}
 
-		if ( _disp_curs_x >= _view_winp->w-32 && _view_winp->w < x2 )
+		if ( _disp_curs_x >= _view_winp->GetWidth()-32 && _view_winp->GetWidth() < x2 )
 		{
 			_disp_off_x -= 8;
-			if ( _disp_curs_x >= _view_winp->w-8 )
+			if ( _disp_curs_x >= _view_winp->GetWidth()-8 )
 				_disp_off_x -= 16;
 
 			win_invalidate( _view_winp );
 		}
 
-		if ( _disp_curs_y >= _view_winp->h-32 && _view_winp->h < y2 )
+		if ( _disp_curs_y >= _view_winp->GetHeight()-32 && _view_winp->GetHeight() < y2 )
 		{
 			_disp_off_y -= 8;
-			if ( _disp_curs_y >= _view_winp->h-8 )
+			if ( _disp_curs_y >= _view_winp->GetHeight()-8 )
 				_disp_off_y -= 16;
 			win_invalidate( _view_winp );
 		}
@@ -430,7 +469,7 @@ int DSChannel::Idle()
 		break;
 
 	case COM_ERR_TIMEOUT_CONNECTING:
-		MessageBox( ((DSharinguApp *)_superp)->_main_win.hwnd, "Timed out while trying to connect.\n"
+		MessageBox( ((DSharinguApp *)_superp)->_main_win._hwnd, "Timed out while trying to connect.\n"
 			"Please, make sure that the Internet Address and the Port are correct.",
 			"Connection Problem", MB_OK | MB_ICONSTOP );
 
@@ -515,6 +554,8 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 
 					_console.cons_line_printf( CHNTAG"OK ! Successfully connected to '%s'", msg._caller_username );
 
+					_superp->_chmanagerp->SetChannelName( this, _session_remotep->_rm_username );
+
 					_is_transmitting = true;
 					_frame_since_transmission = 0;
 					_cpk.SendPacket( HS_OK );
@@ -525,20 +566,20 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 					{
 						_cpk.SendPacket( HS_NEW_PROTOCOL_PKID );
 						DoDisconnect( "Connection Failed." );
-						if ( MessageBox( ((DSharinguApp *)_superp)->_main_win.hwnd,
+						if ( MessageBox( ((DSharinguApp *)_superp)->_main_win._hwnd,
 									"Cannot communicate because the other party has a newer version of the program !\n"
 									"Do you want to download the latest version ?",
 									"Incompatible Versions",
 									MB_YESNO | MB_ICONERROR ) == IDYES )
 						{
-							ShellExecute( ((DSharinguApp *)_superp)->_main_win.hwnd, "open", "http://kazzuya.com/dsharingu", NULL, NULL, SW_SHOWNORMAL );
+							ShellExecute( ((DSharinguApp *)_superp)->_main_win._hwnd, "open", "http://kazzuya.com/dsharingu", NULL, NULL, SW_SHOWNORMAL );
 						}
 					}
 					else
 					{
 						_cpk.SendPacket( HS_OLD_PROTOCOL_PKID );
 						DoDisconnect( "Connection Failed." );
-						MessageBox( ((DSharinguApp *)_superp)->_main_win.hwnd,
+						MessageBox( ((DSharinguApp *)_superp)->_main_win._hwnd,
 									"Cannot communicate because the other party has an older version of the program !\n",
 									"Incompatible Versions",
 									MB_OK | MB_ICONERROR );
@@ -571,7 +612,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 
 		case HS_NEW_PROTOCOL_PKID:
 			DoDisconnect( "Connection Failed." );
-			MessageBox( ((DSharinguApp *)_superp)->_main_win.hwnd,
+			MessageBox( ((DSharinguApp *)_superp)->_main_win._hwnd,
 				"Cannot communicate because the other party has an older version of the program !\n",
 				"Incompatible Versions",
 				MB_OK | MB_ICONERROR );
@@ -579,13 +620,13 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 
 		case HS_OLD_PROTOCOL_PKID:
 			DoDisconnect( "Connection Failed." );
-			if ( MessageBox( ((DSharinguApp *)_superp)->_main_win.hwnd,
+			if ( MessageBox( ((DSharinguApp *)_superp)->_main_win._hwnd,
 				"Cannot communicate because the other party has a newer version of the program !\n"
 				"Do you want to download the latest version ?",
 				"Incompatible Versions",
 				MB_YESNO | MB_ICONERROR ) == IDYES )
 			{
-				ShellExecute( ((DSharinguApp *)_superp)->_main_win.hwnd, "open", "http://kazzuya.com/dsharingu", NULL, NULL, SW_SHOWNORMAL );
+				ShellExecute( ((DSharinguApp *)_superp)->_main_win._hwnd, "open", "http://kazzuya.com/dsharingu", NULL, NULL, SW_SHOWNORMAL );
 			}
 			break;
 
@@ -627,19 +668,32 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 			break;
 
 		case USAGE_ABILITY_PKID:
+			{
 			_remote_allows_view  = ((UsageAbilityMsg *)datap)->_see_remote_screen;
 			_remote_allows_share = ((UsageAbilityMsg *)datap)->_use_remote_screen;
 			PSYS_ASSERT( _session_remotep != NULL );
+
+			GGET_Manager	&gam = _view_winp->GetGGETManager();
+
+			gam.EnableGadget( VIEW_WIN_VIEWEMOTE_BUTT, _remote_allows_view );
+			gam.FindGadget( VIEW_WIN_VIEWEMOTE_STEXT )->Show( !_remote_allows_view );
+
 			if ( _remote_allows_share && _remote_allows_view &&
 				 _session_remotep &&
 				 _session_remotep->_see_remote_screen )
 			{
+				gam.EnableGadget( VIEW_WIN_USEREMOTE_BUTT, true );
+				gam.FindGadget( VIEW_WIN_USEREMOTE_STEXT )->Show( false );
 //				_tool_winp->GetGGETManager().EnableGadget( DSharinguApp::BUTT_USEREMOTE, true );
 			}
 			else
 			{
+				gam.EnableGadget( VIEW_WIN_USEREMOTE_BUTT, false );
+				gam.FindGadget( VIEW_WIN_USEREMOTE_STEXT )->Show( true );
 //				_tool_winp->GetGGETManager().EnableGadget( DSharinguApp::BUTT_USEREMOTE, false );
 				setInteractiveMode( false );
+			}
+
 			}
 			break;
 		}
@@ -660,7 +714,7 @@ void DSChannel::handleConnectedFlow()
 		{
 			{
 				UsageWishMsg	msg(_session_remotep->_see_remote_screen,
-					_session_remotep->_use_remote_screen );
+									_is_using_remote );
 
 				if ERR_ERROR( _cpk.SendPacket( USAGE_WISH_PKID, &msg, sizeof(msg), NULL ) )
 					return;
@@ -683,7 +737,7 @@ void DSChannel::handleConnectedFlow()
 	{
 		if ( do_show )
 		{
-			((DSharinguApp *)_superp)->_scrwriter.StartGrabbing( (HWND)((DSharinguApp *)_superp)->_main_win.hwnd );
+			((DSharinguApp *)_superp)->_scrwriter.StartGrabbing( (HWND)((DSharinguApp *)_superp)->_main_win._hwnd );
 		}
 		else
 		{
@@ -727,16 +781,26 @@ void DSChannel::updateViewScale()
 //===============================================================
 void DSChannel::setInteractiveMode( bool onoff )
 {
-//	GGET_Manager	&gam = _tool_winp->GetGGETManager();
+	GGET_Manager	&gam = _view_winp->GetGGETManager();
 
 	if ( _is_connected && onoff )
 		_intersys.RestartFeed();
 
 	_intersys.Activate( onoff );
-//	if ( onoff )
-//		gam.SetGadgetText( DSharinguApp::BUTT_USEREMOTE, "[O] Use Remote" );
-//	else
-//		gam.SetGadgetText( DSharinguApp::BUTT_USEREMOTE, "[ ] Use Remote" );
+
+	_is_using_remote = onoff;
+	//_session_remotep->_use_remote_screen = onoff;
+
+	updateUserButt();
+}
+
+//===============================================================
+void DSChannel::setViewMode( bool onoff )
+{
+	GGET_Manager	&gam = _view_winp->GetGGETManager();
+
+	_session_remotep->_see_remote_screen = onoff;
+	updateViewButt();
 }
 
 //==================================================================
@@ -751,6 +815,29 @@ void DSChannel::gadgetCallback( int gget_id, GGET_Item *itemp )
 
 	switch ( gget_id )
 	{
+	case VIEW_WIN_VIEWEMOTE_BUTT:
+		if ( _session_remotep )
+		{
+			setViewMode( !_session_remotep->_see_remote_screen );
+
+			if ( _is_transmitting )
+			{
+				UsageWishMsg	msg( _session_remotep->_see_remote_screen,
+									 _is_using_remote );
+
+				if ERR_ERROR( _cpk.SendPacket( USAGE_WISH_PKID, &msg, sizeof(msg), NULL ) )
+					return;
+			}
+		}
+		break;
+
+	case VIEW_WIN_USEREMOTE_BUTT:
+		if ( _session_remotep )
+		{
+			setInteractiveMode( !_is_using_remote );
+		}
+		break;
+/*
 	case DSharinguApp::BUTT_CONNECTIONS:
 		((DSharinguApp *)_superp)->_remote_mng.OpenDialog( &((DSharinguApp *)_superp)->_main_win,
 								DSharinguApp::handleChangedRemoteManager_s,
@@ -769,28 +856,31 @@ void DSChannel::gadgetCallback( int gget_id, GGET_Item *itemp )
 	case DSharinguApp::BUTT_QUIT:
 		setState( STATE_QUIT );
 		break;
-*/
-	case DSharinguApp::BUTT_USEREMOTE:
-		if ( _session_remotep )
-		{
-			_session_remotep->_use_remote_screen = !_session_remotep->_use_remote_screen;
-			setInteractiveMode( _session_remotep->_use_remote_screen );
-		}
-		break;
-
+* /
 	case DSharinguApp::BUTT_SHELL:
 		setShellVisibility( true );
 		break;
+*/
 	}
 }
 
+//==================================================================
+int DSChannel::viewEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp )
+{
+	DSChannel	*mythis = (DSChannel *)userobjp;
+	return mythis->viewEventFilter( etype, eventp );
+}
 //==================================================================
 int DSChannel::viewEventFilter( win_event_type etype, win_event_t *eventp )
 {
 	switch ( etype )
 	{
+	case WIN_ETYPE_CREATE:
+		viewWinRebuildButtons( eventp->winp );
+		break;
+
 	case WIN_ETYPE_ACTIVATE:
-		win_focus( &_console._win, true );
+		_console._win.SetFocus();
 		break;
 
 	case WIN_ETYPE_KEYDOWN:
@@ -858,8 +948,6 @@ int DSChannel::viewEventFilter( win_event_type etype, win_event_t *eventp )
 		}
 		break;
 		*/
-	case WIN_ETYPE_CREATE:
-		break;
 
 	case WIN_ETYPE_WINRESIZE:
 		{
@@ -881,6 +969,7 @@ int DSChannel::viewEventFilter( win_event_type etype, win_event_t *eventp )
 			}
 		}
 		updateViewScale();
+		viewWinReshapeButtons( eventp->winp );
 		//reshape( eventp->win_w, eventp->win_h );
 		break;
 
@@ -891,12 +980,6 @@ int DSChannel::viewEventFilter( win_event_type etype, win_event_t *eventp )
 
 	return 0;
 }
-//==================================================================
-int DSChannel::viewEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp )
-{
-	DSChannel	*mythis = (DSChannel *)userobjp;
-	return mythis->viewEventFilter( etype, eventp );
-}
 /*
 //==================================================================
 int DSChannel::toolEventFilter( win_event_type etype, win_event_t *eventp )
@@ -906,7 +989,7 @@ int DSChannel::toolEventFilter( win_event_type etype, win_event_t *eventp )
 	switch ( etype )
 	{
 	case WIN_ETYPE_ACTIVATE:
-		win_focus( &_console._win, true );
+		&_console._win.SetFocus().;
 		break;
 
 	case WIN_ETYPE_CREATE:
@@ -929,10 +1012,9 @@ int DSChannel::toolEventFilter_s( void *userobjp, win_event_type etype, win_even
 }
 */
 //==================================================================
-void DSChannel::rebuildButtons( win_t *winp )
+void DSChannel::viewWinRebuildButtons( win_t *winp )
 {
 	float	x = 4;
-	float	y = 3;
 	float	w = 90;
 	float	h = 22;
 	float	y_margin = 4;
@@ -941,8 +1023,24 @@ void DSChannel::rebuildButtons( win_t *winp )
 	GGET_Manager	&gam = winp->GetGGETManager();
 
 	gam.SetCallback( gadgetCallback_s, this );
-	
-	GGET_StaticText *stextp = gam.AddStaticText( DSharinguApp::STEXT_TOOLBARBASE, 0, 0, winp->w, winp->h, NULL );
+
+	GGET_Item	*itemp;
+
+	gam.AddButton( VIEW_WIN_VIEWEMOTE_BUTT, 0, 0, BUTT_WD, BUTT_HE, "[ ] View Remote" );
+	itemp = gam.AddStaticText( VIEW_WIN_VIEWEMOTE_STEXT, 0, 0, BUTT_WD*2, BUTT_HE, "Not Allowed" );
+	itemp->SetTextColor( 0.9f, 0, 0, 1 );
+	itemp->_flags |= GGET_FLG_ALIGN_LEFT;
+	itemp->Show( false );
+
+	gam.AddButton( VIEW_WIN_USEREMOTE_BUTT, 0, 0, BUTT_WD, BUTT_HE, "[ ] Use Remote" );
+	itemp = gam.AddStaticText( VIEW_WIN_USEREMOTE_STEXT, 0, 0, BUTT_WD*2, BUTT_HE, "Not Allowed" );
+	itemp->SetTextColor( 0.9f, 0, 0, 1 );
+	itemp->_flags |= GGET_FLG_ALIGN_LEFT;
+	itemp->Show( false );
+
+
+/*	
+	GGET_StaticText *stextp = gam.AddStaticText( DSharinguApp::STEXT_TOOLBARBASE, 0, 0, winp->GetWidth(), winp->GetHeight(), NULL );
 	if ( stextp )
 		stextp->SetFillType( GGET_StaticText::FILL_TYPE_HTOOLBAR );
 
@@ -964,16 +1062,33 @@ void DSChannel::rebuildButtons( win_t *winp )
 	x += x_margin;
 	gam.AddButton( DSharinguApp::BUTT_SHELL, x, y, 60, h, "[ ] Shell" );			x += 60 + x_margin;
 //	gam.AddButton( DSharinguApp::BUTT_HELP, x, y, 60, h, "About" );			x += 60 + x_margin;
+*/
+//	setInteractiveMode( getInteractiveMode() );
 
-	setInteractiveMode( getInteractiveMode() );
+	if ( _session_remotep )
+		setViewMode( _session_remotep->_see_remote_screen );
 }
 
 //==================================================================
-void DSChannel::reshapeButtons( win_t *winp )
+void DSChannel::viewWinReshapeButtons( win_t *winp )
 {
 	GGET_Manager	&gam = winp->GetGGETManager();
 
-	gam.FindGadget( DSharinguApp::STEXT_TOOLBARBASE )->SetRect( 0, 0, winp->w, winp->h );
+//	GGET_Item	*itemp = gam.FindGadget( VIEW_WIN_USEREMOTE_BUTT );
+	//buttp->SetPos( eventp->winp->GetWidth() - BUTT_WD - 12, 20 );
+//	buttp->SetPos( 12, 20 );
+
+	float	y = 8;
+
+	gam.FindGadget( VIEW_WIN_VIEWEMOTE_BUTT )->SetPos( 20, y );
+	gam.FindGadget( VIEW_WIN_VIEWEMOTE_STEXT )->SetPos( 20 + BUTT_WD + 4, y );
+	y += BUTT_HE + 4;
+
+	gam.FindGadget( VIEW_WIN_USEREMOTE_BUTT )->SetPos( 20, y );
+	gam.FindGadget( VIEW_WIN_USEREMOTE_STEXT )->SetPos( 20 + BUTT_WD + 4, y );
+	y += BUTT_HE + 4;
+
+	//gam.FindGadget( DSharinguApp::STEXT_TOOLBARBASE )->SetRect( 0, 0, winp->GetWidth(), winp->GetHeight() );
 }
 
 //===============================================================
