@@ -22,7 +22,7 @@ SetCompressor /SOLID lzma
 
 	!define MY_APP_NAME	"DSharingu"
 	
-	OutFile "${MY_APP_NAME}013a.exe"
+	OutFile "${MY_APP_NAME}014a.exe"
 	
 	;Default installation folder
 	InstallDir "$PROGRAMFILES\${MY_APP_NAME}"
