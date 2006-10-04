@@ -36,8 +36,7 @@
 #include "SHA1.h"
 #include "data_schema.h"
 #include "appbase3.h"
-#include "channel.h"
-#include "channel_manager.h"
+#include "dschannel.h"
 
 //==================================================================
 class DSharinguApp;
@@ -73,6 +72,7 @@ public:
 
 	bool					_is_connected;
 	bool					_is_transmitting;
+	bool					_is_using_remote;
 
 	console_t				_console;
 
@@ -113,6 +113,10 @@ public:
 	}
 
 	void		DoDisconnect( const char *messagep, bool is_error=0 );
+	void		Show( bool onoff )
+	{
+		_view_winp->Show( onoff );
+	}
 
 //private:
 public:
@@ -127,6 +131,9 @@ public:
 	void		handleAutoScroll();
 	void		handleConnectedFlow();
 
+	void		updateUserButt();
+	void		updateViewButt();
+	void		setViewMode( bool onoff );
 	void		setInteractiveMode( bool onoff );
 	bool		getInteractiveMode();
 	void		setShellVisibility( bool do_switch=false );
@@ -139,8 +146,8 @@ public:
 	void		drawDispOffArrows();
 	void		doViewPaint();
 
-	void		rebuildButtons( win_t *winp );
-	void		reshapeButtons( win_t *winp );
+	void		viewWinRebuildButtons( win_t *winp );
+	void		viewWinReshapeButtons( win_t *winp );
 
 	void		updateViewScale();
 

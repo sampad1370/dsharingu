@@ -25,7 +25,7 @@
 
 #include <windows.h>
 #include "psys.h"
-#include "kwindow.h"
+#include "pwindow.h"
 #include "console.h"
 #include "compak.h"
 #include "screen_sharing.h"
@@ -39,7 +39,7 @@
 
 #define CHNTAG				"* "
 #define APP_NAME			"DSharingu"
-#define APP_VERSION_STR		"0.13a"
+#define APP_VERSION_STR		"0.14a"
 
 /*
 //==================================================================
@@ -96,7 +96,7 @@ public:
 
 	//==================================================================
 	DSChannel			*_cur_chanp;
-	DSChannelManager		*_chmanagerp;
+	DSChannelManager	*_chmanagerp;
 
 	static const int	INPACK_BUFF_SIZE = 1024*1024;
 	char				_config_fname[256];
@@ -109,6 +109,7 @@ public:
 	u_char				*_inpack_buffp;
 
 	win_t				_main_win;
+	win_t				*_home_winp;
 	win_t				_dbg_win;
 
 	DownloadUpdate		*_download_updatep;	
@@ -128,15 +129,8 @@ public:
 	}
 
 private:
-	static void		channelSwitch_s( void *superp, Channel *chanp )
-	{
-		((DSharinguApp *)superp)->channelSwitch( chanp );
-	}
-	void			channelSwitch( Channel *chanp )
-	{
-		_cur_chanp = (DSChannel *)chanp;
-		updateViewMenu( (DSChannel *)chanp );
-	}
+	static void		channelSwitch_s( DSharinguApp *superp, DSChannel *new_sel_chanp, DSChannel *old_sel_chanp );
+	void			channelSwitch( DSChannel *new_sel_chanp, DSChannel *old_sel_chanp );
 
 	void		updateViewMenu( DSChannel *chanp );
 
@@ -166,6 +160,14 @@ private:
 	BOOL CALLBACK aboutDialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
 
 	void		saveConfig();
+
+	void		homeWinCreate();
+	static int	homeWinEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );
+	int			homeWinEventFilter( win_event_type etype, win_event_t *eventp );
+
+	static void	homeWinGadgetCallback_s( int gget_id, GGET_Item *itemp, void *userdatap );
+	void		homeWinGadgetCallback( int gget_id, GGET_Item *itemp );
+	void		homeWinOnChangedSettings();
 };
 
 #endif

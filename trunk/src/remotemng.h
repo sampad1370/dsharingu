@@ -25,7 +25,7 @@
 #define REMOTEMNG_H
 
 #include <windows.h>
-#include "kwindow.h"
+#include "pwindow.h"
 #include "psys.h"
 #include "dsharingu_protocol.h"
 #include "data_schema.h"
@@ -42,7 +42,7 @@ public:
 	char		_rm_ip_address[128];
 	int			_call_port;
 	bool		_see_remote_screen;
-	bool		_use_remote_screen;
+	//bool		_use_remote_screen;
 
 	DataSchema	_schema;
 

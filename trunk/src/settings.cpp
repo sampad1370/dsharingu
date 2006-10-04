@@ -398,7 +398,7 @@ void Settings::OpenDialog( win_t *parent_winp, void (*onChangedSettingsCB)( void
 
 		HWND hwnd =
 			CreateDialogParam( (HINSTANCE)win_system_getinstance(),
-				MAKEINTRESOURCE(IDD_SETTINGS), parent_winp->hwnd,
+				MAKEINTRESOURCE(IDD_SETTINGS), parent_winp->_hwnd,
 				DialogProc_s, (LPARAM)this );
 		appbase_add_modeless_dialog( hwnd );
 		ShowWindow( hwnd, SW_SHOWNORMAL );
