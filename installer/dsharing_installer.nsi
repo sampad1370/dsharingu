@@ -22,7 +22,7 @@ SetCompressor /SOLID lzma
 
 	!define MY_APP_NAME	"DSharingu"
 	
-	OutFile "${MY_APP_NAME}014a.exe"
+	OutFile "${MY_APP_NAME}${DSHARINGU_VNAME}.exe"
 	
 	;Default installation folder
 	InstallDir "$PROGRAMFILES\${MY_APP_NAME}"
@@ -47,7 +47,7 @@ Function .onInit
     FindWindow $0 "DSHARINGU_CLASS"
     IntCmp $0 0 not_found
     
-	MessageBox MB_OKCANCEL "All instances of ${MY_APP_NAME} will now be closed." /SD IDOK IDCANCEL do_quit
+	MessageBox MB_OKCANCEL "All instances of ${MY_APP_NAME} will now be closed." IDOK kill_loop IDCANCEL do_quit
 
 kill_loop:
 		FindWindow $0 "DSHARINGU_CLASS"
@@ -95,7 +95,7 @@ FunctionEnd
 		;!define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
 		;!define MUI_FINISHPAGE_SHOWREADME $INSTDIR\readme.txt
 	!insertmacro MUI_PAGE_FINISH
-  
+	
 ;	!define MUI_FINISHPAGE_RUN 			"$INSTDIR"
 ;	!insertmacro MUI_PAGE_FINISH
 	
@@ -135,17 +135,25 @@ SectionEnd
 
 ; Optional section (can be disabled by the user)
 Section "Desktop Shortcut" SecDesktop
-  CreateShortCut "$DESKTOP\${MY_APP_NAME}.lnk" "$INSTDIR\${MY_APP_NAME}.exe" ""
+	IfSilent +2
+		CreateShortCut "$DESKTOP\${MY_APP_NAME}.lnk" "$INSTDIR\${MY_APP_NAME}.exe" ""
 SectionEnd
 
 ; Optional section (can be disabled by the user)
 Section "Quick Launch Shortcut" SecQuick
-  CreateShortCut "$QUICKLAUNCH\${MY_APP_NAME}.lnk" "$INSTDIR\${MY_APP_NAME}.exe" ""
+	IfSilent +2
+		CreateShortCut "$QUICKLAUNCH\${MY_APP_NAME}.lnk" "$INSTDIR\${MY_APP_NAME}.exe" ""
 SectionEnd
 
 ; Optional section (can be disabled by the user)
 Section "Run After Login" SecRunLogin
-  WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Run" "DSharingu" "$\"$INSTDIR\${MY_APP_NAME}.exe$\" /minimized"
+	IfSilent +2
+		WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Run" "DSharingu" "$\"$INSTDIR\${MY_APP_NAME}.exe$\" /minimized"
+SectionEnd
+
+Section "-run after silent install"
+	IfSilent 0 +2
+		Exec "$INSTDIR\${MY_APP_NAME}.exe"
 SectionEnd
 
 ;--------------------------------

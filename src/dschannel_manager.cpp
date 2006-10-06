@@ -118,7 +118,7 @@ void DSChannelManager::addTab( int idx, const char *namep )
 {
 	float	x = 4;
 	float	y = 3;
-	float	w = 70;
+	float	w = 100;
 	float	h = 20;
 
 	GGET_Manager	&gam = _tabs_winp->GetGGETManager();
@@ -150,13 +150,44 @@ void DSChannelManager::gadgetCallback( int gget_id, GGET_Item *itemp )
 }
 
 //==================================================================
-DSChannel *DSChannelManager::NewChannel( RemoteDef *remotep )
+DSChannel *DSChannelManager::RecycleOrNewChannel( RemoteDef *remotep )
+{
+	DSChannel	*chanp = FindChannelByRemote( remotep );
+
+	if ( chanp )
+	{
+		chanp->Recycle();
+		return chanp;
+	}
+	else
+	{
+		if PTRAP_FALSE( _n_channels < MAX_CHANNELS )
+		{
+			DSChannel	*chanp = new DSChannel( this, remotep );
+			_channelsp[ _n_channels ] = chanp;
+			addTab( _n_channels, remotep->_rm_username );
+			++_n_channels;
+
+			if ( _onChannelSwitchCB )
+				_onChannelSwitchCB( _superp, chanp, _cur_chanp );
+
+			_cur_chanp = chanp;
+
+			return chanp;
+		}
+		else
+			return NULL;
+	}
+}
+
+//==================================================================
+DSChannel *DSChannelManager::NewChannel( int accepted_fd )
 {
 	if PTRAP_FALSE( _n_channels < MAX_CHANNELS )
 	{
-		DSChannel	*chanp = new DSChannel( _superp, remotep );
+		DSChannel	*chanp = new DSChannel( this, accepted_fd );
 		_channelsp[ _n_channels ] = chanp;
-		addTab( _n_channels, remotep->_rm_username );
+		addTab( _n_channels, "...." );
 		++_n_channels;
 
 		if ( _onChannelSwitchCB )
@@ -171,24 +202,17 @@ DSChannel *DSChannelManager::NewChannel( RemoteDef *remotep )
 }
 
 //==================================================================
-DSChannel *DSChannelManager::NewChannel( int accepted_fd )
+DSChannel *DSChannelManager::FindChannelByRemote( const RemoteDef *remotep )
 {
-	if PTRAP_FALSE( _n_channels < MAX_CHANNELS )
+	for (int i=0; i < _n_channels; ++i)
 	{
-		DSChannel	*chanp = new DSChannel( _superp, accepted_fd );
-		_channelsp[ _n_channels ] = chanp;
-		addTab( _n_channels, "...." );
-		++_n_channels;
-
-		if ( _onChannelSwitchCB )
-			_onChannelSwitchCB( _superp, chanp, _cur_chanp );
-
-		_cur_chanp = chanp;
-
-		return chanp;
+		if ( _channelsp[i] && _channelsp[i]->_session_remotep == remotep )
+		{
+			return _channelsp[i];
+		}
 	}
-	else
-		return NULL;
+
+	return NULL;
 }
 
 //==================================================================

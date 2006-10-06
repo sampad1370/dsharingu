@@ -51,19 +51,18 @@ class DSChannel
 public:
 	enum State
 	{
-		STATE_NULL,
 		STATE_IDLE,
 		STATE_CONNECTING,
 		STATE_CONNECTED,
 		STATE_DISCONNECT_START,
 		STATE_DISCONNECTING,
 		STATE_DISCONNECTED,
+		STATE_RECYCLE,
 		STATE_QUIT
 	};
 
 public:
-	DSharinguApp			*_superp;
-
+	DSChannelManager		*_managerp;
 	State					_state;
 	Compak					_cpk;
 	ScrShare::Reader		_scrreader;
@@ -102,27 +101,34 @@ public:
 	int						_connecting_dlg_timer;
 
 public:
-	DSChannel( DSharinguApp *superp, int accepted_fd );
-	DSChannel( DSharinguApp *superp, RemoteDef *remotep );
+	DSChannel( DSChannelManager *managerp, int accepted_fd );
+	DSChannel( DSChannelManager *managerp, RemoteDef *remotep );
 	~DSChannel();
 
 	int			Idle();
 	void		Quit()
 	{
-		setState( DSChannel::STATE_QUIT );
+		setState( STATE_QUIT );
+	}
+
+	void		Recycle()
+	{
+		setState( STATE_RECYCLE );
 	}
 
 	void		DoDisconnect( const char *messagep, bool is_error=0 );
-	void		Show( bool onoff )
+	void		Show( bool onoff );
+
+	State		GetState() const
 	{
-		_view_winp->Show( onoff );
+		return _state;
 	}
+
+	void		CallRemote() throw(...);
 
 //private:
 public:
-	void		create( DSharinguApp *superp );
-
-
+	void		create();
 	void		setState( State state );
 	void		onConnect( bool is_connected_as_caller );
 

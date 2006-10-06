@@ -40,7 +40,7 @@
 #define IDC_LISTEN_CONNECTIONS_CHECK    1018
 #define IDC_RM_CONNECT                  1019
 #define IDC_RM_SEE_REMOTE_SCREEN        1020
-#define IDC_RM_USE_REMOTE_SCREEN        1021
+#define IDC_RM_AUTO_CALL                1021
 #define IDC_RM_REMOTE_PORT              1022
 #define IDC_RM_DELETE_REMOTE            1024
 #define IDC_ST_LOCAL_PORT               1029
@@ -49,8 +49,12 @@
 #define IDC_DU_DOWNLOADING_PROGRESS     1032
 #define IDC_DU_INSTALL                  1033
 #define IDC_DU_PLEASEWAIT               1034
-#define IDC_DU_PLEASEWAIT2              1035
 #define IDC_DU_READYINSTALL             1035
+#define IDC_ABOUT_APPNAME               1035
+#define IDC_RM_REMOTE_INFO_STATIC       1036
+#define IDC_RM_USERNAME_STATIC          1037
+#define IDC_RM_PASSWORD_STATIC          1038
+#define IDC_RM_INET_ADDRESS_STATIC      1039
 #define ID_FILE_CONNECTIONS             40001
 #define ID_Menu                         40003
 #define ID_FILE_EXIT                    40004
@@ -69,9 +73,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        122
+#define _APS_NEXT_RESOURCE_VALUE        123
 #define _APS_NEXT_COMMAND_VALUE         40019
-#define _APS_NEXT_CONTROL_VALUE         1035
+#define _APS_NEXT_CONTROL_VALUE         1040
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

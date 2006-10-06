@@ -43,18 +43,18 @@ RemoteDef::RemoteDef() :
 	_rm_ip_address[0] = 0;
 	_call_port = DEF_PORT_NUMBER;
 	_see_remote_screen = false;
-//	_use_remote_screen = false;
+	_call_automatically = false;
 
 	_schema.AddString(	"_rm_username", _rm_username, sizeof(_rm_username) );
 	_schema.AddSHA1Hash("_rm_password", &_rm_password );
 	_schema.AddString(	"_rm_ip_address", _rm_ip_address, sizeof(_rm_ip_address) );
 	_schema.AddInt(		"_port", &_call_port, 1, 65535 );
 	_schema.AddBool(	"_see_remote_screen", &_see_remote_screen );
-//	_schema.AddBool(	"_use_remote_screen", &_use_remote_screen );
+	_schema.AddBool(	"_call_automatically", &_call_automatically );
 }
 
 //==================================================================
-//==
+///
 //==================================================================
 RemoteMng::RemoteMng() :
 	_hwnd(NULL),
@@ -90,7 +90,7 @@ void RemoteMng::setRemoteToForm( RemoteDef *remotep, HWND hwnd )
 		SetDlgItemText( hwnd, IDC_RM_REMOTE_ADDRESS, remotep->_rm_ip_address );
 		SetDlgItemInt( hwnd, IDC_RM_REMOTE_PORT, remotep->_call_port );
 		CheckDlgButton( hwnd, IDC_RM_SEE_REMOTE_SCREEN, remotep->_see_remote_screen );
-		//CheckDlgButton( hwnd, IDC_RM_USE_REMOTE_SCREEN, remotep->_use_remote_screen );
+		CheckDlgButton( hwnd, IDC_RM_AUTO_CALL, remotep->_call_automatically );
 	}
 }
 
@@ -104,7 +104,7 @@ void RemoteMng::setNewEntryRemoteDef( HWND hwnd )
 	SetDlgItemText( hwnd, IDC_RM_REMOTE_ADDRESS, "" );
 	SetDlgItemInt( hwnd, IDC_RM_REMOTE_PORT, DEF_PORT_NUMBER );
 	CheckDlgButton( hwnd, IDC_RM_SEE_REMOTE_SCREEN, false );
-	//CheckDlgButton( hwnd, IDC_RM_USE_REMOTE_SCREEN, false );
+	CheckDlgButton( hwnd, IDC_RM_AUTO_CALL, false );
 }
 
 //===============================================================
@@ -170,6 +170,9 @@ void RemoteMng::refreshEnabledStatus( HWND hwnd )
 	DlgEnableItem( hwnd, IDC_RM_DELETE_REMOTE,		is_not_locked );
 	DlgEnableItem( hwnd, IDC_RM_CONNECT,			is_not_locked );
 
+
+	DlgEnableItem( hwnd, IDC_RM_AUTO_CALL, TRUE );
+
 	DlgEnableItem( hwnd, IDC_RM_SEE_REMOTE_SCREEN,	TRUE );
 //	DlgEnableItem( hwnd, IDC_RM_USE_REMOTE_SCREEN,
 //					IsDlgButtonON( hwnd, IDC_RM_SEE_REMOTE_SCREEN ) );
@@ -234,14 +237,14 @@ void RemoteMng::onEmptyList( HWND hwnd )
 	SetDlgItemText( hwnd, IDC_RM_REMOTE_ADDRESS, "" );
 	SetDlgItemInt( hwnd, IDC_RM_REMOTE_PORT, DEF_PORT_NUMBER );
 	CheckDlgButton( hwnd, IDC_RM_SEE_REMOTE_SCREEN, false );
-	//CheckDlgButton( hwnd, IDC_RM_USE_REMOTE_SCREEN, false );
+	CheckDlgButton( hwnd, IDC_RM_AUTO_CALL, false );
 
 	DlgEnableItem( hwnd, IDC_RM_REMOTE_NAME, FALSE );
 	DlgEnableItem( hwnd, IDC_RM_REMOTE_PASSWORD, FALSE );
 	DlgEnableItem( hwnd, IDC_RM_REMOTE_ADDRESS, FALSE );
 	DlgEnableItem( hwnd, IDC_RM_REMOTE_PORT, FALSE );
 	DlgEnableItem( hwnd, IDC_RM_SEE_REMOTE_SCREEN, FALSE );
-	//DlgEnableItem( hwnd, IDC_RM_USE_REMOTE_SCREEN, FALSE );
+	DlgEnableItem( hwnd, IDC_RM_AUTO_CALL, FALSE );
 	DlgEnableItem( hwnd, IDC_RM_CONNECT, FALSE );
 	DlgEnableItem( hwnd, IDC_RM_DELETE_REMOTE, FALSE );
 }
@@ -344,15 +347,15 @@ BOOL CALLBACK RemoteMng::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM 
 				updateRemote( hwnd );
 			}
 			break;
-/*
-		case IDC_RM_USE_REMOTE_SCREEN:
+
+		case IDC_RM_AUTO_CALL:
 			if ( _cur_remotep )
 			{
-				_cur_remotep->_use_remote_screen = IsDlgButtonON( hwnd, IDC_RM_USE_REMOTE_SCREEN );
+				_cur_remotep->_call_automatically = IsDlgButtonON( hwnd, IDC_RM_AUTO_CALL );
 				updateRemote( hwnd );
 			}
 			break;
-*/
+
 		case IDC_RM_REMOTES_LIST:
 			switch (HIWORD(wparam)) 
 			{ 

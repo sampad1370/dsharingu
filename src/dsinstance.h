@@ -39,7 +39,7 @@
 
 #define CHNTAG				"* "
 #define APP_NAME			"DSharingu"
-#define APP_VERSION_STR		"0.14a"
+#define APP_VERSION_STR		"0.16a"
 
 /*
 //==================================================================
@@ -115,6 +115,8 @@ public:
 	DownloadUpdate		*_download_updatep;	
 	HMENU				_main_menu;
 
+	double				_last_autocall_check_time;
+
 //	IntSysMessageParser	_intsysmsgparser;
 public:
 	DSharinguApp( const char *config_fnamep );
@@ -164,10 +166,11 @@ private:
 	void		homeWinCreate();
 	static int	homeWinEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );
 	int			homeWinEventFilter( win_event_type etype, win_event_t *eventp );
-
 	static void	homeWinGadgetCallback_s( int gget_id, GGET_Item *itemp, void *userdatap );
 	void		homeWinGadgetCallback( int gget_id, GGET_Item *itemp );
 	void		homeWinOnChangedSettings();
+	
+	void		handleAutoCall();
 };
 
 #endif
