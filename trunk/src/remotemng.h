@@ -42,7 +42,7 @@ public:
 	char		_rm_ip_address[128];
 	int			_call_port;
 	bool		_see_remote_screen;
-	//bool		_use_remote_screen;
+	bool		_call_automatically;
 
 	DataSchema	_schema;
 

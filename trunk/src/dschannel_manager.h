@@ -41,8 +41,8 @@ public:
 	int					_n_channels;
 	DSChannel			*_cur_chanp;
 
-private:
 	DSharinguApp			*_superp;
+private:
 	OnChannelSwitchCBType	_onChannelSwitchCB;
 	win_t					*_parent_winp;
 	win_t					*_tabs_winp;
@@ -52,8 +52,9 @@ public:
 	DSChannelManager( win_t *parent_winp, DSharinguApp *superp,
 					  OnChannelSwitchCBType onChannelSwitchCB );
 
-	DSChannel	*NewChannel( RemoteDef *remotep );
+	DSChannel	*RecycleOrNewChannel( RemoteDef *remotep );
 	DSChannel	*NewChannel( int accepted_fd );
+	DSChannel	*FindChannelByRemote( const RemoteDef *remotep );
 	DSChannel	*GetCurChannel()
 	{
 		return	_cur_chanp;

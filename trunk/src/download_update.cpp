@@ -187,7 +187,9 @@ bool DownloadUpdate::Idle()
 					fclose( fp );
 					if PTRAP_FALSE( done )
 					{
-						ShellExecute( _dlg_hwnd, "open", _exe_desk_path_str.c_str(), NULL, NULL, SW_SHOWNORMAL );
+						ShellExecute( _dlg_hwnd, "open",
+							_exe_desk_path_str.c_str(),
+							"/S", NULL, SW_SHOWNORMAL );
 						WGUT::SafeDestroyWindow( _dlg_hwnd );
 						return false;
 					}

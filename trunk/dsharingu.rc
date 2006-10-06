@@ -85,37 +85,6 @@ IDB_BITMAP1             BITMAP                  "main_icon_48.bmp"
 // Dialog
 //
 
-IDD_REMOTEMNG DIALOGEX 0, 0, 357, 183
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | 
-    WS_CAPTION | WS_SYSMENU
-CAPTION "Remotes Manager"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
-BEGIN
-    LISTBOX         IDC_RM_REMOTES_LIST,7,7,128,108,LBS_SORT | 
-                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Connect Now !",IDC_RM_CONNECT,7,137,128,19
-    EDITTEXT        IDC_RM_REMOTE_NAME,213,24,124,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_RM_REMOTE_PASSWORD,213,43,124,14,ES_PASSWORD | 
-                    ES_AUTOHSCROLL
-    EDITTEXT        IDC_RM_REMOTE_ADDRESS,213,63,124,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_RM_REMOTE_PORT,244,81,33,14,ES_AUTOHSCROLL | 
-                    ES_NUMBER
-    CONTROL         "Watch Remote's Screen",IDC_RM_SEE_REMOTE_SCREEN,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,205,111,92,10
-    CONTROL         "Use Remote's Screen",IDC_RM_USE_REMOTE_SCREEN,"Button",
-                    BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,205,129,83,
-                    10
-    PUSHBUTTON      "New Remote...",IDC_RM_NEW_REMOTE,7,119,69,14
-    PUSHBUTTON      "Delete",IDC_RM_DELETE_REMOTE,85,119,50,14
-    DEFPUSHBUTTON   "Close",IDOK,300,162,50,14
-    GROUPBOX        "Remote's Info:",IDC_STATIC,142,7,208,150
-    LTEXT           "Internet Address:",IDC_STATIC,151,65,58,8
-    LTEXT           "Username:",IDC_STATIC,173,27,36,8
-    LTEXT           "Password:",IDC_STATIC,175,45,34,8
-    LTEXT           "On Port:",IDC_STATIC,213,84,28,8
-    LTEXT           "(default is 51112)",IDC_STATIC,281,84,58,8
-END
-
 IDD_CONNECTING DIALOGEX 0, 0, 186, 77
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | 
     WS_CAPTION | WS_SYSMENU
@@ -152,14 +121,6 @@ END
 #ifdef APSTUDIO_INVOKED
 GUIDELINES DESIGNINFO 
 BEGIN
-    IDD_REMOTEMNG, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 350
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 176
-    END
-
     IDD_CONNECTING, DIALOG
     BEGIN
         LEFTMARGIN, 7
@@ -268,7 +229,7 @@ FONT 9, "Tahoma", 400, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,77,114,50,14
     GROUPBOX        "About:",IDC_STATIC,7,7,191,99
-    LTEXT           "DSharingu 0.14a",IDC_STATIC,100,20,80,9
+    LTEXT           "DSharingu xxxxx",IDC_ABOUT_APPNAME,100,20,80,9
     LTEXT           "desktop sharing software",IDC_STATIC,85,30,85,8,
                     SS_CENTERIMAGE
     LTEXT           "written by Davide Pasca 2006",IDC_STATIC,76,40,96,8
@@ -316,6 +277,37 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,22,202,64,10
 END
 
+IDD_REMOTEMNG DIALOGEX 0, 0, 357, 183
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Remotes Manager"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LISTBOX         IDC_RM_REMOTES_LIST,7,7,128,108,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Call Now !",IDC_RM_CONNECT,7,137,128,19
+    EDITTEXT        IDC_RM_REMOTE_NAME,213,24,124,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_RM_REMOTE_PASSWORD,213,43,124,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    EDITTEXT        IDC_RM_REMOTE_ADDRESS,213,63,124,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_RM_REMOTE_PORT,237,81,33,14,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    CONTROL         "Watch Remote's Screen",IDC_RM_SEE_REMOTE_SCREEN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,205,111,92,10
+    CONTROL         "Call Automatically",IDC_RM_AUTO_CALL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,205,129,72,10
+    PUSHBUTTON      "New Remote...",IDC_RM_NEW_REMOTE,7,119,69,14
+    PUSHBUTTON      "Delete",IDC_RM_DELETE_REMOTE,85,119,50,14
+    DEFPUSHBUTTON   "Close",IDOK,300,162,50,14
+    GROUPBOX        "Remote's Info:",IDC_RM_REMOTE_INFO_STATIC,142,7,208,150
+    LTEXT           "Internet Address:",IDC_RM_INET_ADDRESS_STATIC,151,65,58,
+                    8
+    LTEXT           "Username:",IDC_RM_USERNAME_STATIC,173,27,36,8
+    LTEXT           "Password:",IDC_RM_PASSWORD_STATIC,175,45,34,8
+    RTEXT           "On Port:",IDC_STATIC,191,84,43,8
+    LTEXT           "(default is 51112)",IDC_STATIC,274,84,66,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -339,6 +331,14 @@ BEGIN
         RIGHTMARGIN, 201
         TOPMARGIN, 7
         BOTTOMMARGIN, 246
+    END
+
+    IDD_REMOTEMNG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 350
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 176
     END
 END
 #endif    // APSTUDIO_INVOKED

@@ -55,6 +55,7 @@ BOOL CALLBACK DSharinguApp::aboutDialogProc(HWND hwnd, UINT umsg, WPARAM wparam,
     switch( umsg )
     {
     case WM_INITDIALOG:
+		SetDlgItemText( hwnd, IDC_ABOUT_APPNAME, APP_NAME" "APP_VERSION_STR );
 		break; 
 
     case WM_COMMAND:
@@ -103,7 +104,8 @@ DSharinguApp::DSharinguApp( const char *config_fnamep ) :
 	_download_updatep(NULL),
 	_main_menu(NULL),
 	_chmanagerp(NULL),
-	_home_winp(NULL)
+	_home_winp(NULL),
+	_last_autocall_check_time(0.0)
 {
 	psys_strcpy( _config_fname, config_fnamep, sizeof(_config_fname) );
 }
@@ -175,7 +177,7 @@ char	*s, *d;
 //==================================================================
 void DSharinguApp::cmd_debug( char *params[], int n_params )
 {
-	_dbg_win.Show( !win_is_showing( &_dbg_win ) );
+	_dbg_win.Show( !_dbg_win.IsShowing() );
 }
 
 //==================================================================
@@ -434,7 +436,12 @@ void DSharinguApp::handleCallRemoteManager( RemoteDef *remotep )
 		return;
 	}
 
-	_chmanagerp->NewChannel( remotep );
+	try
+	{
+		_chmanagerp->RecycleOrNewChannel( remotep );
+	} catch(...) {
+		PSYS_ASSERT( 0 );
+	}
 }
 
 //==================================================================
@@ -579,6 +586,48 @@ void DSharinguApp::handleChangedSettings()
 }
 
 //==================================================================
+void DSharinguApp::handleAutoCall()
+{
+	for (int i=0; i < _remote_mng._remotes_list.len(); ++i)
+	{
+		RemoteDef	*remotep = _remote_mng._remotes_list[i];
+		if ( remotep->_call_automatically )
+		{
+			bool	is_being_handled = false;
+			for (int j=0; j < _chmanagerp->_n_channels; ++j)
+			{
+				DSChannel	*chanp = _chmanagerp->_channelsp[j];
+				if ( chanp && chanp->_session_remotep == remotep )
+				{
+					if ( chanp->GetState() == DSChannel::STATE_IDLE )
+					{
+						try
+						{
+							chanp->CallRemote();
+						} catch(...) {
+							PSYS_ASSERT( 0 );
+						}
+					}
+					is_being_handled = true;
+				}
+			}
+
+			if NOT( is_being_handled )
+			{
+				if ( _settings._username[0] != 0 && !_settings._password.IsEmpty() )
+				{
+					try
+					{
+						_chmanagerp->RecycleOrNewChannel( remotep );
+					} catch(...) {
+						PSYS_ASSERT( 0 );
+					}
+				}
+			}
+		}
+	}
+}
+//==================================================================
 int DSharinguApp::Idle()
 {
 	if ( _download_updatep )
@@ -586,11 +635,25 @@ int DSharinguApp::Idle()
 		if NOT( _download_updatep->Idle() )
 			SAFE_DELETE( _download_updatep );
 	}
-
-	int	accepted_fd;
-	if ( _com_listener.Idle( accepted_fd ) == COM_ERR_CONNECTED )
+	else
 	{
-		_chmanagerp->NewChannel( accepted_fd );
+		double	now_time = psys_timer_get_d();
+		if ( now_time - _last_autocall_check_time >= 1000.0 )
+		{
+			_last_autocall_check_time = now_time;
+			handleAutoCall();
+		}
+
+		int	accepted_fd;
+		if ( _com_listener.Idle( accepted_fd ) == COM_ERR_CONNECTED )
+		{
+			try
+			{
+				_chmanagerp->NewChannel( accepted_fd );
+			} catch(...) {
+				PSYS_ASSERT( 0 );
+			}
+		}
 	}
 
 	_chmanagerp->Idle();
