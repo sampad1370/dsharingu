@@ -249,8 +249,7 @@ void DSharinguApp::Create( bool start_minimized )
 		}
 	}
 
-	if ( _settings._listen_for_connections )
-		StartListening( _settings._listen_port );
+	handleChangedSettings();
 
 	updateViewMenu( NULL );
 }
@@ -583,6 +582,19 @@ void DSharinguApp::handleChangedSettings()
 			}
 		}
 	}
+
+	std::string	title( WINDOW_TITLE );
+
+	title += " - ";
+	
+	if ( _settings._username[0] )
+	{
+		title += _settings._username;
+	}
+	else
+		title += "no username !";
+
+	_main_win.SetTitle( title.c_str() );
 }
 
 //==================================================================
@@ -603,7 +615,7 @@ void DSharinguApp::handleAutoCall()
 					{
 						try
 						{
-							chanp->CallRemote();
+							chanp->CallRemote( true );
 						} catch(...) {
 							PSYS_ASSERT( 0 );
 						}

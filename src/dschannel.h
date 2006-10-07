@@ -64,6 +64,7 @@ public:
 public:
 	DSChannelManager		*_managerp;
 	State					_state;
+	bool					_is_calling_silently;
 	Compak					_cpk;
 	ScrShare::Reader		_scrreader;
 
@@ -124,7 +125,7 @@ public:
 		return _state;
 	}
 
-	void		CallRemote() throw(...);
+	void		CallRemote( bool call_silent ) throw(...);
 
 //private:
 public:
@@ -137,8 +138,7 @@ public:
 	void		handleAutoScroll();
 	void		handleConnectedFlow();
 
-	void		updateUserButt();
-	void		updateViewButt();
+	void		refreshInteractionInterface();
 	void		setViewMode( bool onoff );
 	void		setInteractiveMode( bool onoff );
 	bool		getInteractiveMode();
@@ -165,6 +165,9 @@ public:
 
 	BOOL CALLBACK connectingDialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
 	static BOOL CALLBACK connectingDialogProc_s(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
+	
+	void		thisMessageBox( LPCTSTR lpText, LPCTSTR lpCaption, UINT uType );
+	int			thisMessageBoxRet( LPCTSTR lpText, LPCTSTR lpCaption, UINT uType, UINT uDefVal );
 };
 
 #endif

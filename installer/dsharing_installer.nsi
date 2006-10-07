@@ -87,7 +87,7 @@ FunctionEnd
 
 	
 		# These indented statements modify settings for MUI_PAGE_FINISH
-		!define MUI_FINISHPAGE_NOAUTOCLOSE
+		#!define MUI_FINISHPAGE_NOAUTOCLOSE
 		!define MUI_FINISHPAGE_RUN		"$INSTDIR\${MY_APP_NAME}.exe"
 		!define MUI_FINISHPAGE_RUN_CHECKED
 		;!define MUI_FINISHPAGE_RUN_TEXT "Start a shortcut"
