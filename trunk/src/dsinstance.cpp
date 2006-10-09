@@ -235,7 +235,7 @@ void DSharinguApp::Create( bool start_minimized )
 
 	_main_win.Show( true, start_minimized || _settings._start_minimized );
 
-	_chmanagerp = new DSChannelManager( &_main_win, this, channelSwitch_s );
+	_chmanagerp = new DSChannelManager( &_main_win, this, channelSwitch_s, onChannelDelete_s );
 
 
 	if ( _settings._username[0] == 0 || _settings._password.IsEmpty() )
@@ -693,4 +693,21 @@ void DSharinguApp::channelSwitch( DSChannel *new_sel_chanp, DSChannel *old_sel_c
 
 	_cur_chanp = (DSChannel *)new_sel_chanp;
 	updateViewMenu( (DSChannel *)new_sel_chanp );
+}
+
+//==================================================================
+void DSharinguApp::onChannelDelete_s( DSharinguApp *superp, DSChannel *chanp )
+{
+	((DSharinguApp *)superp)->onChannelDelete( chanp );
+}
+//==================================================================
+void DSharinguApp::onChannelDelete( DSChannel *chanp )
+{
+	if ( _cur_chanp == chanp )
+	{
+		PSYS_ASSERT( 0 );
+		_cur_chanp = NULL;
+	}
+
+//	SAFE_DELETE( chanp );
 }

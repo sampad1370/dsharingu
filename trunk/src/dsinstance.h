@@ -39,7 +39,7 @@
 
 #define CHNTAG				"* "
 #define APP_NAME			"DSharingu"
-#define APP_VERSION_STR		"0.17a"
+#define APP_VERSION_STR		"0.18a"
 
 /*
 //==================================================================
@@ -133,6 +133,8 @@ public:
 private:
 	static void		channelSwitch_s( DSharinguApp *superp, DSChannel *new_sel_chanp, DSChannel *old_sel_chanp );
 	void			channelSwitch( DSChannel *new_sel_chanp, DSChannel *old_sel_chanp );
+	static void		onChannelDelete_s( DSharinguApp *superp, DSChannel *chanp );
+	void			onChannelDelete( DSChannel *chanp );
 
 	void		updateViewMenu( DSChannel *chanp );
 
@@ -166,8 +168,8 @@ private:
 	void		homeWinCreate();
 	static int	homeWinEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );
 	int			homeWinEventFilter( win_event_type etype, win_event_t *eventp );
-	static void	homeWinGadgetCallback_s( int gget_id, GGET_Item *itemp, void *userdatap );
-	void		homeWinGadgetCallback( int gget_id, GGET_Item *itemp );
+	static void	homeWinGadgetCallback_s( void *userdatap, int gget_id, GGET_Item *itemp, GGET_CB_Action action );
+	void		homeWinGadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB_Action action );
 	void		homeWinOnChangedSettings();
 	
 	void		handleAutoCall();

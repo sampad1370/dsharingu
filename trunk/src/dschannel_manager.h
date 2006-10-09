@@ -32,25 +32,30 @@
 //==================================================================
 class DSChannelManager
 {
-public:
-	typedef void		(*OnChannelSwitchCBType)( DSharinguApp *superp, DSChannel *new_sel_chanp, DSChannel *old_sel_chanp );
+	friend class DSChannel;
 
 public:
-	static const int	MAX_CHANNELS = 16;
-	DSChannel			*_channelsp[ MAX_CHANNELS ];
-	int					_n_channels;
-	DSChannel			*_cur_chanp;
+	typedef void		(*OnChannelSwitchCBType)( DSharinguApp *superp, DSChannel *new_sel_chanp, DSChannel *old_sel_chanp );
+	typedef void		(*OnChannelDeleteCBType)( DSharinguApp *superp, DSChannel *chanp );
+
+public:
+	static const int		MAX_CHANNELS = 16;
+	DSChannel				*_channelsp[ MAX_CHANNELS ];
+	int						_n_channels;
+	DSChannel				*_cur_chanp;
 
 	DSharinguApp			*_superp;
 private:
 	OnChannelSwitchCBType	_onChannelSwitchCB;
+	OnChannelDeleteCBType	_onChannelDeleteCBType;
 	win_t					*_parent_winp;
 	win_t					*_tabs_winp;
 
 public:
 	//==================================================================
 	DSChannelManager( win_t *parent_winp, DSharinguApp *superp,
-					  OnChannelSwitchCBType onChannelSwitchCB );
+					  OnChannelSwitchCBType onChannelSwitchCB,
+					  OnChannelDeleteCBType onChannelDeleteCBType );
 
 	DSChannel	*RecycleOrNewChannel( RemoteDef *remotep );
 	DSChannel	*NewChannel( int accepted_fd );
@@ -63,9 +68,11 @@ public:
 	void		Idle();
 	void		Quit();
 
+	void		RemoveChannel( DSChannel *chanp );
+
 private:
-	static void	gadgetCallback_s( int gget_id, GGET_Item *itemp, void *userdatap );
-	void		gadgetCallback( int gget_id, GGET_Item *itemp );
+	static void	gadgetCallback_s( void *superp, int gget_id, GGET_Item *itemp, GGET_CB_Action action );
+	void		gadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB_Action action  );
 
 	void		addTab( int idx, const char *namep );
 	void		toggleOne( GGET_Manager &gam, int gget_id );

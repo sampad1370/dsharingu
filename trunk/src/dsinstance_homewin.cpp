@@ -128,12 +128,12 @@ void DSharinguApp::homeWinOnChangedSettings()
 }
 
 //==================================================================
-void DSharinguApp::homeWinGadgetCallback_s( int gget_id, GGET_Item *itemp, void *userdatap )
+void DSharinguApp::homeWinGadgetCallback_s( void *userdatap, int gget_id, GGET_Item *itemp, GGET_CB_Action action )
 {
-	((DSharinguApp *)userdatap)->homeWinGadgetCallback( gget_id, itemp );
+	((DSharinguApp *)userdatap)->homeWinGadgetCallback( gget_id, itemp, action );
 }
 //==================================================================
-void DSharinguApp::homeWinGadgetCallback( int gget_id, GGET_Item *itemp )
+void DSharinguApp::homeWinGadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB_Action action )
 {
 	GGET_Manager	&gam = itemp->GetManager();
 

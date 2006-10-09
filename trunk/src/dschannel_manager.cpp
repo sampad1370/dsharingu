@@ -46,11 +46,19 @@ enum {
 };
 
 //==================================================================
+static const int	TAB_BASE_X = 4;
+static const int	TAB_BASE_Y = 3;
+static const int	TAB_BASE_WD = 100;
+static const int	TAB_BASE_HE = 19;
+
+//==================================================================
 DSChannelManager::DSChannelManager( win_t *parent_winp, DSharinguApp *superp,
-									OnChannelSwitchCBType onChannelSwitchCB ) :
+									OnChannelSwitchCBType onChannelSwitchCB,
+									OnChannelDeleteCBType onChannelDeleteCBType ) :
 	_parent_winp(parent_winp),
 	_superp(superp),
 	_onChannelSwitchCB(onChannelSwitchCB),
+	_onChannelDeleteCBType(onChannelDeleteCBType),
 	_tabs_winp(NULL),
 	_n_channels(0),
 	_cur_chanp(NULL)
@@ -116,36 +124,44 @@ void DSChannelManager::toggleOne( GGET_Manager &gam, int gget_id )
 //==================================================================
 void DSChannelManager::addTab( int idx, const char *namep )
 {
-	float	x = 4;
-	float	y = 3;
-	float	w = 100;
-	float	h = 20;
+	float	x = TAB_BASE_X;
+	float	y = TAB_BASE_Y;
 
 	GGET_Manager	&gam = _tabs_winp->GetGGETManager();
 
-	gam.AddButton( TAB_CH0 + idx, x + w * idx, y, w, h, namep );
+	gam.AddTab( TAB_CH0 + idx, x + TAB_BASE_WD * idx, y, TAB_BASE_WD, TAB_BASE_HE, namep );
 	toggleOne( gam, TAB_CH0 + idx );
 }
 
 //==================================================================
-void DSChannelManager::gadgetCallback_s( int gget_id, GGET_Item *itemp, void *superp )
+void DSChannelManager::gadgetCallback_s( void *superp, int gget_id, GGET_Item *itemp, GGET_CB_Action action )
 {
-	((DSChannelManager *)superp)->gadgetCallback( gget_id, itemp );
+	((DSChannelManager *)superp)->gadgetCallback( gget_id, itemp, action );
 }
 //==================================================================
-void DSChannelManager::gadgetCallback( int gget_id, GGET_Item *itemp )
+void DSChannelManager::gadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB_Action action )
 {
 	GGET_Manager	&gam = itemp->GetManager();
 
 	if ( gget_id >= TAB_CH0 && gget_id < TAB_CHMAX )
 	{
-		toggleOne( gam, gget_id );
+		if ( action == GGET_CB_ACTION_CLICK )
+		{
+			toggleOne( gam, gget_id );
 
-		DSChannel	*chanp = _channelsp[ gget_id - TAB_CH0 ];
-		if ( _onChannelSwitchCB )
-			_onChannelSwitchCB( _superp, chanp, _cur_chanp );
+			DSChannel	*chanp = _channelsp[ gget_id - TAB_CH0 ];
+			if ( _onChannelSwitchCB )
+				_onChannelSwitchCB( _superp, chanp, _cur_chanp );
 
-		_cur_chanp = chanp;
+			_cur_chanp = chanp;
+		}
+		else
+		if ( action == GGET_CB_ACTION_CLOSETAB )
+		{
+			DSChannel	*chanp = _channelsp[ gget_id - TAB_CH0 ];
+			if ( chanp )
+				RemoveChannel( chanp );
+		}
 	}
 }
 
@@ -250,3 +266,61 @@ void DSChannelManager::Quit()
 			chanp->Quit();
 	}
 }
+
+//==================================================================
+void DSChannelManager::RemoveChannel( DSChannel *chanp )
+{
+	DSChannel	*new_sel_chanp = NULL;
+
+	GGET_Manager	&gam = _tabs_winp->GetGGETManager();
+
+	float	x = TAB_BASE_X;
+	float	y = TAB_BASE_Y;
+
+	for (int i=0; i < _n_channels; ++i)
+	{
+		if ( _channelsp[i] == chanp )
+		{
+			gam.RemoveItem( TAB_CH0 + i );
+
+			for (int j=i+1; j < _n_channels; ++j)
+			{
+				gam.ChangeGadgetID( TAB_CH0 + j, TAB_CH0 + j-1 );
+				gam.FindGadget( TAB_CH0 + (j-1) )->SetPos( x + TAB_BASE_WD * (j-1), y );
+				_channelsp[j-1] = _channelsp[j];
+			}
+			_n_channels -= 1;
+
+			if ( i < _n_channels )
+			{
+				new_sel_chanp = _channelsp[i];
+				toggleOne( gam, TAB_CH0 + i );
+			}
+			else
+			if ( (i-1) >= 0 )
+			{
+				new_sel_chanp = _channelsp[i-1];
+				toggleOne( gam, TAB_CH0 + (i-1) );
+			}
+			else
+			{
+				new_sel_chanp = NULL;
+				toggleOne( gam, TAB_CH0 + 0 );
+			}
+
+			break;
+		}
+	}
+
+	if ( _cur_chanp == chanp )
+		_cur_chanp = new_sel_chanp;
+
+	if ( _onChannelSwitchCB )
+		_onChannelSwitchCB( _superp, new_sel_chanp, NULL );
+
+	SAFE_DELETE( chanp );
+
+//	if ( _onChannelDeleteCBType )
+//		_onChannelDeleteCBType( _superp, chanp );
+}
+
