@@ -21,8 +21,9 @@ SetCompressor /SOLID lzma
 	Name "DSharingu"
 
 	!define MY_APP_NAME	"DSharingu"
-	
-	OutFile "${MY_APP_NAME}${DSHARINGU_VNAME}.exe"
+
+	;${DSHARINGU_VNAME}
+	OutFile "${MY_APP_NAME}_Installer.exe"
 	
 	;Default installation folder
 	InstallDir "$PROGRAMFILES\${MY_APP_NAME}"
@@ -71,18 +72,17 @@ FunctionEnd
 ;Pages		
 	!insertmacro MUI_PAGE_WELCOME
 	!insertmacro MUI_PAGE_LICENSE "..\manual\license.txt"
+	
+		!define MUI_COMPONENTSPAGE_NODESC
 	!insertmacro MUI_PAGE_COMPONENTS
+	
 	!insertmacro MUI_PAGE_DIRECTORY
 	
-;	!insertmacro MUI_PAGE_DIRECTORY
-	
-	;Start Menu Folder Page Configuration
-	!define MUI_STARTMENUPAGE_REGISTRY_ROOT "HKCU" 
-	!define MUI_STARTMENUPAGE_REGISTRY_KEY "Software\${MY_APP_NAME}" 
-	!define MUI_STARTMENUPAGE_REGISTRY_VALUENAME "Start Menu Folder"
-	
-	!insertmacro MUI_PAGE_STARTMENU Application $STARTMENU_FOLDER
-	
+		!define MUI_STARTMENUPAGE_REGISTRY_ROOT "HKCU" 
+		!define MUI_STARTMENUPAGE_REGISTRY_KEY "Software\${MY_APP_NAME}" 
+		!define MUI_STARTMENUPAGE_REGISTRY_VALUENAME "Start Menu Folder"
+	!insertmacro MUI_PAGE_STARTMENU Application $STARTMENU_FOLDER	
+
 	!insertmacro MUI_PAGE_INSTFILES
 
 	
@@ -92,8 +92,8 @@ FunctionEnd
 		!define MUI_FINISHPAGE_RUN_CHECKED
 		;!define MUI_FINISHPAGE_RUN_TEXT "Start a shortcut"
 		;!define MUI_FINISHPAGE_RUN_FUNCTION "LaunchLink"
-		;!define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
-		;!define MUI_FINISHPAGE_SHOWREADME $INSTDIR\readme.txt
+		!define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
+		!define MUI_FINISHPAGE_SHOWREADME $INSTDIR\manual\index.html
 	!insertmacro MUI_PAGE_FINISH
 	
 ;	!define MUI_FINISHPAGE_RUN 			"$INSTDIR"

@@ -87,8 +87,8 @@ public:
 
 	static cons_cmd_def_t	_cmd_defs[3];
 
-	win_t					*_tool_winp;
-	win_t					*_view_winp;
+	safe_ptr<win_t>			_tool_winp;
+	safe_ptr<win_t>			_view_winp;
 
 	u_int					_frame_since_transmission;
 
@@ -160,8 +160,8 @@ public:
 	void		console_line_func( const char *txtp, int is_cmd );
 	static void console_line_func_s( void *userp, const char *txtp, int is_cmd );
 
-	void		gadgetCallback( int gget_id, GGET_Item *itemp );
-	static void	gadgetCallback_s( int gget_id, GGET_Item *itemp, void *userdatap );
+	static void	gadgetCallback_s( void *userdatap, int gget_id, GGET_Item *itemp, GGET_CB_Action action );
+	void		gadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB_Action action );
 
 	BOOL CALLBACK connectingDialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
 	static BOOL CALLBACK connectingDialogProc_s(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);

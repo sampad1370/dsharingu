@@ -83,6 +83,12 @@ DSChannel::DSChannel( DSChannelManager *managerp, RemoteDef *remotep ) :
 }
 
 //==================================================================
+DSChannel::~DSChannel()
+{
+	//_managerp->RemoveChannel( this );
+}
+
+//==================================================================
 int DSChannel::thisMessageBoxRet( LPCTSTR lpText, LPCTSTR lpCaption, UINT uType, UINT uDefVal )
 {
 	if NOT( _is_calling_silently )
@@ -112,12 +118,16 @@ void DSChannel::CallRemote( bool call_silent ) throw(...)
 	{
 	case 0:
 		setState( STATE_CONNECTING );
-		_connecting_dlg_hwnd =
-			CreateDialogParam( (HINSTANCE)win_system_getinstance(),
-			MAKEINTRESOURCE(IDD_CONNECTING), ((DSharinguApp *)_managerp->_superp)->_main_win._hwnd,
-			(DLGPROC)connectingDialogProc_s, (LPARAM)this );
-		appbase_add_modeless_dialog( _connecting_dlg_hwnd );
-		ShowWindow( _connecting_dlg_hwnd, SW_SHOWNORMAL );
+
+		if NOT( _is_calling_silently )
+		{
+			_connecting_dlg_hwnd =
+				CreateDialogParam( (HINSTANCE)win_system_getinstance(),
+				MAKEINTRESOURCE(IDD_CONNECTING), ((DSharinguApp *)_managerp->_superp)->_main_win._hwnd,
+				(DLGPROC)connectingDialogProc_s, (LPARAM)this );
+			appbase_add_modeless_dialog( _connecting_dlg_hwnd );
+			ShowWindow( _connecting_dlg_hwnd, SW_SHOWNORMAL );
+		}
 		break;
 
 	case COM_ERR_INVALID_ADDRESS:
@@ -456,7 +466,7 @@ int DSChannel::Idle()
 		break;
 
 	case COM_ERR_HARD_DISCONNECT:
-		DoDisconnect( "Connection Lost." );
+		DoDisconnect( "Lost Connection (hard)." );
 		break;
 
 	case COM_ERR_INVALID_ADDRESS:
@@ -468,7 +478,7 @@ int DSChannel::Idle()
 		break;
 
 	case COM_ERR_GENERIC:
-		DoDisconnect( "Connection Lost (generic error)" );
+		DoDisconnect( "Lost Connection" );
 		break;
 
 	case COM_ERR_TIMEOUT_CONNECTING:
@@ -555,6 +565,13 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 					_console.cons_line_printf( CHNTAG"OK ! Successfully connected to '%s'", msg._caller_username );
 
 					RemoteDef	*remotep = ((DSharinguApp *)_managerp->_superp)->_remote_mng.FindOrAddRemoteDefAndSelect( msg._caller_username );
+
+					// we remove the older channel using this remote, because we're already using a differen one (this one !)
+					DSChannel	*older_chan_using_remotep = _managerp->FindChannelByRemote( remotep );
+					if ( older_chan_using_remotep )
+						_managerp->RemoveChannel( older_chan_using_remotep );
+
+					// assign the remote to this channel
 					changeSessionRemote( remotep );
 
 					PSYS_ASSERT( _session_remotep != NULL );
@@ -822,12 +839,12 @@ void DSChannel::setViewMode( bool onoff )
 }
 
 //==================================================================
-void DSChannel::gadgetCallback_s( int gget_id, GGET_Item *itemp, void *userdatap )
+void DSChannel::gadgetCallback_s( void *userdatap, int gget_id, GGET_Item *itemp, GGET_CB_Action action )
 {
-	((DSChannel *)userdatap)->gadgetCallback( gget_id, itemp );
+	((DSChannel *)userdatap)->gadgetCallback( gget_id, itemp, action );
 }
 //==================================================================
-void DSChannel::gadgetCallback( int gget_id, GGET_Item *itemp )
+void DSChannel::gadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB_Action action )
 {
 	GGET_Manager	&gam = _tool_winp->GetGGETManager();
 
@@ -855,30 +872,6 @@ void DSChannel::gadgetCallback( int gget_id, GGET_Item *itemp )
 			setInteractiveMode( !_is_using_remote );
 		}
 		break;
-/*
-	case DSharinguApp::BUTT_CONNECTIONS:
-		((DSharinguApp *)_managerp->_superp)->_remote_mng.OpenDialog( &((DSharinguApp *)_managerp->_superp)->_main_win,
-								DSharinguApp::handleChangedRemoteManager_s,
-								DSharinguApp::handleCallRemoteManager_s,
-								_superp );
-		break;
-
-	case DSharinguApp::BUTT_HANGUP:
-		DoDisconnect( "Successfully disconnected." );
-		break;
-
-//	case DSharinguApp::BUTT_superp->_settings:
-//		((DSharinguApp *)_managerp->_superp)->_settings.OpenDialog( &((DSharinguApp *)_managerp->_superp)->_main_win, handleChangedSettings_s, this );
-//		break;
-/*
-	case DSharinguApp::BUTT_QUIT:
-		setState( STATE_QUIT );
-		break;
-* /
-	case DSharinguApp::BUTT_SHELL:
-		setShellVisibility( true );
-		break;
-*/
 	}
 }
 
@@ -998,37 +991,7 @@ int DSChannel::viewEventFilter( win_event_type etype, win_event_t *eventp )
 
 	return 0;
 }
-/*
-//==================================================================
-int DSChannel::toolEventFilter( win_event_type etype, win_event_t *eventp )
-{
-	_console.cons_parent_eventfilter( NULL, etype, eventp );
 
-	switch ( etype )
-	{
-	case WIN_ETYPE_ACTIVATE:
-		&_console._win.SetFocus().;
-		break;
-
-	case WIN_ETYPE_CREATE:
-		_tool_winp = eventp->winp;
-		rebuildButtons( eventp->winp );
-		break;
-
-	case WIN_ETYPE_WINRESIZE:
-		reshapeButtons( eventp->winp );
-		break;
-	}
-
-	return 0;
-}
-//==================================================================
-int DSChannel::toolEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp )
-{
-	DSChannel	*mythis = (DSChannel *)userobjp;
-	return mythis->toolEventFilter( etype, eventp );
-}
-*/
 //==================================================================
 void DSChannel::viewWinRebuildButtons( win_t *winp )
 {
@@ -1055,33 +1018,6 @@ void DSChannel::viewWinRebuildButtons( win_t *winp )
 	itemp->SetTextColor( 0.9f, 0, 0, 1 );
 	itemp->_flags |= GGET_FLG_ALIGN_LEFT;
 	itemp->Show( false );
-
-
-/*	
-	GGET_StaticText *stextp = gam.AddStaticText( DSharinguApp::STEXT_TOOLBARBASE, 0, 0, winp->GetWidth(), winp->GetHeight(), NULL );
-	if ( stextp )
-		stextp->SetFillType( GGET_StaticText::FILL_TYPE_HTOOLBAR );
-
-	gam.AddButton( DSharinguApp::BUTT_CONNECTIONS, x, y, 98, h, "Connections..." );		x += 98 + x_margin;
-	gam.AddButton( DSharinguApp::BUTT_HANGUP, x, y, 85, h, "Hang-up" );			x += 85 + x_margin;
-	gam.EnableGadget( DSharinguApp::BUTT_HANGUP, false );
-	EnableMenuItem( ((DSharinguApp *)_managerp->_superp)->_main_menu, ID_FILE_HANGUP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED );
-//	x += x_margin;
-//	x += x_margin;
-//	gam.AddButton( DSharinguApp::BUTT_SETTINGS, x, y, 98, h, "Settings..." );	x += 98 + x_margin;
-//	x += x_margin;
-//	gam.AddButton( DSharinguApp::BUTT_QUIT, x, y, 60, h, "Quit" );				x += 60 + x_margin;
-
-	x += x_margin;
-	x += x_margin;
-	x += x_margin;
-	x += x_margin;
-	gam.AddButton( DSharinguApp::BUTT_USEREMOTE, x, y, 98, h, "[ ] Use Remote" );	x += 98 + x_margin;
-	x += x_margin;
-	gam.AddButton( DSharinguApp::BUTT_SHELL, x, y, 60, h, "[ ] Shell" );			x += 60 + x_margin;
-//	gam.AddButton( DSharinguApp::BUTT_HELP, x, y, 60, h, "About" );			x += 60 + x_margin;
-*/
-//	setInteractiveMode( getInteractiveMode() );
 
 	if ( _session_remotep )
 		setViewMode( _session_remotep->_see_remote_screen );
