@@ -39,7 +39,7 @@
 
 #define CHNTAG				"* "
 #define APP_NAME			"DSharingu"
-#define APP_VERSION_STR		"0.18a"
+#define APP_VERSION_STR		"0.20a"
 
 /*
 //==================================================================
@@ -100,6 +100,7 @@ public:
 
 	static const int	INPACK_BUFF_SIZE = 1024*1024;
 	char				_config_fname[256];
+	char				_config_pathname[PSYS_MAX_PATH];
 
 	ComListener			_com_listener;
 	ScrShare::Writer	_scrwriter;

@@ -58,8 +58,8 @@ bool main_start( void *hinstance )
 		_control87( _RC_CHOP, _MCW_RC );
 		ss_init_winsock();
 
-
-		bool	start_minimized = (strstr( GetCommandLine(), "/minimized" ) != NULL);
+		const char	*cmd_linep = GetCommandLine();
+		bool	start_minimized = (strstr( cmd_linep, "/minimized" ) != NULL);
 
 		_basechannel = new DSharinguApp( "dsharingu.cfg" );
 		_basechannel->Create( start_minimized );
@@ -112,4 +112,3 @@ int main_requestquit(void)
 void main_quit(void)
 {
 }
-
