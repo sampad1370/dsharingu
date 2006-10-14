@@ -23,6 +23,7 @@
 
 #include <windows.h>
 #include <CommCtrl.h>
+#include <ShlObj.h>
 #include <direct.h>
 #include <gl/glew.h>
 #include "dsinstance.h"
@@ -108,6 +109,7 @@ DSharinguApp::DSharinguApp( const char *config_fnamep ) :
 	_last_autocall_check_time(0.0)
 {
 	psys_strcpy( _config_fname, config_fnamep, sizeof(_config_fname) );
+	_config_pathname[0] = 0;
 }
 
 //===============================================================
@@ -146,7 +148,7 @@ void DSharinguApp::updateViewMenu( DSChannel *chanp )
 //==================================================================
 void DSharinguApp::saveConfig()
 {
-	FILE *fp = fopen( _config_fname, "wt" );
+	FILE *fp = fopen( _config_pathname, "wt" );
 
 	PSYS_ASSERT( fp != NULL );
 	if ( fp )
@@ -187,9 +189,36 @@ void DSharinguApp::cmd_debug_s( void *userp, char *params[], int n_params )
 }
 
 //==================================================================
+static bool doesDirExist( const char *dirnamep )
+{
+	char	buff[ PSYS_MAX_PATH ];
+	_getcwd( buff, PSYS_MAX_PATH-1 );
+	bool exists = (_chdir( dirnamep) == 0);
+	_chdir( buff );
+
+	return exists;
+}
+
+//==================================================================
 void DSharinguApp::Create( bool start_minimized )
 {
-	FILE	*fp = fopen( _config_fname, "rt" );
+	TCHAR szPath[ PSYS_MAX_PATH ];
+
+	if ( SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA|CSIDL_FLAG_CREATE, NULL, 0, szPath) ) )
+	{
+		strcat( szPath, "\\DSharingu\\" );
+		
+		if NOT( doesDirExist(szPath) )
+			mkdir( szPath );
+	}
+	psys_strcpy( _config_pathname, szPath, sizeof(_config_pathname) );
+	strcat( _config_pathname, _config_fname );
+	
+
+	// first try in the application data directory
+	FILE	*fp = fopen( _config_pathname, "rt" );
+	if NOT( fp )	// if it fails, then try in the current directory
+		fp = fopen( _config_fname, "rt" );
 
 	if ( fp )
 	{
