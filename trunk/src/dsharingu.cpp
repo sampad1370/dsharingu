@@ -68,8 +68,12 @@ bool main_start( void *hinstance )
 		_extrachannel->Create( start_minimized );
 	#endif
 	}
-	catch (...)
+	catch ( exception *e )
 	{
+		psys_msg_printf( "", 0, 
+			"Exception: %s\n",
+			e->what() );
+
 		return false;
 	}
 	

@@ -130,6 +130,10 @@ void DSChannelManager::addTab( int idx, const char *namep )
 	GGET_Manager	&gam = _tabs_winp->GetGGETManager();
 
 	gam.AddTab( TAB_CH0 + idx, x + TAB_BASE_WD * idx, y, TAB_BASE_WD, TAB_BASE_HE, namep );
+	
+	if ( idx > 0 )
+		gam.FindGadget( TAB_CH0 + idx )->SetIcon( GGET_Item::STD_ICO_OFF );
+
 	toggleOne( gam, TAB_CH0 + idx );
 }
 
@@ -180,9 +184,9 @@ DSChannel *DSChannelManager::RecycleOrNewChannel( RemoteDef *remotep )
 		if PTRAP_FALSE( _n_channels < MAX_CHANNELS )
 		{
 			DSChannel	*chanp = new DSChannel( this, remotep );
-			_channelsp[ _n_channels ] = chanp;
-			addTab( _n_channels, remotep->_rm_username );
-			++_n_channels;
+			//_channelsp[ _n_channels ] = chanp;
+			//addTab( _n_channels, remotep->_rm_username );
+			//++_n_channels;
 
 			if ( _onChannelSwitchCB )
 				_onChannelSwitchCB( _superp, chanp, _cur_chanp );
@@ -197,14 +201,19 @@ DSChannel *DSChannelManager::RecycleOrNewChannel( RemoteDef *remotep )
 }
 
 //==================================================================
+void DSChannelManager::AddChannelToList( DSChannel *chanp, const char *namep )
+{
+	_channelsp[ _n_channels ] = chanp;
+	addTab( _n_channels, namep );
+	++_n_channels;
+}
+
+//==================================================================
 DSChannel *DSChannelManager::NewChannel( int accepted_fd )
 {
 	if PTRAP_FALSE( _n_channels < MAX_CHANNELS )
 	{
 		DSChannel	*chanp = new DSChannel( this, accepted_fd );
-		_channelsp[ _n_channels ] = chanp;
-		addTab( _n_channels, "...." );
-		++_n_channels;
 
 		if ( _onChannelSwitchCB )
 			_onChannelSwitchCB( _superp, chanp, _cur_chanp );
@@ -232,15 +241,31 @@ DSChannel *DSChannelManager::FindChannelByRemote( const RemoteDef *remotep )
 }
 
 //==================================================================
-void DSChannelManager::SetChannelName( DSChannel *chanp, const char *namep )
+int DSChannelManager::findChannelIndex( DSChannel *chanp )
 {
-	GGET_Manager	&gam = _tabs_winp->GetGGETManager();
-
 	for (int i=0; i < _n_channels; ++i)
 	{
 		if ( _channelsp[i] == chanp )
-			gam.SetGadgetText( TAB_CH0 + i, namep );
+			return i;
 	}
+
+	throw "FindChannelIndex() Failed !";
+
+	return NULL;
+}
+
+//==================================================================
+void DSChannelManager::SetChannelName( DSChannel *chanp, const char *namep )
+{
+	GGET_Manager	&gam = _tabs_winp->GetGGETManager();
+	gam.SetGadgetText( TAB_CH0 + findChannelIndex( chanp ), namep );
+}
+
+//==================================================================
+void DSChannelManager::SetChannelTabIcon( DSChannel *chanp, GGET_Item::StdIcon std_icon )
+{
+	GGET_Manager	&gam = _tabs_winp->GetGGETManager();
+	gam.FindGadget( TAB_CH0 + findChannelIndex( chanp ) )->SetIcon( std_icon );
 }
 
 //==================================================================
@@ -323,4 +348,3 @@ void DSChannelManager::RemoveChannel( DSChannel *chanp )
 //	if ( _onChannelDeleteCBType )
 //		_onChannelDeleteCBType( _superp, chanp );
 }
-

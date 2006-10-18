@@ -13,8 +13,10 @@
 #define IDD_DOWNLOADING_UPDATE          125
 #define IDC_CUSTOM_PORT_EDIT            1004
 #define IDC_CUSTOM_PORT_CALL_EDIT       1004
-#define IDC_SHOW_MY_SCREEN_CHECK        1005
-#define IDC_SHARE_MY_SCREEN_CHECK       1006
+#define IDC_SHOW_MY_DESKTOP_CHECK       1005
+#define IDC_SHOW_MY_DESKTOP_CHECK       1005
+#define IDC_SHARE_MY_DESKTOP_CHECK      1006
+#define IDC_SHARE_MY_DESKTOP_CHECK      1006
 #define IDC_PASSWORD1_EDIT              1007
 #define IDC_PASSWORD2_EDIT              1008
 #define IDC_SEE_REMOTE_SCREEN_CHECK     1009
@@ -40,6 +42,7 @@
 #define IDC_LISTEN_CONNECTIONS_CHECK    1018
 #define IDC_RM_CONNECT                  1019
 #define IDC_RM_SEE_REMOTE_SCREEN        1020
+#define IDC_RM_SEE_REMOTE_DESKTOP       1020
 #define IDC_RM_AUTO_CALL                1021
 #define IDC_RM_REMOTE_PORT              1022
 #define IDC_RM_DELETE_REMOTE            1024

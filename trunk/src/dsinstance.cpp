@@ -242,7 +242,7 @@ void DSharinguApp::Create( bool start_minimized )
 	win_init_quick( &_main_win, WINDOW_TITLE, NULL,
 					this, mainEventFilter_s,
 					WIN_ANCH_TYPE_FIXED, 0, WIN_ANCH_TYPE_FIXED, 0,
-					WIN_ANCH_TYPE_THIS_X1, 640, WIN_ANCH_TYPE_THIS_Y1, 512,
+					WIN_ANCH_TYPE_THIS_X1, 640, WIN_ANCH_TYPE_THIS_Y1, 490,
 					(win_init_flags)(WIN_INIT_FLG_SYSTEM |
 									 WIN_INIT_FLG_INVISIBLE |
 									 WIN_INIT_FLG_CLIENTEDGE |
@@ -600,12 +600,12 @@ void DSharinguApp::handleChangedSettings()
 
 		if ( chanp )
 		{
-			chanp->_intersys.ActivateExternalInput( _settings._share_my_screen && _settings._show_my_screen );
+			chanp->_intersys.ActivateExternalInput( _settings._share_my_desktop && _settings._show_my_desktop );
 
 			if ( chanp->_is_transmitting )
 			{
-				UsageAbilityMsg	msg(_settings._show_my_screen,
-					_settings._share_my_screen );
+				UsageAbilityMsg	msg(_settings._show_my_desktop,
+					_settings._share_my_desktop );
 				if ERR_ERROR( chanp->_cpk.SendPacket( USAGE_ABILITY_PKID, &msg, sizeof(msg), NULL ) )
 					return;
 			}
