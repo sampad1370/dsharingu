@@ -65,10 +65,14 @@ public:
 		return	_cur_chanp;
 	}
 	void		SetChannelName( DSChannel *chanp, const char *namep );
+	void		SetChannelTabIcon( DSChannel *chanp, GGET_Item::StdIcon std_icon );
+
 	void		Idle();
 	void		Quit();
 
 	void		RemoveChannel( DSChannel *chanp );
+
+	void		AddChannelToList( DSChannel *chanp, const char *namep );
 
 private:
 	static void	gadgetCallback_s( void *superp, int gget_id, GGET_Item *itemp, GGET_CB_Action action );
@@ -79,6 +83,8 @@ private:
 	
 	static int	eventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );
 	int			eventFilter( win_event_type etype, win_event_t *eventp );
+	
+	int			findChannelIndex( DSChannel *chanp );
 };
 
 #endif

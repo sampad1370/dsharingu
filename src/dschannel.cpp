@@ -56,6 +56,8 @@ DSChannel::DSChannel( DSChannelManager *managerp, int accepted_fd ) :
 	_managerp(managerp),
 	_intersys( &_cpk )
 {
+	_managerp->AddChannelToList( this, "..." );
+
 	create();
 
 	if PTRAP_FALSE( accepted_fd >= 0 )
@@ -73,6 +75,8 @@ DSChannel::DSChannel( DSChannelManager *managerp, RemoteDef *remotep ) :
 	_managerp(managerp),
 	_intersys( &_cpk )
 {
+	_managerp->AddChannelToList( this, remotep->_rm_username );
+
 	create();
 
 	changeSessionRemote( remotep );
@@ -85,6 +89,10 @@ DSChannel::DSChannel( DSChannelManager *managerp, RemoteDef *remotep ) :
 //==================================================================
 DSChannel::~DSChannel()
 {
+	// remove the channel from the remotedef that is currently using it
+	if ( _session_remotep )
+		_session_remotep->SetUserData( NULL );
+
 	//_managerp->RemoveChannel( this );
 }
 
@@ -196,8 +204,8 @@ void DSChannel::create()
 
 	// we need to initialize this after loading the settings
 	_intersys.ActivateExternalInput(
-							((DSharinguApp *)_managerp->_superp)->_settings._share_my_screen &&
-							((DSharinguApp *)_managerp->_superp)->_settings._show_my_screen );
+							((DSharinguApp *)_managerp->_superp)->_settings._share_my_desktop &&
+							((DSharinguApp *)_managerp->_superp)->_settings._show_my_desktop );
 	_cpk.SetOnPackCallback( REMOCON_ARRAY_PKID, InteractiveSystem::OnPackCallback_s, &_intersys );
 
 	updateViewScale();
@@ -217,14 +225,20 @@ void DSChannel::setState( State state )
 //		gam.EnableGadget( DSharinguApp::BUTT_HANGUP, true );
 		EnableMenuItem( ((DSharinguApp *)_managerp->_superp)->_main_menu, ID_FILE_HANGUP, MF_BYCOMMAND | MF_ENABLED );
 		//gam.SetGadgetText( DSharinguApp::BUTT_CONNECTIONS, "[ ] Calling..." );
+
+		_managerp->SetChannelTabIcon( this, GGET_Item::STD_ICO_OFF );
 		break;
 
 	case STATE_CONNECTED:
 		onConnect( _cpk.IsConnectedAsCaller() );
+
+		_managerp->SetChannelTabIcon( this, GGET_Item::STD_ICO_ON );
 		break;
 
 	// recycle the channel
 	case STATE_RECYCLE:
+		_managerp->SetChannelTabIcon( this, GGET_Item::STD_ICO_OFF );
+
 		WGUT::SafeDestroyWindow( _connecting_dlg_hwnd );
 		((DSharinguApp *)_managerp->_superp)->_scrwriter.StopGrabbing();
 		EnableMenuItem( ((DSharinguApp *)_managerp->_superp)->_main_menu, ID_FILE_HANGUP, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED );
@@ -253,6 +267,8 @@ void DSChannel::setState( State state )
 
 	case STATE_DISCONNECTED:
 		{
+			_managerp->SetChannelTabIcon( this, GGET_Item::STD_ICO_OFF );
+
 //			GGET_Manager	&gam = _tool_winp->GetGGETManager();
 //			gam.EnableGadget( DSharinguApp::BUTT_CONNECTIONS, true );
 			_state = STATE_IDLE;
@@ -754,8 +770,8 @@ void DSChannel::handleConnectedFlow()
 			}
 
 			{
-				UsageAbilityMsg	msg(((DSharinguApp *)_managerp->_superp)->_settings._show_my_screen,
-					((DSharinguApp *)_managerp->_superp)->_settings._share_my_screen );
+				UsageAbilityMsg	msg(((DSharinguApp *)_managerp->_superp)->_settings._show_my_desktop,
+					((DSharinguApp *)_managerp->_superp)->_settings._share_my_desktop );
 				if ERR_ERROR( _cpk.SendPacket( USAGE_ABILITY_PKID, &msg, sizeof(msg), NULL ) )
 					return;
 
@@ -764,7 +780,7 @@ void DSChannel::handleConnectedFlow()
 	}
 
 
-	bool	do_show = (_remote_wants_view && ((DSharinguApp *)_managerp->_superp)->_settings._show_my_screen);
+	bool	do_show = (_remote_wants_view && ((DSharinguApp *)_managerp->_superp)->_settings._show_my_desktop);
 
 	if ( ((DSharinguApp *)_managerp->_superp)->_scrwriter.IsGrabbing() != do_show )
 	{
