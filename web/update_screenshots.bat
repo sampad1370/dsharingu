@@ -1,0 +1,1 @@
+c:\cygwin\bin\bash update_screenshots.sh

@@ -170,13 +170,14 @@ void DSChannelManager::gadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB_Ac
 }
 
 //==================================================================
-DSChannel *DSChannelManager::RecycleOrNewChannel( RemoteDef *remotep )
+DSChannel *DSChannelManager::RecycleOrNewChannel( RemoteDef *remotep, bool call_silent )
 {
 	DSChannel	*chanp = FindChannelByRemote( remotep );
 
 	if ( chanp )
 	{
 		chanp->Recycle();
+		chanp->CallRemote( call_silent );
 		return chanp;
 	}
 	else
