@@ -57,7 +57,7 @@ public:
 					  OnChannelSwitchCBType onChannelSwitchCB,
 					  OnChannelDeleteCBType onChannelDeleteCBType );
 
-	DSChannel	*RecycleOrNewChannel( RemoteDef *remotep );
+	DSChannel	*RecycleOrNewChannel( RemoteDef *remotep, bool call_silent );
 	DSChannel	*NewChannel( int accepted_fd );
 	DSChannel	*FindChannelByRemote( const RemoteDef *remotep );
 	DSChannel	*GetCurChannel()

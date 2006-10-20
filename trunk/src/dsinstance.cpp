@@ -466,7 +466,7 @@ void DSharinguApp::handleCallRemoteManager( RemoteDef *remotep )
 
 	try
 	{
-		_chmanagerp->RecycleOrNewChannel( remotep );
+		_chmanagerp->RecycleOrNewChannel( remotep, false );
 	} catch(...) {
 		PSYS_ASSERT( 0 );
 	}
@@ -659,7 +659,7 @@ void DSharinguApp::handleAutoCall()
 				{
 					try
 					{
-						_chmanagerp->RecycleOrNewChannel( remotep );
+						_chmanagerp->RecycleOrNewChannel( remotep, true );
 					} catch(...) {
 						PSYS_ASSERT( 0 );
 					}
