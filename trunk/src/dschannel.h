@@ -37,6 +37,7 @@
 #include "data_schema.h"
 #include "appbase3.h"
 #include "dschannel.h"
+#include "dstask.h"
 
 //==================================================================
 class DSharinguApp;
@@ -100,6 +101,8 @@ public:
 
 	HWND					_connecting_dlg_hwnd;
 	int						_connecting_dlg_timer;
+
+	safe_ptr<DSTaskManager>		_task_managerp;
 
 public:
 	DSChannel( DSChannelManager *managerp, int accepted_fd );

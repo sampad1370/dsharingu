@@ -239,6 +239,12 @@
 				RelativePath=".\src\dsinstance_homewin.cpp">
 			</File>
 			<File
+				RelativePath=".\src\dstask.cpp">
+			</File>
+			<File
+				RelativePath=".\src\dstask.h">
+			</File>
+			<File
 				RelativePath=".\src\interactsys.cpp">
 			</File>
 			<File
