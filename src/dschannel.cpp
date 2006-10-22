@@ -34,6 +34,8 @@
 #include "data_schema.h"
 #include "appbase3.h"
 #include "dschannel_manager.h"
+#include "dstask.h"
+
 
 #define CHNTAG				"* "
 
@@ -45,6 +47,8 @@ enum
 	VIEW_WIN_USE_REMOTE_BUTT,
 	VIEW_WIN_USE_REM_NOT_ALLOWED_STXT,
 };
+
+static const int	DSTM_GGET_ID_START = 100;
 
 static const int	BUTT_WD	= 110;
 static const int	BUTT_HE	= 22;
@@ -209,6 +213,9 @@ void DSChannel::create()
 	_cpk.SetOnPackCallback( REMOCON_ARRAY_PKID, InteractiveSystem::OnPackCallback_s, &_intersys );
 
 	updateViewScale();
+
+	_task_managerp = new DSTaskManager( _view_winp, DSTM_GGET_ID_START );
+	_task_managerp->AddTask();
 
 	_view_winp->PostResize();
 }
@@ -718,7 +725,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 	}
 }
 
-	//==================================================================
+//==================================================================
 void DSChannel::refreshInteractionInterface()
 {
 	GGET_Manager	&gam = _view_winp->GetGGETManager();
@@ -997,6 +1004,10 @@ int DSChannel::viewEventFilter( win_event_type etype, win_event_t *eventp )
 		}
 		updateViewScale();
 		viewWinReshapeButtons( eventp->winp );
+
+		if ( _task_managerp )
+			_task_managerp->OnWinResize();
+
 		//reshape( eventp->win_w, eventp->win_h );
 		break;
 

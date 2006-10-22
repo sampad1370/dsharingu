@@ -268,6 +268,8 @@ void DSChannel::doViewPaint()
 
 			glDisable( GL_BLEND );
 
+			_task_managerp->Paint();
+
 		glDisable( GL_CULL_FACE );
 		glDisable( GL_LIGHTING );
 

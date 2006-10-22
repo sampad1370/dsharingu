@@ -1,1 +1,0 @@
-for %%I in (screenshots\*.*) do convert -resize 128x128 "%%I" "screenshots\%%~nI_ico%%~xI"
