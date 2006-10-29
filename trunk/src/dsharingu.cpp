@@ -39,9 +39,11 @@
 static bool				_do_quit_flag;
 static DSharinguApp		*_basechannel;
 static DSharinguApp		*_extrachannel;
+static DSharinguApp		*_extrachannel2;
 
 #ifdef _DEBUG
 #define USE_EXTRA_CHANNEL
+#define USE_EXTRA_CHANNEL2
 #endif
 //#define USE_EXTRA_CHANNEL
 
@@ -66,6 +68,11 @@ bool main_start( void *hinstance )
 	#ifdef USE_EXTRA_CHANNEL
 		_extrachannel = new DSharinguApp( "dsharingu2.cfg" );
 		_extrachannel->Create( start_minimized );
+	#endif
+
+	#ifdef USE_EXTRA_CHANNEL2
+		_extrachannel2 = new DSharinguApp( "dsharingu3.cfg" );
+		_extrachannel2->Create( start_minimized );
 	#endif
 	}
 	catch ( exception *e )
@@ -101,6 +108,10 @@ void main_anim(void)
 
 #ifdef USE_EXTRA_CHANNEL
 	handleChannel( _extrachannel );
+#endif
+
+#ifdef USE_EXTRA_CHANNEL2
+	handleChannel( _extrachannel2 );
 #endif
 
 	Sleep( 20 );

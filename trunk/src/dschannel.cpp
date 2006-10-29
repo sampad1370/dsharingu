@@ -557,6 +557,25 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 
 				if ( msg._protocol_version == PROTOCOL_VERSION )
 				{
+					RemoteDef	*remotep;
+
+					remotep = ((DSharinguApp *)_managerp->_superp)->_remote_mng.FindRemoteDef( msg._caller_username );
+					if ( remotep && remotep->IsLocked() )
+					{
+						_console.cons_line_printf( CHNTAG" '%s' is trying to connect again !", msg._caller_username );
+						return;
+					}
+
+					remotep = ((DSharinguApp *)_managerp->_superp)->_remote_mng.FindOrAddRemoteDefAndSelect( msg._caller_username );
+					// assign the remote to this channel
+					changeSessionRemote( remotep );
+					_managerp->SetChannelName( this, msg._caller_username );
+
+					// we remove the older channel using this remote, because we're already using a different one (this one !)
+					DSChannel	*older_chan_using_remotep = _managerp->FindChannelByRemote( remotep );
+					if ( older_chan_using_remotep != this )
+						_managerp->RemoveChannel( older_chan_using_remotep );
+
 					if ( stricmp( msg._communicating_username, ((DSharinguApp *)_managerp->_superp)->_settings._username ) )
 					{
 						_console.cons_line_printf( CHNTAG"PROBLEM: Rejected connection from '%s'. The wrong username was provided.",
@@ -577,21 +596,9 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 
 					_console.cons_line_printf( CHNTAG"OK ! Successfully connected to '%s'", msg._caller_username );
 
-					RemoteDef	*remotep = ((DSharinguApp *)_managerp->_superp)->_remote_mng.FindOrAddRemoteDefAndSelect( msg._caller_username );
-
-					// we remove the older channel using this remote, because we're already using a differen one (this one !)
-					DSChannel	*older_chan_using_remotep = _managerp->FindChannelByRemote( remotep );
-					if ( older_chan_using_remotep )
-						_managerp->RemoveChannel( older_chan_using_remotep );
-
-					// assign the remote to this channel
-					changeSessionRemote( remotep );
-
 					PSYS_ASSERT( _session_remotep != NULL );
 					_session_remotep->SetUserData( this );
 					_session_remotep->Lock();
-
-					_managerp->SetChannelName( this, _session_remotep->_rm_username );
 
 					_is_transmitting = true;
 					_frame_since_transmission = 0;

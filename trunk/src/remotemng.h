@@ -103,6 +103,7 @@ public:
 		return ((RemoteMng *)userdatap)->RemoteDefLoaderProc( fp );
 	}
 	DataSchema	*RemoteDefLoaderProc( FILE *fp );
+	RemoteDef	*FindRemoteDef( const char *namep );
 	RemoteDef	*FindOrAddRemoteDefAndSelect( const char *namep );
 
 	RemoteDef	*GetCurRemote()
