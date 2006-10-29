@@ -555,22 +555,35 @@ DataSchema *RemoteMng::RemoteDefLoaderProc( FILE *fp )
 //==================================================================
 RemoteDef *RemoteMng::FindOrAddRemoteDefAndSelect( const char *namep )
 {
-	for (int i=0; i < _remotes_list.len(); ++i)
+	RemoteDef	*remotep = FindRemoteDef( namep );
+	if ( remotep )
 	{
-		if ( !stricmp( _remotes_list[i]->_rm_username, namep ) )
-		{
-			setRemoteToForm( _remotes_list[i], NULL );
-			return _remotes_list[i];
-		}
+		setRemoteToForm( remotep, NULL );
+		return remotep;
 	}
 
-	RemoteDef	*remotep = new RemoteDef();
+	remotep = new RemoteDef();
 	psys_strcpy( remotep->_rm_username, namep, sizeof(remotep->_rm_username) );
 	_remotes_list.append( remotep );
 	setRemoteToForm( remotep, NULL );
 
 	return remotep;
 }
+
+//==================================================================
+RemoteDef *RemoteMng::FindRemoteDef( const char *namep )
+{
+	for (int i=0; i < _remotes_list.len(); ++i)
+	{
+		if ( !stricmp( _remotes_list[i]->_rm_username, namep ) )
+		{
+			return _remotes_list[i];
+		}
+	}
+
+	return NULL;
+}
+
 
 //==================================================================
 RemoteMng::~RemoteMng()
