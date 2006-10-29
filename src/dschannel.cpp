@@ -39,17 +39,6 @@
 
 #define CHNTAG				"* "
 
-//==================================================================
-enum
-{
-	VIEW_WIN_VIEW_REMOTE_BUTT = 1,
-	VIEW_WIN_VIEW_REM_NOT_ALLOWED_STXT,
-	VIEW_WIN_USE_REMOTE_BUTT,
-	VIEW_WIN_USE_REM_NOT_ALLOWED_STXT,
-};
-
-static const int	DSTM_GGET_ID_START = 100;
-
 static const int	BUTT_WD	= 110;
 static const int	BUTT_HE	= 22;
 
@@ -214,8 +203,9 @@ void DSChannel::create()
 
 	updateViewScale();
 
-	_task_managerp = new DSTaskManager( _view_winp, DSTM_GGET_ID_START );
-	_task_managerp->AddTask();
+	_task_managerp = new DSTaskManager( _view_winp, this, taskOnGadgetCB_s );
+	_task_managerp->AddTask( "Desk", VIEW_WIN_TASK_DESK_BUTTON, DSTask::FITVIEW );
+	_task_managerp->AddTask( "Shell", VIEW_WIN_TASK_SHELL_BUTTON, DSTask::FITVIEW );
 
 	_view_winp->PostResize();
 }
@@ -744,15 +734,11 @@ void DSChannel::refreshInteractionInterface()
 		gam.EnableGadget( VIEW_WIN_VIEW_REMOTE_BUTT, _remote_allows_view );
 		gam.EnableGadget( VIEW_WIN_USE_REMOTE_BUTT, _remote_allows_view && _remote_allows_share );
 
-		if ( _is_using_remote )
-			gam.FindGadget( VIEW_WIN_USE_REMOTE_BUTT )->SetText( "[/] Use Remote" );
-		else
-			gam.FindGadget( VIEW_WIN_USE_REMOTE_BUTT )->SetText( "[ ] Use Remote" );
+		gam.FindGadget( VIEW_WIN_USE_REMOTE_BUTT )->SetIcon(
+			_is_using_remote ? GGET_Item::STD_ICO_MARK_ON : GGET_Item::STD_ICO_MARK_OFF );
 
-		if ( _session_remotep->_see_remote_screen )
-			gam.FindGadget( VIEW_WIN_VIEW_REMOTE_BUTT )->SetText( "[/] View Remote" );
-		else
-			gam.FindGadget( VIEW_WIN_VIEW_REMOTE_BUTT )->SetText( "[ ] View Remote" );
+		gam.FindGadget( VIEW_WIN_VIEW_REMOTE_BUTT )->SetIcon(
+			_session_remotep->_see_remote_screen ? GGET_Item::STD_ICO_MARK_ON : GGET_Item::STD_ICO_MARK_OFF );
 	}
 }
 
@@ -869,6 +855,10 @@ void DSChannel::gadgetCallback_s( void *userdatap, int gget_id, GGET_Item *itemp
 //==================================================================
 void DSChannel::gadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB_Action action )
 {
+	if ( _task_managerp )
+		if ( _task_managerp->OnGadget( gget_id, itemp, action ) )
+			return;
+
 	GGET_Manager	&gam = _tool_winp->GetGGETManager();
 
 	switch ( gget_id )
@@ -894,6 +884,35 @@ void DSChannel::gadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB_Action ac
 		{
 			setInteractiveMode( !_is_using_remote );
 		}
+		break;
+	}
+}
+
+//==================================================================
+void DSChannel::taskOnGadgetCB_s( void *userobjp, DSTask *taskp, DSTask::ViewState view_state )
+{
+	((DSChannel *)userobjp)->taskOnGadgetCB( taskp, view_state );
+}
+//==================================================================
+void DSChannel::taskOnGadgetCB( DSTask *taskp, DSTask::ViewState view_state )
+{
+	bool	do_show = (view_state != DSTask::ViewState::ICONIZED);
+
+	switch( taskp->GetButtonID() )
+	{
+	case VIEW_WIN_TASK_DESK_BUTTON:
+		{
+			GGET_Manager	&gam = _view_winp->GetGGETManager();
+			gam.FindGadget( VIEW_WIN_VIEW_REMOTE_BUTT )->Show( do_show );
+			gam.FindGadget( VIEW_WIN_USE_REMOTE_BUTT )->Show( do_show );
+			gam.FindGadget( VIEW_WIN_VIEW_REM_NOT_ALLOWED_STXT )->Show( do_show && !_remote_allows_view );
+			gam.FindGadget( VIEW_WIN_USE_REM_NOT_ALLOWED_STXT )->Show( do_show && !_remote_allows_share );
+		}
+		break;
+
+	case VIEW_WIN_TASK_SHELL_BUTTON:
+		win_anchor_y2_offset_set( _view_winp, do_show ? -160 : 0 );
+		_console.cons_show( do_show );
 		break;
 	}
 }
@@ -1034,13 +1053,13 @@ void DSChannel::viewWinRebuildButtons( win_t *winp )
 
 	GGET_Item	*itemp;
 
-	gam.AddButton( VIEW_WIN_VIEW_REMOTE_BUTT, 0, 0, BUTT_WD, BUTT_HE, "[ ] View Remote" );
+	gam.AddButton( VIEW_WIN_VIEW_REMOTE_BUTT, 0, 0, BUTT_WD, BUTT_HE, "View Remote" );
 	itemp = gam.AddStaticText( VIEW_WIN_VIEW_REM_NOT_ALLOWED_STXT, 0, 0, BUTT_WD*2, BUTT_HE, "Not Allowed" );
 	itemp->SetTextColor( 0.9f, 0, 0, 1 );
 	itemp->_flags |= GGET_FLG_ALIGN_LEFT;
 	itemp->Show( false );
 
-	gam.AddButton( VIEW_WIN_USE_REMOTE_BUTT, 0, 0, BUTT_WD, BUTT_HE, "[ ] Use Remote" );
+	gam.AddButton( VIEW_WIN_USE_REMOTE_BUTT, 0, 0, BUTT_WD, BUTT_HE, "Use Remote" );
 	itemp = gam.AddStaticText( VIEW_WIN_USE_REM_NOT_ALLOWED_STXT, 0, 0, BUTT_WD*2, BUTT_HE, "Not Allowed" );
 	itemp->SetTextColor( 0.9f, 0, 0, 1 );
 	itemp->_flags |= GGET_FLG_ALIGN_LEFT;

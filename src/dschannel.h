@@ -49,6 +49,18 @@ class DSChannel
 {
 	friend class DSChannelManager;
 
+	//==================================================================
+	enum
+	{
+		VIEW_WIN_VIEW_REMOTE_BUTT = 1,
+		VIEW_WIN_VIEW_REM_NOT_ALLOWED_STXT,
+		VIEW_WIN_USE_REMOTE_BUTT,
+		VIEW_WIN_USE_REM_NOT_ALLOWED_STXT,
+
+		VIEW_WIN_TASK_DESK_BUTTON,
+		VIEW_WIN_TASK_SHELL_BUTTON,
+	};
+
 public:
 	enum State
 	{
@@ -171,6 +183,9 @@ public:
 	
 	void		thisMessageBox( LPCTSTR lpText, LPCTSTR lpCaption, UINT uType );
 	int			thisMessageBoxRet( LPCTSTR lpText, LPCTSTR lpCaption, UINT uType, UINT uDefVal );
+	
+	static void taskOnGadgetCB_s( void *userobjp, DSTask *taskp, DSTask::ViewState view_state );
+	void		taskOnGadgetCB( DSTask *taskp, DSTask::ViewState view_state );
 };
 
 #endif
