@@ -48,8 +48,10 @@ enum {
 //==================================================================
 static const int	TAB_BASE_X = 4;
 static const int	TAB_BASE_Y = 3;
-static const int	TAB_BASE_WD = 100;
+static const int	TAB_BASE_WD = 120;
+static const int	TAB_BASE_PAD_X = 4;
 static const int	TAB_BASE_HE = 19;
+static const int	TAB_BASE_STRIDE_X = TAB_BASE_WD + TAB_BASE_PAD_X;
 
 //==================================================================
 DSChannelManager::DSChannelManager( win_t *parent_winp, DSharinguApp *superp,
@@ -129,7 +131,7 @@ void DSChannelManager::addTab( int idx, const char *namep )
 
 	GGET_Manager	&gam = _tabs_winp->GetGGETManager();
 
-	gam.AddTab( TAB_CH0 + idx, x + TAB_BASE_WD * idx, y, TAB_BASE_WD, TAB_BASE_HE, namep );
+	gam.AddTab( TAB_CH0 + idx, x + TAB_BASE_STRIDE_X * idx, y, TAB_BASE_WD, TAB_BASE_HE, namep );
 	
 	if ( idx > 0 )
 		gam.FindGadget( TAB_CH0 + idx )->SetIcon( GGET_Item::STD_ICO_OFF );
@@ -312,7 +314,7 @@ void DSChannelManager::RemoveChannel( DSChannel *chanp )
 			for (int j=i+1; j < _n_channels; ++j)
 			{
 				gam.ChangeGadgetID( TAB_CH0 + j, TAB_CH0 + j-1 );
-				gam.FindGadget( TAB_CH0 + (j-1) )->SetPos( x + TAB_BASE_WD * (j-1), y );
+				gam.FindGadget( TAB_CH0 + (j-1) )->SetPos( x + TAB_BASE_STRIDE_X * (j-1), y );
 				_channelsp[j-1] = _channelsp[j];
 			}
 			_n_channels -= 1;

@@ -235,34 +235,51 @@ void DSChannel::doViewPaint()
 		glLoadIdentity();
 			//glScalef( 0.5f, 0.5f, 1 );
 
-			glPushMatrix();
+		DSTask::ViewState	desk_view_state = _task_managerp->FindByButtID( VIEW_WIN_TASK_DESK_BUTTON )->GetViewState();
 
-			if NOT( _view_fitwindow )
-				glTranslatef( _disp_off_x, _disp_off_y, 0 );
-
-			_scrreader.RenderParsedFrame( _view_scale_x, _view_scale_y );
-			glPopMatrix();
-
-			glEnable( GL_BLEND );
-			glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-
-			if ( _intersys.IsActive() )
+			if ( desk_view_state != DSTask::ViewState::ICONIZED )
 			{
-				glColor4f( 1.0f, 0.1f, 0.1f, 0.3f );
+				glPushMatrix();
+
+				if NOT( _view_fitwindow )
+					glTranslatef( _disp_off_x, _disp_off_y, 0 );
+
+				_scrreader.RenderParsedFrame( _view_scale_x, _view_scale_y );
+				glPopMatrix();
+
+				glEnable( GL_BLEND );
+				glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+				if ( _intersys.IsActive() )
+				{
+					glColor4f( 1.0f, 0.1f, 0.1f, 0.3f );
+				}
+				else
+				{
+					glColor4f( 0.3f, 0.3f, 0.3f, 0.3f );
+				}
+
+				//drawFrame( _view_winp->GetWidth(), _view_winp->GetHeight() );
+
+				if NOT( _view_fitwindow )
+					drawDispOffArrows();
+
+				if ( _intersys.IsActive() )
+				{
+					drawCursor( _disp_curs_x, _disp_curs_y );
+				}
 			}
 			else
 			{
-				glColor4f( 0.3f, 0.3f, 0.3f, 0.3f );
-			}
-
-			//drawFrame( _view_winp->GetWidth(), _view_winp->GetHeight() );
-
-			if NOT( _view_fitwindow )
-				drawDispOffArrows();
-
-			if ( _intersys.IsActive() )
-			{
-				drawCursor( _disp_curs_x, _disp_curs_y );
+				glDisable( GL_TEXTURE_2D );
+				glBegin( GL_QUADS );
+				glColor4f( 1.0f, 1.0f, 1.0f, 1 );
+				glVertex2f( 0, 0 );
+				glVertex2f( _view_winp->GetWidth(), 0 );
+				glColor4f( 0.85f, 0.85f, 0.85f, 1 );
+				glVertex2f( _view_winp->GetWidth(), _view_winp->GetHeight() );
+				glVertex2f( 0, _view_winp->GetHeight() );
+				glEnd();
 			}
 
 
