@@ -725,11 +725,14 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 //==================================================================
 void DSChannel::refreshInteractionInterface()
 {
+	if NOT( _view_winp )
+		return;
+
 	GGET_Manager	&gam = _view_winp->GetGGETManager();
 
 	if NOT( _session_remotep )
 	{
-		gam.EnableGadget( VIEW_WIN_VIEW_REMOTE_BUTT, false );
+		//gam.EnableGadget( VIEW_WIN_VIEW_REMOTE_BUTT, false );
 		gam.EnableGadget( VIEW_WIN_USE_REMOTE_BUTT, false );
 		gam.FindGadget( VIEW_WIN_VIEW_REM_NOT_ALLOWED_STXT )->Show( false );
 		gam.FindGadget( VIEW_WIN_USE_REM_NOT_ALLOWED_STXT )->Show( false );
@@ -738,14 +741,18 @@ void DSChannel::refreshInteractionInterface()
 	{
 		gam.FindGadget( VIEW_WIN_VIEW_REM_NOT_ALLOWED_STXT )->Show( !_remote_allows_view );
 		gam.FindGadget( VIEW_WIN_USE_REM_NOT_ALLOWED_STXT )->Show( !_remote_allows_share );
-		gam.EnableGadget( VIEW_WIN_VIEW_REMOTE_BUTT, _remote_allows_view );
+		//gam.EnableGadget( VIEW_WIN_VIEW_REMOTE_BUTT, _remote_allows_view );
 		gam.EnableGadget( VIEW_WIN_USE_REMOTE_BUTT, _remote_allows_view && _remote_allows_share );
 
 		gam.FindGadget( VIEW_WIN_USE_REMOTE_BUTT )->SetIcon(
 			_is_using_remote ? GGET_Item::STD_ICO_MARK_ON : GGET_Item::STD_ICO_MARK_OFF );
 
-		gam.FindGadget( VIEW_WIN_VIEW_REMOTE_BUTT )->SetIcon(
-			_session_remotep->_see_remote_screen ? GGET_Item::STD_ICO_MARK_ON : GGET_Item::STD_ICO_MARK_OFF );
+		//gam.FindGadget( VIEW_WIN_VIEW_REMOTE_BUTT )->SetIcon(
+		//	_session_remotep->_see_remote_screen ? GGET_Item::STD_ICO_MARK_ON : GGET_Item::STD_ICO_MARK_OFF );
+
+		_task_managerp->FindByButtID( VIEW_WIN_TASK_DESK_BUTTON )->SetViewState(
+			_session_remotep->_see_remote_screen ? DSTask::FITVIEW : DSTask::ICONIZED );
+
 	}
 }
 
@@ -844,13 +851,8 @@ void DSChannel::setInteractiveMode( bool onoff )
 }
 
 //===============================================================
-void DSChannel::setViewMode( bool onoff )
+void DSChannel::setViewMode()
 {
-	GGET_Manager	&gam = _view_winp->GetGGETManager();
-
-	if ( _session_remotep )
-		_session_remotep->_see_remote_screen = onoff;
-
 	refreshInteractionInterface();
 }
 
@@ -870,6 +872,7 @@ void DSChannel::gadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB_Action ac
 
 	switch ( gget_id )
 	{
+	/*
 	case VIEW_WIN_VIEW_REMOTE_BUTT:
 		if ( _session_remotep )
 		{
@@ -885,6 +888,7 @@ void DSChannel::gadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB_Action ac
 			}
 		}
 		break;
+	*/
 
 	case VIEW_WIN_USE_REMOTE_BUTT:
 		if ( _session_remotep )
@@ -908,9 +912,25 @@ void DSChannel::taskOnGadgetCB( DSTask *taskp, DSTask::ViewState view_state )
 	switch( taskp->GetButtonID() )
 	{
 	case VIEW_WIN_TASK_DESK_BUTTON:
+		if ( _session_remotep )
+		{
+			_session_remotep->_see_remote_screen = do_show;
+			setViewMode();
+
+			if ( _is_transmitting )
+			{
+				UsageWishMsg	msg( _session_remotep->_see_remote_screen,
+									 _is_using_remote );
+
+				if ERR_ERROR( _cpk.SendPacket( USAGE_WISH_PKID, &msg, sizeof(msg), NULL ) )
+					return;
+			}
+		}
+
 		{
 			GGET_Manager	&gam = _view_winp->GetGGETManager();
-			gam.FindGadget( VIEW_WIN_VIEW_REMOTE_BUTT )->Show( do_show );
+			//gam.FindGadget( VIEW_WIN_VIEW_REMOTE_BUTT )->Show( do_show );
+			//_task_managerp->FindByButtID( VIEW_WIN_TASK_DESK_BUTTON )->SetViewState( do_show ? DSTask::FITVIEW : DSTask::ICONIZED );
 			gam.FindGadget( VIEW_WIN_USE_REMOTE_BUTT )->Show( do_show );
 			gam.FindGadget( VIEW_WIN_VIEW_REM_NOT_ALLOWED_STXT )->Show( do_show && !_remote_allows_view );
 			gam.FindGadget( VIEW_WIN_USE_REM_NOT_ALLOWED_STXT )->Show( do_show && !_remote_allows_share );
@@ -1060,7 +1080,7 @@ void DSChannel::viewWinRebuildButtons( win_t *winp )
 
 	GGET_Item	*itemp;
 
-	gam.AddButton( VIEW_WIN_VIEW_REMOTE_BUTT, 0, 0, BUTT_WD, BUTT_HE, "View Remote" );
+//	gam.AddButton( VIEW_WIN_VIEW_REMOTE_BUTT, 0, 0, BUTT_WD, BUTT_HE, "View Remote" );
 	itemp = gam.AddStaticText( VIEW_WIN_VIEW_REM_NOT_ALLOWED_STXT, 0, 0, BUTT_WD*2, BUTT_HE, "Not Allowed" );
 	itemp->SetTextColor( 0.9f, 0, 0, 1 );
 	itemp->_flags |= GGET_FLG_ALIGN_LEFT;
@@ -1072,8 +1092,7 @@ void DSChannel::viewWinRebuildButtons( win_t *winp )
 	itemp->_flags |= GGET_FLG_ALIGN_LEFT;
 	itemp->Show( false );
 
-	if ( _session_remotep )
-		setViewMode( _session_remotep->_see_remote_screen );
+	setViewMode();
 }
 
 //==================================================================
@@ -1087,9 +1106,9 @@ void DSChannel::viewWinReshapeButtons( win_t *winp )
 
 	float	y = 8;
 
-	gam.FindGadget( VIEW_WIN_VIEW_REMOTE_BUTT )->SetPos( 20, y );
+//	gam.FindGadget( VIEW_WIN_VIEW_REMOTE_BUTT )->SetPos( 20, y );
 	gam.FindGadget( VIEW_WIN_VIEW_REM_NOT_ALLOWED_STXT )->SetPos( 20 + BUTT_WD + 4, y );
-	y += BUTT_HE + 4;
+//	y += BUTT_HE + 4;
 
 	gam.FindGadget( VIEW_WIN_USE_REMOTE_BUTT )->SetPos( 20, y );
 	gam.FindGadget( VIEW_WIN_USE_REM_NOT_ALLOWED_STXT )->SetPos( 20 + BUTT_WD + 4, y );
