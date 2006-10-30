@@ -48,11 +48,13 @@ private:
 	char		_name[64];
 	u_int		_butt_id;
 
+	DSTaskManager *_managerp;
 	ViewState	_view_state;
 	GXY::Rect	_rect;
 
 public:
-	DSTask( const char *task_namep, u_int task_butt_id ) :
+	DSTask( DSTaskManager *managerp, const char *task_namep, u_int task_butt_id ) :
+		_managerp(managerp),
 		_view_state(ICONIZED),
 		_rect(0,0,100,100)
 	{
@@ -65,6 +67,8 @@ public:
 		return _view_state;
 	}
 
+	void SetViewState( ViewState view_state );
+
 	u_int	GetButtonID() const
 	{
 		return _butt_id;
@@ -76,6 +80,8 @@ public:
 //==================================================================
 class DSTaskManager
 {
+	friend class DSTask;
+
 	win_t				*_winp;
 	PArray<DSTask *>	_tasks;
 	void				*_cb_userdatap;

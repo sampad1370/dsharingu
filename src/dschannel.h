@@ -52,7 +52,7 @@ class DSChannel
 	//==================================================================
 	enum
 	{
-		VIEW_WIN_VIEW_REMOTE_BUTT = 1,
+		//VIEW_WIN_VIEW_REMOTE_BUTT = 1,
 		VIEW_WIN_VIEW_REM_NOT_ALLOWED_STXT,
 		VIEW_WIN_USE_REMOTE_BUTT,
 		VIEW_WIN_USE_REM_NOT_ALLOWED_STXT,
@@ -154,7 +154,7 @@ public:
 	void		handleConnectedFlow();
 
 	void		refreshInteractionInterface();
-	void		setViewMode( bool onoff );
+	void		setViewMode();
 	void		setInteractiveMode( bool onoff );
 	bool		getInteractiveMode();
 	void		setShellVisibility( bool do_switch=false );

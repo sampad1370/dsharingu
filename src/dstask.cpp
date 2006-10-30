@@ -121,7 +121,7 @@ void DSTaskManager::AddTask( const char *task_namep, u_int task_butt_id, DSTask:
 
 	gam.AddButton( task_butt_id, 0, 0, 100, 100, task_namep );
 
-	DSTask	*taskp = new DSTask( task_namep, task_butt_id );
+	DSTask	*taskp = new DSTask( this, task_namep, task_butt_id );
 	taskp->_view_state = init_view_state;
 	_tasks.append( taskp );
 	updateViewState( taskp );
@@ -170,4 +170,11 @@ DSTask	*DSTaskManager::FindByButtID( u_int butt_id )
 	}
 
 	return NULL;
+}
+
+//==================================================================
+void DSTask::SetViewState( ViewState view_state )
+{
+	_view_state = view_state;
+	_managerp->updateViewState( this );
 }

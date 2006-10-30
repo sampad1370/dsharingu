@@ -434,7 +434,8 @@ void DSharinguApp::handleChangedRemoteManager( RemoteDef *changed_remotep )
 
 	if ( chanp && chanp->_is_transmitting )
 	{
-		chanp->setViewMode( changed_remotep->_see_remote_screen );
+		chanp->_session_remotep->_see_remote_screen = changed_remotep->_see_remote_screen;
+		chanp->setViewMode();
 
 		UsageWishMsg	msg( changed_remotep->_see_remote_screen,
 							 chanp->_is_using_remote );
@@ -464,12 +465,12 @@ void DSharinguApp::handleCallRemoteManager( RemoteDef *remotep )
 		return;
 	}
 
-	try
+	//try
 	{
 		_chmanagerp->RecycleOrNewChannel( remotep, false );
-	} catch(...) {
-		PSYS_ASSERT( 0 );
-	}
+	}// catch(...) {
+	//	PSYS_ASSERT( 0 );
+	//}
 }
 
 //==================================================================
