@@ -200,7 +200,7 @@ void RemoteMng::onNameFocus( HWND hwnd )
 	GetDlgItemText( hwnd, IDC_RM_REMOTE_NAME, buff, sizeof(buff)-1 );
 	psys_str_remove_beginend_spaces( buff );
 
-	if ( stricmp( _emptyname_string, buff ) == 0 )
+	if ( _stricmp( _emptyname_string, buff ) == 0 )
 	{
 		SendDlgItemMessage( hwnd, IDC_RM_REMOTE_NAME, EM_SETSEL, 0, -1 );
 	}
@@ -575,7 +575,7 @@ RemoteDef *RemoteMng::FindRemoteDef( const char *namep )
 {
 	for (int i=0; i < _remotes_list.len(); ++i)
 	{
-		if ( !stricmp( _remotes_list[i]->_rm_username, namep ) )
+		if ( !_stricmp( _remotes_list[i]->_rm_username, namep ) )
 		{
 			return _remotes_list[i];
 		}
