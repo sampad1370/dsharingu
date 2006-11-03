@@ -148,10 +148,10 @@ void DSharinguApp::updateViewMenu( DSChannel *chanp )
 //==================================================================
 void DSharinguApp::saveConfig()
 {
-	FILE *fp = fopen( _config_pathname, "wt" );
+	FILE *fp;
+	errno_t	err = fopen_s( &fp, _config_pathname, "wt" );
 
-	PSYS_ASSERT( fp != NULL );
-	if ( fp )
+	if NOT( err )
 	{
 		_settings._schema.SaveData( fp );
 		_remote_mng.SaveList( fp );
@@ -206,21 +206,22 @@ void DSharinguApp::Create( bool start_minimized )
 
 	if ( SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA|CSIDL_FLAG_CREATE, NULL, 0, szPath) ) )
 	{
-		strcat( szPath, "\\DSharingu\\" );
+		strcat_s( szPath, sizeof(szPath), "\\DSharingu\\" );
 		
 		if NOT( doesDirExist(szPath) )
-			mkdir( szPath );
+			_mkdir( szPath );
 	}
 	psys_strcpy( _config_pathname, szPath, sizeof(_config_pathname) );
-	strcat( _config_pathname, _config_fname );
+	strcat_s( _config_pathname, sizeof(_config_pathname), _config_fname );
 	
 
 	// first try in the application data directory
-	FILE	*fp = fopen( _config_pathname, "rt" );
-	if NOT( fp )	// if it fails, then try in the current directory
-		fp = fopen( _config_fname, "rt" );
+	FILE	*fp;
+	errno_t	err;
+	if ( err = fopen_s( &fp, _config_pathname, "rt" ) )	// if it fails, then try in the current directory
+		err = fopen_s( &fp, _config_fname, "rt" );
 
-	if ( fp )
+	if NOT( err )
 	{
 		DataSchema::LoaderItem	loader_items[2] =
 		{

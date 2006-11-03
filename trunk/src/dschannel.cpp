@@ -576,7 +576,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 					if ( older_chan_using_remotep != this )
 						_managerp->RemoveChannel( older_chan_using_remotep );
 
-					if ( stricmp( msg._communicating_username, ((DSharinguApp *)_managerp->_superp)->_settings._username ) )
+					if ( _stricmp( msg._communicating_username, ((DSharinguApp *)_managerp->_superp)->_settings._username ) )
 					{
 						_console.cons_line_printf( CHNTAG"PROBLEM: Rejected connection from '%s'. The wrong username was provided.",
 													msg._caller_username );
