@@ -22,6 +22,7 @@
 //==================================================================
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
 #include <gl/glew.h>
 #include "psys.h"
@@ -54,7 +55,7 @@ va_list	va;
 	}
 
 	va_start( va, fmtp );
-		_vsnprintf( _strings[ _n_strings ], MAX_STRLEN-1, fmtp, va );
+		vsprintf_s( _strings[ _n_strings ], _countof(_strings[0]), fmtp, va );
 	va_end( va );
 
 	++_n_strings;

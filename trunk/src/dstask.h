@@ -39,9 +39,9 @@ class DSTask
 public:
 	enum ViewState
 	{
-		ICONIZED,
-		FITVIEW,
-		EXACTVIEW,
+		VS_ICONIZED,
+		VS_FITVIEW,
+		VS_EXACTVIEW,
 	};
 
 private:
@@ -55,7 +55,7 @@ private:
 public:
 	DSTask( DSTaskManager *managerp, const char *task_namep, u_int task_butt_id ) :
 		_managerp(managerp),
-		_view_state(ICONIZED),
+		_view_state(VS_ICONIZED),
 		_rect(0,0,100,100)
 	{
 		psys_strcpy( _name, task_namep, sizeof(_name) );
@@ -85,6 +85,7 @@ class DSTaskManager
 	win_t				*_winp;
 	PArray<DSTask *>	_tasks;
 	void				*_cb_userdatap;
+	bool				_is_showing;
 	void				(*_dstaskCallBack)( void *cb_userdatap, DSTask *taskp, DSTask::ViewState view_state );
 
 public:
@@ -93,6 +94,7 @@ public:
 					void (*dstaskCallBack)( void *cb_userdatap, DSTask *taskp, DSTask::ViewState view_state ) ) :
 		_winp(winp),
 		_cb_userdatap(cb_userdatap),
+		_is_showing(false),
 		_dstaskCallBack(dstaskCallBack)
 	{
 	}
@@ -106,6 +108,7 @@ public:
 	void	OnWinResize();
 	bool	OnGadget( int gget_id, GGET_Item *itemp, GGET_CB_Action action );
 	void	Paint();
+	void	Show( bool onoff );
 
 private:
 	void	updateViewState( DSTask *taskp );

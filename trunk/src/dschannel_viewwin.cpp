@@ -237,7 +237,7 @@ void DSChannel::doViewPaint()
 
 		DSTask::ViewState	desk_view_state = _task_managerp->FindByButtID( VIEW_WIN_TASK_DESK_BUTTON )->GetViewState();
 
-			if ( desk_view_state != DSTask::ViewState::ICONIZED )
+			if ( desk_view_state != DSTask::VS_ICONIZED )
 			{
 				glPushMatrix();
 

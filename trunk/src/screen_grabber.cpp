@@ -134,7 +134,7 @@ char	buff[512];
 
 	if ( err )
 	{
-		sprintf( buff, "DirectDraw Error: %s - %i - %s", error_to_string( err ), line, filep );
+		sprintf_s( buff, _countof(buff), "DirectDraw Error: %s - %i - %s", error_to_string( err ), line, filep );
 		PSYS_DEBUG_PRINTF( "%s\n", buff );
 		//MessageBox( NULL, buff, "RD DirectDraw Error", MB_OK | MB_ICONERROR );
 	}

@@ -102,11 +102,11 @@ void DSTaskManager::updateViewState( DSTask *taskp )
 
 	switch ( taskp->_view_state )
 	{
-	case DSTask::FITVIEW:
+	case DSTask::VS_FITVIEW:
 		ggetp->SetIcon( GGET_Item::STD_ICO_MARK_ON );
 		break;
 
-	case DSTask::ICONIZED:
+	case DSTask::VS_ICONIZED:
 		ggetp->SetIcon( GGET_Item::STD_ICO_MARK_OFF );
 		break;
 	}
@@ -139,12 +139,12 @@ bool DSTaskManager::OnGadget( int gget_id, GGET_Item *itemp, GGET_CB_Action acti
 		{
 			switch ( taskp->_view_state )
 			{
-			case DSTask::FITVIEW:
-				taskp->_view_state = DSTask::ICONIZED;
+			case DSTask::VS_FITVIEW:
+				taskp->_view_state = DSTask::VS_ICONIZED;
 				break;
 
-			case DSTask::ICONIZED:
-				taskp->_view_state = DSTask::FITVIEW;
+			case DSTask::VS_ICONIZED:
+				taskp->_view_state = DSTask::VS_FITVIEW;
 				break;
 			}
 
@@ -170,6 +170,20 @@ DSTask	*DSTaskManager::FindByButtID( u_int butt_id )
 	}
 
 	return NULL;
+}
+
+//==================================================================
+void DSTaskManager::Show( bool onoff )
+{
+	GGET_Manager	&gam = _winp->GetGGETManager();
+
+	_is_showing = onoff;
+
+	for (int i=0; i < _tasks.len(); ++i)
+	{
+		GGET_Item	*ggetp = gam.FindGadget( _tasks[i]->_butt_id );
+		ggetp->Show( onoff );
+	}
 }
 
 //==================================================================

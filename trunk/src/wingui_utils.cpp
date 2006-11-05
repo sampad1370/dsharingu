@@ -45,7 +45,7 @@ void DlgShowItem( HWND hwnd, int id, BOOL onoff )
 void SetDlgItemInt( HWND hwnd, int id, int val )
 {
 	char	buff[64];
-	sprintf( buff, "%i", val );
+	sprintf_s( buff, _countof(buff), "%i", val );
 	SetDlgItemText( hwnd, id, buff );
 }
 

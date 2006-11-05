@@ -32,13 +32,13 @@
 #include "appbase3.h"
 
 //==================================================================
-static bool GetApplicationInstallDir( const char *appnamep, char *out_instdirp )
+static bool GetApplicationInstallDir( const char *appnamep, char *out_instdirp, int cnt_out_instdir )
 {
 	out_instdirp[0] = 0;
 
 	TCHAR	buff[4096];
 
-	sprintf( buff, "Software\\%s", appnamep );
+	sprintf_s( buff, _countof(buff), "Software\\%s", appnamep );
 
 	HKEY hkey;
 
@@ -54,7 +54,7 @@ static bool GetApplicationInstallDir( const char *appnamep, char *out_instdirp )
 		bool	yesno = (RegQueryValueEx(hkey, "", NULL, &dwType, (LPBYTE)buff, &dwSize ) == ERROR_SUCCESS);
 		RegCloseKey( hkey );
 
-		strcpy( out_instdirp, buff );
+		strcpy_s( out_instdirp, cnt_out_instdir, buff );
 
 		return yesno;
 	}
@@ -95,12 +95,12 @@ static bool SetApplicationToRegistryRun( const char *appnamep )
 {
 	char	fullpath[PSYS_MAX_PATH];
 
-	strcpy( fullpath, "\"" );
+	strcpy_s( fullpath, _countof(fullpath), "\"" );
 
-	GetApplicationInstallDir( appnamep, fullpath+1 );	
-	strcat( fullpath, "\\" );
-	strcat( fullpath, appnamep );
-	strcat( fullpath, ".exe\" /minimized" );
+	GetApplicationInstallDir( appnamep, fullpath+1, _countof(fullpath)-1 );
+	strcat_s( fullpath, _countof(fullpath), "\\" );
+	strcat_s( fullpath, _countof(fullpath), appnamep );
+	strcat_s( fullpath, _countof(fullpath), ".exe\" /minimized" );
 
 	HKEY hkey;
 

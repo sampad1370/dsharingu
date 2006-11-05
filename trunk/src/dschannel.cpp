@@ -204,8 +204,8 @@ void DSChannel::create()
 	updateViewScale();
 
 	_task_managerp = new DSTaskManager( _view_winp, this, taskOnGadgetCB_s );
-	_task_managerp->AddTask( "Desk", VIEW_WIN_TASK_DESK_BUTTON, DSTask::FITVIEW );
-	_task_managerp->AddTask( "Shell", VIEW_WIN_TASK_SHELL_BUTTON, DSTask::FITVIEW );
+	_task_managerp->AddTask( "Desk", VIEW_WIN_TASK_DESK_BUTTON, DSTask::VS_FITVIEW );
+	_task_managerp->AddTask( "Shell", VIEW_WIN_TASK_SHELL_BUTTON, DSTask::VS_FITVIEW );
 
 	_view_winp->PostResize();
 }
@@ -751,8 +751,11 @@ void DSChannel::refreshInteractionInterface()
 		//	_session_remotep->_see_remote_screen ? GGET_Item::STD_ICO_MARK_ON : GGET_Item::STD_ICO_MARK_OFF );
 
 		_task_managerp->FindByButtID( VIEW_WIN_TASK_DESK_BUTTON )->SetViewState(
-			_session_remotep->_see_remote_screen ? DSTask::FITVIEW : DSTask::ICONIZED );
+			_session_remotep->_see_remote_screen ? DSTask::VS_FITVIEW : DSTask::VS_ICONIZED );
 
+		// makes invisible as long as the user is interacting
+		gam.FindGadget( VIEW_WIN_USE_REMOTE_BUTT )->Show( !_is_using_remote );
+		_task_managerp->Show( !_is_using_remote );
 	}
 }
 
@@ -907,7 +910,7 @@ void DSChannel::taskOnGadgetCB_s( void *userobjp, DSTask *taskp, DSTask::ViewSta
 //==================================================================
 void DSChannel::taskOnGadgetCB( DSTask *taskp, DSTask::ViewState view_state )
 {
-	bool	do_show = (view_state != DSTask::ViewState::ICONIZED);
+	bool	do_show = (view_state != DSTask::VS_ICONIZED);
 
 	switch( taskp->GetButtonID() )
 	{
@@ -930,7 +933,7 @@ void DSChannel::taskOnGadgetCB( DSTask *taskp, DSTask::ViewState view_state )
 		{
 			GGET_Manager	&gam = _view_winp->GetGGETManager();
 			//gam.FindGadget( VIEW_WIN_VIEW_REMOTE_BUTT )->Show( do_show );
-			//_task_managerp->FindByButtID( VIEW_WIN_TASK_DESK_BUTTON )->SetViewState( do_show ? DSTask::FITVIEW : DSTask::ICONIZED );
+			//_task_managerp->FindByButtID( VIEW_WIN_TASK_DESK_BUTTON )->SetViewState( do_show ? DSTask::VS_FITVIEW : DSTask::VS_ICONIZED );
 			gam.FindGadget( VIEW_WIN_USE_REMOTE_BUTT )->Show( do_show );
 			gam.FindGadget( VIEW_WIN_VIEW_REM_NOT_ALLOWED_STXT )->Show( do_show && !_remote_allows_view );
 			gam.FindGadget( VIEW_WIN_USE_REM_NOT_ALLOWED_STXT )->Show( do_show && !_remote_allows_share );
@@ -1020,14 +1023,12 @@ int DSChannel::viewEventFilter( win_event_type etype, win_event_t *eventp )
 		}
 		break;
 
-		/*
-		case WIN_ETYPE_MOUSEMOVEDOUT:
-		if ( _is_interactive_mode )
+	case WIN_ETYPE_MOUSEMOVEDOUT:
+		if ( _intersys.IsActive() )
 		{
-		ShowCursor( FALSE );
+			setInteractiveMode( false );
 		}
 		break;
-		*/
 
 	case WIN_ETYPE_WINRESIZE:
 		{
@@ -1081,13 +1082,13 @@ void DSChannel::viewWinRebuildButtons( win_t *winp )
 	GGET_Item	*itemp;
 
 //	gam.AddButton( VIEW_WIN_VIEW_REMOTE_BUTT, 0, 0, BUTT_WD, BUTT_HE, "View Remote" );
-	itemp = gam.AddStaticText( VIEW_WIN_VIEW_REM_NOT_ALLOWED_STXT, 0, 0, BUTT_WD*2, BUTT_HE, "Not Allowed" );
+	itemp = gam.AddStaticText( VIEW_WIN_VIEW_REM_NOT_ALLOWED_STXT, 0, 0, BUTT_WD*2, BUTT_HE, "Viewing Not Allowed" );
 	itemp->SetTextColor( 0.9f, 0, 0, 1 );
 	itemp->_flags |= GGET_FLG_ALIGN_LEFT;
 	itemp->Show( false );
 
 	gam.AddButton( VIEW_WIN_USE_REMOTE_BUTT, 0, 0, BUTT_WD, BUTT_HE, "Use Remote" );
-	itemp = gam.AddStaticText( VIEW_WIN_USE_REM_NOT_ALLOWED_STXT, 0, 0, BUTT_WD*2, BUTT_HE, "Not Allowed" );
+	itemp = gam.AddStaticText( VIEW_WIN_USE_REM_NOT_ALLOWED_STXT, 0, 0, BUTT_WD*2, BUTT_HE, "Usage Not Allowed" );
 	itemp->SetTextColor( 0.9f, 0, 0, 1 );
 	itemp->_flags |= GGET_FLG_ALIGN_LEFT;
 	itemp->Show( false );
@@ -1106,13 +1107,14 @@ void DSChannel::viewWinReshapeButtons( win_t *winp )
 
 	float	y = 8;
 
+	gam.FindGadget( VIEW_WIN_USE_REMOTE_BUTT )->SetPos( 20, y );
+	gam.FindGadget( VIEW_WIN_USE_REM_NOT_ALLOWED_STXT )->SetPos( 20 + BUTT_WD + 4, y );
+	y += BUTT_HE + 4;
+
 //	gam.FindGadget( VIEW_WIN_VIEW_REMOTE_BUTT )->SetPos( 20, y );
 	gam.FindGadget( VIEW_WIN_VIEW_REM_NOT_ALLOWED_STXT )->SetPos( 20 + BUTT_WD + 4, y );
 //	y += BUTT_HE + 4;
 
-	gam.FindGadget( VIEW_WIN_USE_REMOTE_BUTT )->SetPos( 20, y );
-	gam.FindGadget( VIEW_WIN_USE_REM_NOT_ALLOWED_STXT )->SetPos( 20 + BUTT_WD + 4, y );
-	y += BUTT_HE + 4;
 
 	//gam.FindGadget( DSharinguApp::STEXT_TOOLBARBASE )->SetRect( 0, 0, winp->GetWidth(), winp->GetHeight() );
 }

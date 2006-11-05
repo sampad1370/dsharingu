@@ -56,11 +56,19 @@ void InteractiveSystem::FeedMessage( u_int message, u_int lparam, u_int wparam,
 	switch ( message )
 	{
 	case WM_MOUSEMOVE:
+		{
+		/*
+		PSYS_DEBUG_PRINTF( "%g %g\n", 
+			(LOWORD(lparam) - disp_off_x) / scale_x,
+			(HIWORD(lparam) - disp_off_y) / scale_y );
+		*/
+
 		remconmsg.SetMouseMove( (LOWORD(lparam) - disp_off_x) / scale_x,
 							    (HIWORD(lparam) - disp_off_y) / scale_y,
 							    diff_time );
 
 		_remocon_queue.append( remconmsg );
+		}
 		break;
 
 	case WM_LBUTTONUP:	
@@ -217,6 +225,8 @@ void onMouseButton( INPUT *out_inputp, const RemoConMsg &message, int disp_wd, i
 //==================================================================
 bool InteractiveSystem::ProcessMessage_s( u_int pack_id, const void *datap, int disp_wd, int disp_he )
 {
+	return false;
+
 	switch ( pack_id )
 	{
 	case REMOCON_ARRAY_PKID:
