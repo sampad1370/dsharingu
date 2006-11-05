@@ -75,7 +75,7 @@ struct ScreenPackerData
 
 	int					_w, _h;
 
-	std::vector<BlockPackWork>	_blocks_pack_work;
+	PArray<BlockPackWork>		_blocks_pack_work;
 	PArray<u_char>				_blocks_use_bitmap;
 	PUtils::Memfile				_blkdata_head_file;
 	PUtils::Memfile				_blkdata_bits_file;

@@ -83,7 +83,7 @@ void SPAKMM::Reset()
 	_cur_frame = 0;
 	_error = POK;
 
-	for (int i=0; i < _data._blocks_pack_work.size(); ++i)
+	for (int i=0; i < _data._blocks_pack_work.len(); ++i)
 		_data._blocks_pack_work[i].Reset();
 }
 //==================================================================

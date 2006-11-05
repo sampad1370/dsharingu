@@ -43,7 +43,7 @@ static DSharinguApp		*_extrachannel2;
 
 #ifdef _DEBUG
 #define USE_EXTRA_CHANNEL
-#define USE_EXTRA_CHANNEL2
+//#define USE_EXTRA_CHANNEL2
 #endif
 //#define USE_EXTRA_CHANNEL
 
@@ -75,12 +75,13 @@ bool main_start( void *hinstance )
 		_extrachannel2->Create( start_minimized );
 	#endif
 	}
-	catch ( exception *e )
+	catch (...)// exception *e )
 	{
+		/*
 		psys_msg_printf( "", 0, 
 			"Exception: %s\n",
 			e->what() );
-
+		*/
 		return false;
 	}
 	

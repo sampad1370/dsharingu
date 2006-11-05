@@ -130,7 +130,9 @@ bool DownloadUpdate::Idle()
 			{
 				char	version[64];
 
-				sscanf( (const char *)indatap, "%s %s", version, _donwload_fname );
+				sscanf_s( (const char *)indatap, "%s %s",
+						  version, sizeof(version),
+						  _donwload_fname, sizeof(_donwload_fname) );
 
 				double other_version = quantizeVersion( version );
 				double this_version = quantizeVersion( _cur_versionp );
@@ -148,7 +150,7 @@ bool DownloadUpdate::Idle()
 
 				char	buff[1024];
 				psys_strcpy( buff, _base_exe_pathp, sizeof(buff) );
-				strcat( buff, _donwload_fname );
+				strcat_s( buff, sizeof(buff), _donwload_fname );
 
 				_exe_httpfilep = new HTTPFile( _hostnamep, buff, 80 );
 			}
@@ -180,8 +182,9 @@ bool DownloadUpdate::Idle()
 					_exe_desk_path_str += _donwload_fname;
 				}
 
-				FILE *fp = fopen( _exe_desk_path_str.c_str(), "wb" );
-				if PTRAP_FALSE( fp != NULL )
+				FILE *fp;
+				errno_t	err = fopen_s( &fp, _exe_desk_path_str.c_str(), "wb" );
+				if PTRAP_FALSE( err == 0 )
 				{
 					bool done = (fwrite( indatap, indata_size, 1, fp ) > 0);
 					fclose( fp );
