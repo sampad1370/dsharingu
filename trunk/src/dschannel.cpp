@@ -172,13 +172,13 @@ void DSChannel::create()
 
 	_intersys.Activate( false );
 /*
-	_tool_winp = new win_t( "tool win", &((DSharinguApp *)_managerp->_superp)->_main_win,
+	_tool_winp = new Window( "tool win", &((DSharinguApp *)_managerp->_superp)->_main_win,
 							this, toolEventFilter_s,
 							WIN_ANCH_TYPE_FIXED, 0, WIN_ANCH_TYPE_FIXED, 0,
 							WIN_ANCH_TYPE_PARENT_X2, 0, WIN_ANCH_TYPE_PARENT_Y1, 30,
 							(win_init_flags)(WIN_INIT_FLG_OPENGL | WIN_INTFLG_DONT_CLEAR) );
 */
-	_view_winp = new win_t( "view win", &((DSharinguApp *)_managerp->_superp)->_main_win,
+	_view_winp = new Window( "view win", &((DSharinguApp *)_managerp->_superp)->_main_win,
 							this, viewEventFilter_s,
 							WIN_ANCH_TYPE_FIXED, 0,
 							WIN_ANCH_TYPE_PARENT_Y1, 22,
@@ -1067,7 +1067,7 @@ int DSChannel::viewEventFilter( win_event_type etype, win_event_t *eventp )
 }
 
 //==================================================================
-void DSChannel::viewWinRebuildButtons( win_t *winp )
+void DSChannel::viewWinRebuildButtons( Window *winp )
 {
 	float	x = 4;
 	float	w = 90;
@@ -1097,7 +1097,7 @@ void DSChannel::viewWinRebuildButtons( win_t *winp )
 }
 
 //==================================================================
-void DSChannel::viewWinReshapeButtons( win_t *winp )
+void DSChannel::viewWinReshapeButtons( Window *winp )
 {
 	GGET_Manager	&gam = winp->GetGGETManager();
 

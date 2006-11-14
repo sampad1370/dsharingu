@@ -48,12 +48,12 @@ public:
 private:
 	OnChannelSwitchCBType	_onChannelSwitchCB;
 	OnChannelDeleteCBType	_onChannelDeleteCBType;
-	win_t					*_parent_winp;
-	win_t					*_tabs_winp;
+	Window					*_parent_winp;
+	Window					*_tabs_winp;
 
 public:
 	//==================================================================
-	DSChannelManager( win_t *parent_winp, DSharinguApp *superp,
+	DSChannelManager( Window *parent_winp, DSharinguApp *superp,
 					  OnChannelSwitchCBType onChannelSwitchCB,
 					  OnChannelDeleteCBType onChannelDeleteCBType );
 

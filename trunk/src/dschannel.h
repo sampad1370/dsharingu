@@ -100,8 +100,8 @@ public:
 
 	static cons_cmd_def_t	_cmd_defs[3];
 
-	safe_ptr<win_t>			_tool_winp;
-	safe_ptr<win_t>			_view_winp;
+	safe_ptr<Window>			_tool_winp;
+	safe_ptr<Window>			_view_winp;
 
 	u_int					_frame_since_transmission;
 
@@ -167,8 +167,8 @@ public:
 	void		drawDispOffArrows();
 	void		doViewPaint();
 
-	void		viewWinRebuildButtons( win_t *winp );
-	void		viewWinReshapeButtons( win_t *winp );
+	void		viewWinRebuildButtons( Window *winp );
+	void		viewWinReshapeButtons( Window *winp );
 
 	void		updateViewScale();
 
