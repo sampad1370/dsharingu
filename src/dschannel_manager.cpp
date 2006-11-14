@@ -54,7 +54,7 @@ static const int	TAB_BASE_HE = 19;
 static const int	TAB_BASE_STRIDE_X = TAB_BASE_WD + TAB_BASE_PAD_X;
 
 //==================================================================
-DSChannelManager::DSChannelManager( win_t *parent_winp, DSharinguApp *superp,
+DSChannelManager::DSChannelManager( Window *parent_winp, DSharinguApp *superp,
 									OnChannelSwitchCBType onChannelSwitchCB,
 									OnChannelDeleteCBType onChannelDeleteCBType ) :
 	_parent_winp(parent_winp),
@@ -65,7 +65,7 @@ DSChannelManager::DSChannelManager( win_t *parent_winp, DSharinguApp *superp,
 	_n_channels(0),
 	_cur_chanp(NULL)
 {
-	_tabs_winp = new win_t( "tabs", parent_winp, this,
+	_tabs_winp = new Window( "tabs", parent_winp, this,
 							eventFilter_s,
 							WIN_ANCH_TYPE_PARENT_X1, 0,
 							WIN_ANCH_TYPE_PARENT_Y1, 0,

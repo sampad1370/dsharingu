@@ -39,7 +39,7 @@ class InteractiveSystem
 
 	PArray<RemoConMsg>	_remocon_queue;
 
-	win_t				_test_win;
+	Window				_test_win;
 	bool				_test_win_created;
 
 public:

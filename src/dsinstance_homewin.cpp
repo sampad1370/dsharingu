@@ -46,7 +46,7 @@ enum {
 //==================================================================
 void DSharinguApp::homeWinCreate()
 {
-	_home_winp = new win_t( "home win", &_main_win,
+	_home_winp = new Window( "home win", &_main_win,
 		this, homeWinEventFilter_s,
 		WIN_ANCH_TYPE_FIXED, 0,
 		WIN_ANCH_TYPE_PARENT_Y1, 22,

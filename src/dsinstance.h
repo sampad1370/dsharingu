@@ -109,9 +109,9 @@ public:
 
 	u_char				*_inpack_buffp;
 
-	win_t				_main_win;
-	win_t				*_home_winp;
-	win_t				_dbg_win;
+	Window				_main_win;
+	Window				*_home_winp;
+	Window				_dbg_win;
 
 	DownloadUpdate		*_download_updatep;	
 	HMENU				_main_menu;
@@ -126,7 +126,7 @@ public:
 	void			Create( bool start_minimized );
 	void			StartListening( int port_listen );
 	int				Idle();
-	win_t			*GetWindowPtr()
+	Window			*GetWindowPtr()
 	{
 		return &_main_win;
 	}

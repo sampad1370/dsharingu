@@ -389,7 +389,7 @@ BOOL CALLBACK Settings::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM l
 }
 
 //==================================================================
-void Settings::OpenDialog( win_t *parent_winp, void (*onChangedSettingsCB)( void *userdatap ), void *cb_userdatap )
+void Settings::OpenDialog( Window *parent_winp, void (*onChangedSettingsCB)( void *userdatap ), void *cb_userdatap )
 {
 	if NOT( _is_open )
 	{

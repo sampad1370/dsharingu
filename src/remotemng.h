@@ -90,7 +90,7 @@ public:
 
 	RemoteMng();
 	~RemoteMng();
-	void	OpenDialog( win_t *parent_winp,
+	void	OpenDialog( Window *parent_winp,
 						void (*onChangedSettingsCB)( void *userdatap, RemoteDef *changed_remotep ),
 						void (*onCallCB)( void *userdatap, RemoteDef *remotep ),
 						void *cb_userdatap );

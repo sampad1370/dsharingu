@@ -489,7 +489,7 @@ BOOL CALLBACK RemoteMng::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM 
 }
 
 //==================================================================
-void RemoteMng::OpenDialog( win_t *parent_winp,
+void RemoteMng::OpenDialog( Window *parent_winp,
 							void (*onChangedSettingsCB)( void *userdatap, RemoteDef *changed_remotep ),
 							void (*onCallCB)( void *userdatap, RemoteDef *remotep ),
 							void *cb_userdatap )

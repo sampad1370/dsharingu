@@ -82,14 +82,14 @@ class DSTaskManager
 {
 	friend class DSTask;
 
-	win_t				*_winp;
+	Window				*_winp;
 	PArray<DSTask *>	_tasks;
 	void				*_cb_userdatap;
 	bool				_is_showing;
 	void				(*_dstaskCallBack)( void *cb_userdatap, DSTask *taskp, DSTask::ViewState view_state );
 
 public:
-	DSTaskManager(	win_t *winp,
+	DSTaskManager(	Window *winp,
 					void *cb_userdatap,
 					void (*dstaskCallBack)( void *cb_userdatap, DSTask *taskp, DSTask::ViewState view_state ) ) :
 		_winp(winp),
