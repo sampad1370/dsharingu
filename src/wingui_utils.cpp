@@ -166,7 +166,7 @@ WGUTCheckPWMsg GetDlgEditPasswordState( HWND hwnd, u_int item_id, const char *pr
 HWND WGUT::OpenModelessDialog( DLGPROC dlg_proc, LPSTR dlg_namep, HWND parent_hwnd, void *mythisp )
 {
 	HWND	hwnd =
-		CreateDialogParam( (HINSTANCE)win_system_getinstance(),
+		CreateDialogParam( (HINSTANCE)WinSys::GetInstance(),
 		dlg_namep, parent_hwnd,
 		dlg_proc, (LPARAM)mythisp );
 

@@ -238,7 +238,7 @@ void DSharinguApp::Create( bool start_minimized )
 
 	_inpack_buffp = (u_char *)PSYS_MALLOC( INPACK_BUFF_SIZE );
 
-	_main_menu = LoadMenu( (HINSTANCE)win_system_getinstance(), MAKEINTRESOURCE(IDR_MAINMENU) );
+	_main_menu = LoadMenu( (HINSTANCE)WinSys::GetInstance(), MAKEINTRESOURCE(IDR_MAINMENU) );
 
 	win_init_quick( &_main_win, WINDOW_TITLE, NULL,
 					this, mainEventFilter_s,
@@ -298,7 +298,7 @@ static void reshape( int w, int h )
 HWND DSharinguApp::openModelessDialog( void *mythisp, DLGPROC dlg_proc, LPSTR dlg_namep )
 {
 	HWND	hwnd =
-		CreateDialogParam( (HINSTANCE)win_system_getinstance(),
+		CreateDialogParam( (HINSTANCE)WinSys::GetInstance(),
 							dlg_namep, _main_win._hwnd,
 							dlg_proc, (LPARAM)mythisp );
 
