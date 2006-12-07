@@ -1,0 +1,4 @@
+// Microsoft Visual C++ generated Help ID include file.
+// Used by dsharingu.rc
+//
+#define HIDC_ST_USERNAME                0x806703f1    // IDD_SETTINGS [English (U.S.)]

@@ -501,7 +501,7 @@ void RemoteMng::OpenDialog( Window *parent_winp,
 		_cb_userdatap = cb_userdatap;
 
 		HWND hwnd =
-			CreateDialogParam( (HINSTANCE)win_system_getinstance(),
+			CreateDialogParam( (HINSTANCE)WinSys::GetInstance(),
 				MAKEINTRESOURCE(IDD_REMOTEMNG), parent_winp->_hwnd,
 				DialogProc_s, (LPARAM)this );
 		appbase_add_modeless_dialog( hwnd );

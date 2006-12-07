@@ -54,7 +54,7 @@ bool main_start( void *hinstance )
 
 		psys_init();
 		HICON	hicon = LoadIcon( (HINSTANCE)hinstance, MAKEINTRESOURCE(IDI_ICO_APPL) );
-		win_system_init( (HINSTANCE)hinstance, hicon, "DSHARINGU" );
+		WinSys::Init( (HINSTANCE)hinstance, hicon, "DSHARINGU" );
 
 		// set float 2 int conversion to chop off !
 		_control87( _RC_CHOP, _MCW_RC );

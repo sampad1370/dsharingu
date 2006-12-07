@@ -123,7 +123,7 @@ void DSChannel::CallRemote( bool call_silent ) throw(...)
 		if NOT( _is_calling_silently )
 		{
 			_connecting_dlg_hwnd =
-				CreateDialogParam( (HINSTANCE)win_system_getinstance(),
+				CreateDialogParam( (HINSTANCE)WinSys::GetInstance(),
 				MAKEINTRESOURCE(IDD_CONNECTING), ((DSharinguApp *)_managerp->_superp)->_main_win._hwnd,
 				(DLGPROC)connectingDialogProc_s, (LPARAM)this );
 			appbase_add_modeless_dialog( _connecting_dlg_hwnd );
