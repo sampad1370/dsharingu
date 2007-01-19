@@ -42,6 +42,8 @@ RemoteDef::RemoteDef() :
 	_rm_username[0] = 0;
 	_rm_ip_address[0] = 0;
 	_call_port = DEF_PORT_NUMBER;
+	_can_watch_my_desk = true;
+	_can_use_my_desk = false;
 	_see_remote_screen = false;
 	_call_automatically = false;
 
@@ -49,6 +51,8 @@ RemoteDef::RemoteDef() :
 	_schema.AddSHA1Hash("_rm_password", &_rm_password );
 	_schema.AddString(	"_rm_ip_address", _rm_ip_address, sizeof(_rm_ip_address) );
 	_schema.AddInt(		"_port", &_call_port, 1, 65535 );
+	_schema.AddBool(	"_can_watch_my_desk", &_can_watch_my_desk );
+	_schema.AddBool(	"_can_use_my_desk", &_can_use_my_desk );
 	_schema.AddBool(	"_see_remote_screen", &_see_remote_screen );
 	_schema.AddBool(	"_call_automatically", &_call_automatically );
 }
@@ -89,6 +93,9 @@ void RemoteMng::setRemoteToForm( RemoteDef *remotep, HWND hwnd )
 			SetDlgItemUnchangedPassword( hwnd, IDC_RM_REMOTE_PASSWORD );
 		SetDlgItemText( hwnd, IDC_RM_REMOTE_ADDRESS, remotep->_rm_ip_address );
 		SetDlgItemInt( hwnd, IDC_RM_REMOTE_PORT, remotep->_call_port );
+
+		CheckDlgButton( hwnd, IDC_RM_CAN_WATCH_MY_DESK, remotep->_can_watch_my_desk );
+		CheckDlgButton( hwnd, IDC_RM_CAN_USE_MY_DESK, remotep->_can_use_my_desk );
 		CheckDlgButton( hwnd, IDC_RM_SEE_REMOTE_SCREEN, remotep->_see_remote_screen );
 		CheckDlgButton( hwnd, IDC_RM_AUTO_CALL, remotep->_call_automatically );
 	}
@@ -103,6 +110,8 @@ void RemoteMng::setNewEntryRemoteDef( HWND hwnd )
 	SetDlgItemText( hwnd, IDC_RM_REMOTE_PASSWORD, "" );
 	SetDlgItemText( hwnd, IDC_RM_REMOTE_ADDRESS, "" );
 	SetDlgItemInt( hwnd, IDC_RM_REMOTE_PORT, DEF_PORT_NUMBER );
+	CheckDlgButton( hwnd, IDC_RM_CAN_WATCH_MY_DESK, true );
+	CheckDlgButton( hwnd, IDC_RM_CAN_USE_MY_DESK, false );
 	CheckDlgButton( hwnd, IDC_RM_SEE_REMOTE_SCREEN, false );
 	CheckDlgButton( hwnd, IDC_RM_AUTO_CALL, false );
 }
@@ -173,6 +182,9 @@ void RemoteMng::refreshEnabledStatus( HWND hwnd )
 
 	DlgEnableItem( hwnd, IDC_RM_AUTO_CALL, TRUE );
 
+	DlgEnableItem( hwnd, IDC_RM_CAN_WATCH_MY_DESK,	TRUE );
+	DlgEnableItem( hwnd, IDC_RM_CAN_USE_MY_DESK,	IsDlgButtonON( hwnd, IDC_RM_CAN_WATCH_MY_DESK ) );
+
 	DlgEnableItem( hwnd, IDC_RM_SEE_REMOTE_SCREEN,	TRUE );
 //	DlgEnableItem( hwnd, IDC_RM_USE_REMOTE_SCREEN,
 //					IsDlgButtonON( hwnd, IDC_RM_SEE_REMOTE_SCREEN ) );
@@ -236,6 +248,9 @@ void RemoteMng::onEmptyList( HWND hwnd )
 	SetDlgItemText( hwnd, IDC_RM_REMOTE_PASSWORD, "" );
 	SetDlgItemText( hwnd, IDC_RM_REMOTE_ADDRESS, "" );
 	SetDlgItemInt( hwnd, IDC_RM_REMOTE_PORT, DEF_PORT_NUMBER );
+	
+	CheckDlgButton( hwnd, IDC_RM_CAN_WATCH_MY_DESK, false );
+	CheckDlgButton( hwnd, IDC_RM_CAN_USE_MY_DESK, false );
 	CheckDlgButton( hwnd, IDC_RM_SEE_REMOTE_SCREEN, false );
 	CheckDlgButton( hwnd, IDC_RM_AUTO_CALL, false );
 
@@ -243,6 +258,8 @@ void RemoteMng::onEmptyList( HWND hwnd )
 	DlgEnableItem( hwnd, IDC_RM_REMOTE_PASSWORD, FALSE );
 	DlgEnableItem( hwnd, IDC_RM_REMOTE_ADDRESS, FALSE );
 	DlgEnableItem( hwnd, IDC_RM_REMOTE_PORT, FALSE );
+	DlgEnableItem( hwnd, IDC_RM_CAN_WATCH_MY_DESK, false );
+	DlgEnableItem( hwnd, IDC_RM_CAN_USE_MY_DESK, false );
 	DlgEnableItem( hwnd, IDC_RM_SEE_REMOTE_SCREEN, FALSE );
 	DlgEnableItem( hwnd, IDC_RM_AUTO_CALL, FALSE );
 	DlgEnableItem( hwnd, IDC_RM_CONNECT, FALSE );
@@ -337,6 +354,21 @@ BOOL CALLBACK RemoteMng::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM 
 					_cur_remotep->_call_port = GetDlgItemInt( hwnd, IDC_RM_REMOTE_PORT );
 					updateRemote( hwnd );
 				}
+			}
+			break;
+
+		case IDC_RM_CAN_WATCH_MY_DESK:
+			if ( _cur_remotep )
+			{
+				_cur_remotep->_can_watch_my_desk = IsDlgButtonON( hwnd, IDC_RM_CAN_WATCH_MY_DESK );
+				updateRemote( hwnd );
+			}
+			break;
+		case IDC_RM_CAN_USE_MY_DESK:
+			if ( _cur_remotep )
+			{
+				_cur_remotep->_can_use_my_desk = IsDlgButtonON( hwnd, IDC_RM_CAN_USE_MY_DESK );
+				updateRemote( hwnd );
 			}
 			break;
 
@@ -490,13 +522,13 @@ BOOL CALLBACK RemoteMng::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM 
 
 //==================================================================
 void RemoteMng::OpenDialog( Window *parent_winp,
-							void (*onChangedSettingsCB)( void *userdatap, RemoteDef *changed_remotep ),
+							void (*onRemoteChangeCB)( void *userdatap, RemoteDef *changed_remotep ),
 							void (*onCallCB)( void *userdatap, RemoteDef *remotep ),
 							void *cb_userdatap )
 {
 	if NOT( _hwnd )
 	{
-		_onRemoteChange = onChangedSettingsCB;
+		_onRemoteChange = onRemoteChangeCB;
 		_onCallCB = onCallCB;
 		_cb_userdatap = cb_userdatap;
 

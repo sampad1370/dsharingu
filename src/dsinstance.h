@@ -174,6 +174,9 @@ private:
 	void		homeWinOnChangedSettings();
 	
 	void		handleAutoCall();
+	void		sendUsageAbility( DSChannel *chanp );
+	bool		channelCanWatch( const DSChannel *chanp );
+	bool		channelCanUse( const DSChannel *chanp );
 };
 
 #endif

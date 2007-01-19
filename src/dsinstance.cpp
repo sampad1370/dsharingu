@@ -435,8 +435,16 @@ void DSharinguApp::handleChangedRemoteManager( RemoteDef *changed_remotep )
 
 	if ( chanp && chanp->_is_transmitting )
 	{
+		chanp->_session_remotep->_can_watch_my_desk = changed_remotep->_can_watch_my_desk;
+		chanp->_session_remotep->_can_use_my_desk = changed_remotep->_can_use_my_desk;
 		chanp->_session_remotep->_see_remote_screen = changed_remotep->_see_remote_screen;
 		chanp->setViewMode();
+
+		chanp->_intersys.ActivateExternalInput(
+								channelCanWatch( chanp ) && 
+								channelCanUse( chanp ) );
+
+		sendUsageAbility( chanp );
 
 		UsageWishMsg	msg( changed_remotep->_see_remote_screen,
 							 chanp->_is_using_remote );
@@ -602,15 +610,11 @@ void DSharinguApp::handleChangedSettings()
 
 		if ( chanp )
 		{
-			chanp->_intersys.ActivateExternalInput( _settings._share_my_desktop && _settings._show_my_desktop );
+			chanp->_intersys.ActivateExternalInput(
+									channelCanWatch( chanp ) && 
+									channelCanUse( chanp ) );
 
-			if ( chanp->_is_transmitting )
-			{
-				UsageAbilityMsg	msg(_settings._show_my_desktop,
-					_settings._share_my_desktop );
-				if ERR_ERROR( chanp->_cpk.SendPacket( USAGE_ABILITY_PKID, &msg, sizeof(msg), NULL ) )
-					return;
-			}
+			sendUsageAbility( chanp );
 		}
 	}
 
@@ -626,6 +630,28 @@ void DSharinguApp::handleChangedSettings()
 		title += "no username !";
 
 	_main_win.SetTitle( title.c_str() );
+}
+
+//==================================================================
+bool DSharinguApp::channelCanWatch( const DSChannel *chanp )
+{
+	return !_settings._forbid_show_my_desktop && chanp->_session_remotep->_can_watch_my_desk;
+}
+//==================================================================
+bool DSharinguApp::channelCanUse( const DSChannel *chanp )
+{
+	return !_settings._forbid_share_my_desktop && chanp->_session_remotep->_can_use_my_desk;
+}
+//==================================================================
+void DSharinguApp::sendUsageAbility( DSChannel *chanp )
+{
+	if ( chanp->_is_transmitting )
+	{
+		UsageAbilityMsg	msg( channelCanWatch( chanp ),
+							 channelCanUse( chanp ) );
+		if ERR_ERROR( chanp->_cpk.SendPacket( USAGE_ABILITY_PKID, &msg, sizeof(msg), NULL ) )
+			return;
+	}
 }
 
 //==================================================================
