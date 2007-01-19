@@ -41,6 +41,8 @@ public:
 	sha1_t		_rm_password;
 	char		_rm_ip_address[128];
 	int			_call_port;
+	bool		_can_watch_my_desk;
+	bool		_can_use_my_desk;
 	bool		_see_remote_screen;
 	bool		_call_automatically;
 

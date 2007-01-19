@@ -163,8 +163,8 @@ Settings::Settings() :
 	_username[0] = 0;
 	_listen_for_connections = true;
 	_listen_port = DEF_PORT_NUMBER;
-	_show_my_desktop = true;
-	_share_my_desktop = false;
+	_forbid_show_my_desktop = false;
+	_forbid_share_my_desktop = true;
 	_run_after_login = IsApplicationInRegistryRun( APP_NAME );
 	_start_minimized = false;
 
@@ -172,8 +172,8 @@ Settings::Settings() :
 	_schema.AddSHA1Hash( "_password", &_password );
 	_schema.AddBool(	"_listen_for_connections", &_listen_for_connections );
 	_schema.AddInt(		"_listen_port", &_listen_port, 1, 65535 );
-	_schema.AddBool(	"_show_my_desktop", &_show_my_desktop	, "_show_my_screen" );
-	_schema.AddBool(	"_share_my_desktop", &_share_my_desktop	, "_share_my_screen"  );
+	_schema.AddBool(	"_forbid_show_my_desktop", &_forbid_show_my_desktop );
+	_schema.AddBool(	"_forbid_share_my_desktop", &_forbid_share_my_desktop  );
 	_schema.AddBool(	"_run_after_login", &_run_after_login );
 	_schema.AddBool(	"_start_minimized", &_start_minimized );
 }
@@ -195,7 +195,7 @@ BOOL CALLBACK Settings::DialogProc_s(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM
 WGUTCheckPWMsg Settings::checkPasswords( HWND hwnd )
 {
 	// if we aren't showing or sharing the screen, then passwords are a non-issue
-//	if NOT( IsDlgButtonON( hwnd, IDC_SHOW_MY_DESKTOP_CHECK ) || IsDlgButtonON( hwnd, IDC_SHARE_MY_DESKTOP_CHECK ) )
+//	if NOT( IsDlgButtonON( hwnd, IDC_FORBID_SHOW_MY_DESKTOP_CHECK ) || IsDlgButtonON( hwnd, IDC_FORBID_SHARE_MY_DESKTOP_CHECK ) )
 //		return CHECKPW_MSG_UNCHANGED;
 
 
@@ -296,9 +296,9 @@ BOOL CALLBACK Settings::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM l
 		SetDlgItemInt( hwnd, IDC_ST_LOCAL_PORT, _listen_port );
 		enableListenGroup( hwnd );
 
-		CheckDlgButton( hwnd, IDC_SHOW_MY_DESKTOP_CHECK, _show_my_desktop );
-		CheckDlgButton( hwnd, IDC_SHARE_MY_DESKTOP_CHECK, _share_my_desktop );
-		DlgEnableItem( hwnd, IDC_SHARE_MY_DESKTOP_CHECK, _show_my_desktop );
+		CheckDlgButton( hwnd, IDC_FORBID_SHOW_MY_DESKTOP_CHECK, _forbid_show_my_desktop );
+		CheckDlgButton( hwnd, IDC_FORBID_SHARE_MY_DESKTOP_CHECK, _forbid_share_my_desktop );
+		DlgEnableItem( hwnd, IDC_FORBID_SHARE_MY_DESKTOP_CHECK, !_forbid_show_my_desktop );
 
 		_run_after_login = IsApplicationInRegistryRun( APP_NAME );
 		CheckDlgButton( hwnd, IDC_RUN_AFTER_LOGIN, _run_after_login );
@@ -308,11 +308,11 @@ BOOL CALLBACK Settings::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM l
 	case WM_COMMAND:
 		switch( LOWORD(wparam) )
 		{
-		case IDC_SHOW_MY_DESKTOP_CHECK:
-		case IDC_SHARE_MY_DESKTOP_CHECK:
+		case IDC_FORBID_SHOW_MY_DESKTOP_CHECK:
+		case IDC_FORBID_SHARE_MY_DESKTOP_CHECK:
 			{
-				bool onoff = IsDlgButtonON( hwnd, IDC_SHOW_MY_DESKTOP_CHECK );
-				DlgEnableItem( hwnd, IDC_SHARE_MY_DESKTOP_CHECK, onoff );
+				bool onoff = IsDlgButtonON( hwnd, IDC_FORBID_SHOW_MY_DESKTOP_CHECK );
+				DlgEnableItem( hwnd, IDC_FORBID_SHARE_MY_DESKTOP_CHECK, !onoff );
 			}
 			break;
 
@@ -351,8 +351,8 @@ BOOL CALLBACK Settings::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM l
 				_listen_for_connections = IsDlgButtonON( hwnd, IDC_LISTEN_CONNECTIONS_CHECK );
 				_listen_port = GetDlgItemInt( hwnd, IDC_ST_LOCAL_PORT );
 
-				_show_my_desktop = IsDlgButtonON( hwnd, IDC_SHOW_MY_DESKTOP_CHECK );
-				_share_my_desktop = IsDlgButtonON( hwnd, IDC_SHARE_MY_DESKTOP_CHECK );
+				_forbid_show_my_desktop = IsDlgButtonON( hwnd, IDC_FORBID_SHOW_MY_DESKTOP_CHECK );
+				_forbid_share_my_desktop = IsDlgButtonON( hwnd, IDC_FORBID_SHARE_MY_DESKTOP_CHECK );
 
 				_run_after_login = IsDlgButtonON( hwnd, IDC_RUN_AFTER_LOGIN );
 				if ( _run_after_login )
