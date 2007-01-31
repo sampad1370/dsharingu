@@ -1,5 +1,5 @@
 //==================================================================
-//	Copyright (C) 2006  Davide Pasca
+//	Copyright (C) 2006-2007  Davide Pasca
 //
 //	This program is free software; you can redistribute it and/or modify
 //	it under the terms of the GNU General Public License as published by
@@ -225,8 +225,6 @@ void onMouseButton( INPUT *out_inputp, const RemoConMsg &message, int disp_wd, i
 //==================================================================
 bool InteractiveSystem::ProcessMessage_s( u_int pack_id, const void *datap, int disp_wd, int disp_he )
 {
-	return false;
-
 	switch ( pack_id )
 	{
 	case REMOCON_ARRAY_PKID:

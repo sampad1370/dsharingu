@@ -142,12 +142,12 @@ Global
 		{155C319B-18CD-471A-ABEF-CBB5C4AEEDFA}.Debug_Main|Win32.Build.0 = Debug_Main|Win32
 		{155C319B-18CD-471A-ABEF-CBB5C4AEEDFA}.Debug_Remote|Win32.ActiveCfg = Debug_Main|Win32
 		{155C319B-18CD-471A-ABEF-CBB5C4AEEDFA}.Debug_Remote|Win32.Build.0 = Debug_Main|Win32
-		{155C319B-18CD-471A-ABEF-CBB5C4AEEDFA}.Debug|Win32.ActiveCfg = Debug|Win32
-		{155C319B-18CD-471A-ABEF-CBB5C4AEEDFA}.Debug|Win32.Build.0 = Debug|Win32
+		{155C319B-18CD-471A-ABEF-CBB5C4AEEDFA}.Debug|Win32.ActiveCfg = Debug_Main|Win32
+		{155C319B-18CD-471A-ABEF-CBB5C4AEEDFA}.Debug|Win32.Build.0 = Debug_Main|Win32
 		{155C319B-18CD-471A-ABEF-CBB5C4AEEDFA}.Release_Main|Win32.ActiveCfg = Release_Main|Win32
 		{155C319B-18CD-471A-ABEF-CBB5C4AEEDFA}.Release_Main|Win32.Build.0 = Release_Main|Win32
-		{155C319B-18CD-471A-ABEF-CBB5C4AEEDFA}.Release|Win32.ActiveCfg = Release|Win32
-		{155C319B-18CD-471A-ABEF-CBB5C4AEEDFA}.Release|Win32.Build.0 = Release|Win32
+		{155C319B-18CD-471A-ABEF-CBB5C4AEEDFA}.Release|Win32.ActiveCfg = Release_Main|Win32
+		{155C319B-18CD-471A-ABEF-CBB5C4AEEDFA}.Release|Win32.Build.0 = Release_Main|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
