@@ -1,5 +1,5 @@
 //==================================================================
-//	Copyright (C) 2006  Davide Pasca
+//	Copyright (C) 2006-2007  Davide Pasca
 //
 //	This program is free software; you can redistribute it and/or modify
 //	it under the terms of the GNU General Public License as published by
@@ -63,7 +63,7 @@ BOOL CALLBACK DSharinguApp::aboutDialogProc(HWND hwnd, UINT umsg, WPARAM wparam,
 	    switch(LOWORD(wparam))
 		{
 		case IDC_HOMEPAGE:
-			ShellExecute( hwnd, "open", "http://kazzuya.com/dsharingu",
+			ShellExecute( hwnd, "open", "http://v4.kazzuya.com/en/dsharingu",
 						  NULL, NULL, SW_SHOWNORMAL );
 			break;
 
@@ -387,7 +387,7 @@ int DSharinguApp::mainEventFilter( win_event_type etype, win_event_t *eventp )
 			{
 				_download_updatep = new DownloadUpdate( _main_win._hwnd,
 											APP_VERSION_STR,
-											"kazzuya.com",
+											"dsharingu.kazzuya.com",
 											"/dsharingu_data/update_info.txt",
 											"/dsharingu_data/",
 											"DSharingu - Download Update" );

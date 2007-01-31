@@ -1,5 +1,5 @@
 //==================================================================
-//	Copyright (C) 2006  Davide Pasca
+//	Copyright (C) 2006-2007  Davide Pasca
 //
 //	This program is free software; you can redistribute it and/or modify
 //	it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@
 
 #define CHNTAG				"* "
 #define APP_NAME			"DSharingu"
-#define APP_VERSION_STR		"0.22a"
+#define APP_VERSION_STR		"0.23a"
 
 /*
 //==================================================================

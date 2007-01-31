@@ -51,7 +51,7 @@ BEGIN
             VALUE "FileDescription", "DSharingu Application"
             VALUE "FileVersion", "1, 0, 0, 1"
             VALUE "InternalName", "dsharing"
-            VALUE "LegalCopyright", "Copyright (C) 2006"
+            VALUE "LegalCopyright", "Copyright (C) 2007"
             VALUE "OriginalFilename", "DSharingu.exe"
             VALUE "ProductName", "DSharingu Application"
             VALUE "ProductVersion", "1, 0, 0, 1"
@@ -197,14 +197,14 @@ FONT 9, "Tahoma", 400, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,77,114,50,14
     GROUPBOX        "About:",IDC_STATIC,7,7,191,99
-    LTEXT           "DSharingu xxxxx",IDC_ABOUT_APPNAME,100,20,80,9
-    LTEXT           "desktop sharing software",IDC_STATIC,85,30,85,8,SS_CENTERIMAGE
-    LTEXT           "written by Davide Pasca 2006",IDC_STATIC,76,40,96,8
-    PUSHBUTTON      "http://kazzuya.com/dsharingu",IDC_HOMEPAGE,70,80,108,14
-    LTEXT           "Internet site:",IDC_STATIC,25,83,43,8
+    LTEXT           "DSharingu xxxxx",IDC_ABOUT_APPNAME,101,20,80,9
+    LTEXT           "desktop sharing software",IDC_STATIC,88,30,85,8,SS_CENTERIMAGE
+    LTEXT           "written by Davide Pasca 2006-2007",IDC_STATIC,74,40,113,8
+    PUSHBUTTON      "http://v4.kazzuya.com/en/dsharingu",IDC_HOMEPAGE,61,80,123,14
+    LTEXT           "Internet site:",IDC_STATIC,16,83,43,8
     CONTROL         118,IDB_BITMAP9,"Static",SS_BITMAP | WS_BORDER,34,20,29,29
-    PUSHBUTTON      "Manual and License",IDC_MANUAL,70,59,108,14
-    LTEXT           "Info:",IDC_STATIC,52,62,15,8
+    PUSHBUTTON      "Manual and License",IDC_MANUAL,61,59,123,14
+    LTEXT           "Info:",IDC_STATIC,43,62,15,8
 END
 
 IDD_SETTINGS DIALOGEX 0, 0, 208, 253

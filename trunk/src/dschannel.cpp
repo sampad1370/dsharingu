@@ -1,5 +1,5 @@
 //==================================================================
-//	Copyright (C) 2006  Davide Pasca
+//	Copyright (C) 2006-2007  Davide Pasca
 //
 //	This program is free software; you can redistribute it and/or modify
 //	it under the terms of the GNU General Public License as published by
@@ -616,7 +616,8 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 									"Incompatible Versions",
 									MB_YESNO | MB_ICONERROR, IDNO ) == IDYES )
 						{
-							ShellExecute( ((DSharinguApp *)_managerp->_superp)->_main_win._hwnd, "open", "http://kazzuya.com/dsharingu", NULL, NULL, SW_SHOWNORMAL );
+							ShellExecute( ((DSharinguApp *)_managerp->_superp)->_main_win._hwnd,
+								"open", "http://v4.kazzuya.com/en/dsharingu", NULL, NULL, SW_SHOWNORMAL );
 						}
 					}
 					else
@@ -670,7 +671,8 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 				"Incompatible Versions",
 				MB_YESNO | MB_ICONERROR, IDNO ) == IDYES )
 			{
-				ShellExecute( ((DSharinguApp *)_managerp->_superp)->_main_win._hwnd, "open", "http://kazzuya.com/dsharingu", NULL, NULL, SW_SHOWNORMAL );
+				ShellExecute( ((DSharinguApp *)_managerp->_superp)->_main_win._hwnd,
+					"open", "http://v4.kazzuya.com/en/dsharingu", NULL, NULL, SW_SHOWNORMAL );
 			}
 			break;
 
