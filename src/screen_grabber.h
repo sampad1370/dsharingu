@@ -59,8 +59,8 @@ public:
 	//PError	GetError() { return _error; }
 
 private:
-	PError RebuildOffscreenSurf( const DDSURFACEDESC2 *prim_descp );
-	PError VerifyOrCreateContext();
+	PError rebuildOffscreenSurf( const DDSURFACEDESC2 *prim_descp );
+	PError verifyOrCreateContext();
 };
 
 #endif
