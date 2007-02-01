@@ -53,12 +53,14 @@ class Writer
 {
 	bool				_is_grabbing;
 	double				_last_grab_time;
-	ScreenGrabber		_grabber;
 	int					_last_w, _last_h;
 	int					_tex_per_x;
 	int					_tex_per_y;
 
 	ScreenPacker		_packer;
+
+private:
+	ScreenGrabber		_grabber;
 
 public:
 	Writer();

@@ -617,7 +617,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 									MB_YESNO | MB_ICONERROR, IDNO ) == IDYES )
 						{
 							ShellExecute( ((DSharinguApp *)_managerp->_superp)->_main_win._hwnd,
-								"open", "http://v4.kazzuya.com/en/dsharingu", NULL, NULL, SW_SHOWNORMAL );
+								"open", "http://dsharingu.kazzuya.com", NULL, NULL, SW_SHOWNORMAL );
 						}
 					}
 					else
@@ -672,7 +672,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 				MB_YESNO | MB_ICONERROR, IDNO ) == IDYES )
 			{
 				ShellExecute( ((DSharinguApp *)_managerp->_superp)->_main_win._hwnd,
-					"open", "http://v4.kazzuya.com/en/dsharingu", NULL, NULL, SW_SHOWNORMAL );
+					"open", "http://dsharingu.kazzuya.com", NULL, NULL, SW_SHOWNORMAL );
 			}
 			break;
 

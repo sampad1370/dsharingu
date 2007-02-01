@@ -156,7 +156,7 @@ char	buff[512];
 bool ScreenGrabber::StartGrabbing( HWND hwnd )
 {
 	_hwnd = hwnd;
-	if ERR_ERROR( VerifyOrCreateContext() )
+	if ERR_ERROR( verifyOrCreateContext() )
 		return false;
 
 	return true;
@@ -199,7 +199,7 @@ void ScreenGrabber::UnlockFrame()
 }
 
 //==================================================================
-PError ScreenGrabber::RebuildOffscreenSurf( const DDSURFACEDESC2 *prim_descp )
+PError ScreenGrabber::rebuildOffscreenSurf( const DDSURFACEDESC2 *prim_descp )
 {
 	if ( _offscreen_surfp )
 	{
@@ -228,7 +228,7 @@ PError ScreenGrabber::RebuildOffscreenSurf( const DDSURFACEDESC2 *prim_descp )
 }
 
 //==================================================================
-PError ScreenGrabber::VerifyOrCreateContext()
+PError ScreenGrabber::verifyOrCreateContext()
 {
 	if NOT( _ddrawp )
 	{
@@ -284,7 +284,7 @@ PError ScreenGrabber::VerifyOrCreateContext()
 
 	if NOT( _offscreen_surfp )
 	{
-		if ( RebuildOffscreenSurf( &prim_desc ) != POK )
+		if ( rebuildOffscreenSurf( &prim_desc ) != POK )
 		{
 			PSYS_ASSERT( 0 );
 			return PERROR;
@@ -303,7 +303,7 @@ PError ScreenGrabber::VerifyOrCreateContext()
 		 off_desc.ddpfPixelFormat.dwGBitMask != prim_desc.ddpfPixelFormat.dwGBitMask ||
 		 off_desc.ddpfPixelFormat.dwBBitMask != prim_desc.ddpfPixelFormat.dwBBitMask )
 	{
-		if ( RebuildOffscreenSurf( &prim_desc ) != POK )
+		if ( rebuildOffscreenSurf( &prim_desc ) != POK )
 		{
 			PSYS_ASSERT( 0 );
 			return PERROR;

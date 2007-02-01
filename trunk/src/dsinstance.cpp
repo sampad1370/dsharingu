@@ -63,7 +63,7 @@ BOOL CALLBACK DSharinguApp::aboutDialogProc(HWND hwnd, UINT umsg, WPARAM wparam,
 	    switch(LOWORD(wparam))
 		{
 		case IDC_HOMEPAGE:
-			ShellExecute( hwnd, "open", "http://v4.kazzuya.com/en/dsharingu",
+			ShellExecute( hwnd, "open", "http://dsharingu.kazzuya.com",
 						  NULL, NULL, SW_SHOWNORMAL );
 			break;
 

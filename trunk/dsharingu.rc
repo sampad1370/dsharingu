@@ -200,7 +200,7 @@ BEGIN
     LTEXT           "DSharingu xxxxx",IDC_ABOUT_APPNAME,101,20,80,9
     LTEXT           "desktop sharing software",IDC_STATIC,88,30,85,8,SS_CENTERIMAGE
     LTEXT           "written by Davide Pasca 2006-2007",IDC_STATIC,74,40,113,8
-    PUSHBUTTON      "http://v4.kazzuya.com/en/dsharingu",IDC_HOMEPAGE,61,80,123,14
+    PUSHBUTTON      "http://dsharingu.kazzuya.com",IDC_HOMEPAGE,61,80,123,14
     LTEXT           "Internet site:",IDC_STATIC,16,83,43,8
     CONTROL         118,IDB_BITMAP9,"Static",SS_BITMAP | WS_BORDER,34,20,29,29
     PUSHBUTTON      "Manual and License",IDC_MANUAL,61,59,123,14
