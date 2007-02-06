@@ -15,15 +15,16 @@
 //	along with this program; if not, write to the Free Software
 //	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //==================================================================
-//= Creation: Davide Pasca 2005
-//=
-//=
-//=
-//=
+///
+///
+///
+///
+///
 //==================================================================
 
 #include <stdio.h>
-#include "screen_grabber.h"
+#include <ddraw.h>
+#include "screen_grabber_ddraw.h"
 
 //==================================================================
 static char *error_to_string( HRESULT err )
@@ -153,7 +154,7 @@ char	buff[512];
 								
 
 //==================================================================
-bool ScreenGrabber::StartGrabbing( HWND hwnd )
+bool ScreenGrabberDDraw::StartGrabbing( HWND hwnd )
 {
 	_hwnd = hwnd;
 	if ERR_ERROR( verifyOrCreateContext() )
@@ -163,7 +164,7 @@ bool ScreenGrabber::StartGrabbing( HWND hwnd )
 }
 
 //==================================================================
-bool ScreenGrabber::GrabFrame()
+bool ScreenGrabberDDraw::GrabFrame()
 {
 	if ERR_FALSE( _primary_surfp != NULL && _offscreen_surfp != NULL )
 		return false;
@@ -176,7 +177,7 @@ bool ScreenGrabber::GrabFrame()
 }
 
 //==================================================================
-void ScreenGrabber::LockFrame( DDSURFACEDESC2 *descp )
+void ScreenGrabberDDraw::LockFrame( DDSURFACEDESC2 *descp )
 {
 	if ERR_NULL( _offscreen_surfp )
 		return;
@@ -190,7 +191,7 @@ void ScreenGrabber::LockFrame( DDSURFACEDESC2 *descp )
 }
 
 //==================================================================
-void ScreenGrabber::UnlockFrame()
+void ScreenGrabberDDraw::UnlockFrame()
 {
 	if ( _offscreen_surfp )
 	{
@@ -199,7 +200,7 @@ void ScreenGrabber::UnlockFrame()
 }
 
 //==================================================================
-PError ScreenGrabber::rebuildOffscreenSurf( const DDSURFACEDESC2 *prim_descp )
+PError ScreenGrabberDDraw::rebuildOffscreenSurf( const DDSURFACEDESC2 *prim_descp )
 {
 	if ( _offscreen_surfp )
 	{
@@ -228,7 +229,7 @@ PError ScreenGrabber::rebuildOffscreenSurf( const DDSURFACEDESC2 *prim_descp )
 }
 
 //==================================================================
-PError ScreenGrabber::verifyOrCreateContext()
+PError ScreenGrabberDDraw::verifyOrCreateContext()
 {
 	if NOT( _ddrawp )
 	{
