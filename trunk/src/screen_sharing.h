@@ -86,7 +86,7 @@ public:
 
 private:
 	bool processGrabbedFrame();
-	bool captureAndPack( const DDSURFACEDESC2 &desc );
+	bool captureAndPack( const ScreenGrabberBase::FrameInfo &finfo );
 };
 
 //==================================================================
