@@ -25,7 +25,7 @@
 #define SCREEN_SHARING_H
 
 #include "compak.h"
-#include "screen_grabber.h"
+#include "screen_grabber_ddraw.h"
 #include "screen_packer.h"
 
 //==================================================================
@@ -60,7 +60,7 @@ class Writer
 	ScreenPacker		_packer;
 
 private:
-	ScreenGrabber		_grabber;
+	ScreenGrabberDDraw	_grabber;
 
 public:
 	Writer();

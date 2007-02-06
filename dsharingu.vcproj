@@ -371,11 +371,27 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\screen_grabber.cpp"
+				RelativePath=".\src\screen_grabber_base.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\screen_grabber.h"
+				RelativePath=".\src\screen_grabber_base.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\screen_grabber_ddraw.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\screen_grabber_ddraw.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\screen_grabber_gdi.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\screen_grabber_gdi.h"
 				>
 			</File>
 			<File

@@ -15,52 +15,38 @@
 //	along with this program; if not, write to the Free Software
 //	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //==================================================================
-//= Creation: Davide Pasca 2005
-//=
-//=
-//=
-//=
+///
+///
+///
+///
+///
 //==================================================================
 
-#ifndef SCREEN_GRABBER_H
-#define SCREEN_GRABBER_H
+#ifndef SCREEN_GRABBER_BASE_H
+#define SCREEN_GRABBER_BASE_H
 
-#include <ddraw.h>
+#include <Windows.h>
 #include "psys.h"
 
 //==================================================================
-class ScreenGrabber
+class ScreenGrabberBase
 {
-	HWND					_hwnd;
-	LPDIRECTDRAW7			_ddrawp;
-	LPDIRECTDRAWSURFACE7	_primary_surfp;
-	LPDIRECTDRAWSURFACE7	_offscreen_surfp;
-	int						_wd;
-	int						_he;
+protected:
+	HWND		_hwnd;
+	int			_wd;
+	int			_he;
 
-	//PError					_error;
 public:
-	ScreenGrabber()
+	ScreenGrabberBase() :
+		_hwnd(NULL),
+		_wd(0),
+		_he(0)
 	{
-		_hwnd = 0;
-		_ddrawp = 0;
-		_primary_surfp = 0;
-		_offscreen_surfp = 0;
-		_wd = 0;
-		_he = 0;
-		//_error = POK;
 	}
 
-	bool	StartGrabbing( HWND hwnd );
-	bool	GrabFrame();
-	void	LockFrame( DDSURFACEDESC2 *descp );
-	void	UnlockFrame();
-
-	//PError	GetError() { return _error; }
-
-private:
-	PError rebuildOffscreenSurf( const DDSURFACEDESC2 *prim_descp );
-	PError verifyOrCreateContext();
+	virtual bool	StartGrabbing( HWND hwnd ) = NULL;
+	virtual bool	GrabFrame() = NULL;
+	virtual void	UnlockFrame() = NULL;
 };
 
 #endif
