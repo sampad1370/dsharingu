@@ -199,40 +199,34 @@ static void copy_block( const u_char *srcp, int spitch, u_char *desp, int dpitch
 }
 
 //==================================================================
-bool ScrShare::Writer::captureAndPack( const DDSURFACEDESC2 &desc )
+bool ScrShare::Writer::captureAndPack( const ScreenGrabberBase::FrameInfo &finfo )
 {
-	if ERR_FALSE( desc.ddpfPixelFormat.dwRGBBitCount == 16 ||
-				desc.ddpfPixelFormat.dwRGBBitCount == 24 ||
-				desc.ddpfPixelFormat.dwRGBBitCount == 32 )
+	if ERR_FALSE( finfo._depth == 16 || finfo._depth == 24 || finfo._depth == 32 )
 		return false;
 
-	_packer.SetScreenSize( desc.dwWidth, desc.dwHeight );
+	_packer.SetScreenSize( finfo._w, finfo._h );
 
 	int	blk_idx = 0;
-	int spitch	= desc.lPitch;
-	int	sbypp	= (desc.ddpfPixelFormat.dwRGBBitCount + 7) / 8;
+	int spitch	= finfo._pitch;
+	int	sbypp	= (finfo._depth + 7) / 8;
 
 
 	void (*convert_x_to_24)( const u_char *srcp, int spitch, u_char *desp, int dpitch, int w, int h ) = 0;
 
-	switch ( desc.ddpfPixelFormat.dwRGBBitCount )
+	switch ( finfo._data_format )
 	{
-	case 16:	if ( desc.ddpfPixelFormat.dwGBitMask == 63<<5 )
-					convert_x_to_24 = convert_565_to_24;
-				else
-					convert_x_to_24 = convert_555_to_24;
-				break;
-
-	case 24:	convert_x_to_24 = convert_24_to_24;		break;
-	case 32:	convert_x_to_24 = convert_32_to_24;		break;
+	case ScreenGrabberBase::FrameInfo::DF_XRGB1555:	convert_x_to_24 = convert_555_to_24;	break;
+	case ScreenGrabberBase::FrameInfo::DF_RGB565:	convert_x_to_24 = convert_565_to_24;	break;
+	case ScreenGrabberBase::FrameInfo::DF_BGR888:	convert_x_to_24 = convert_24_to_24;		break;
+	case ScreenGrabberBase::FrameInfo::DF_BGRA8888:	convert_x_to_24 = convert_32_to_24;		break;
 	default:
-		throw "Unknown bitcount";
+		throw "Unknown format !!";
 		break;
 	}
 
 
-	int	height = desc.dwHeight;
-	int	width = desc.dwWidth;
+	int	height = finfo._w;
+	int	width = finfo._h;
 
 	int	blk_max_size = ScrShare::BLOCK_WD * ScrShare::BLOCK_HE * sbypp;
 	int	tmp_blk_pitch = sbypp * ScrShare::BLOCK_WD;
@@ -253,7 +247,7 @@ bool ScrShare::Writer::captureAndPack( const DDSURFACEDESC2 &desc )
 
 			int	blk_now_size = block_w * block_h * sbypp;
 
-			srcp = (u_char *)desc.lpSurface + y * spitch + x * sbypp;
+			srcp = (u_char *)finfo._datap + y * spitch + x * sbypp;
 
 			u_char	tmp_blk[ ScrShare::BLOCK_WD * ScrShare::BLOCK_HE * 4 ];
 			memset( tmp_blk, 0, ScrShare::BLOCK_WD * ScrShare::BLOCK_HE * 4 );
@@ -285,16 +279,16 @@ bool ScrShare::Writer::captureAndPack( const DDSURFACEDESC2 &desc )
 //==================================================================
 bool ScrShare::Writer::processGrabbedFrame()
 {
-	DDSURFACEDESC2	desc;
+	ScreenGrabberBase::FrameInfo	finfo;
 
-	_grabber.LockFrame( &desc );
+	_grabber.LockFrame( finfo );
 
-		_last_w = desc.dwWidth;
-		_last_h = desc.dwHeight;
+		_last_w = finfo._w;
+		_last_h = finfo._h;
 
 		_packer.BeginPack();
 
-			if ERR_FALSE( captureAndPack( desc ) )
+			if ERR_FALSE( captureAndPack( finfo ) )
 			{
 				_grabber.UnlockFrame();
 				return false;

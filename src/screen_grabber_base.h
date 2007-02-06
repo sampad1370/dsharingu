@@ -37,6 +37,27 @@ protected:
 	int			_he;
 
 public:
+	struct FrameInfo
+	{
+		enum DataFormat
+		{
+			DF_BGR888,
+			DF_BGRA8888,
+			DF_XRGB1555,
+			DF_RGB565,
+		};
+
+		u_int		_w;
+		u_int		_h;
+		u_int		_depth;
+		
+		DataFormat	_data_format;
+
+		u_char		*_datap;
+		int			_pitch;
+	};
+
+public:
 	ScreenGrabberBase() :
 		_hwnd(NULL),
 		_wd(0),
@@ -46,6 +67,7 @@ public:
 
 	virtual bool	StartGrabbing( HWND hwnd ) = NULL;
 	virtual bool	GrabFrame() = NULL;
+	virtual bool	LockFrame( FrameInfo &finfo ) = NULL;
 	virtual void	UnlockFrame() = NULL;
 };
 

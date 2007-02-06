@@ -45,9 +45,8 @@ public:
 
 	virtual bool	StartGrabbing( HWND hwnd );
 	virtual bool	GrabFrame();
+	virtual bool	LockFrame( FrameInfo &out_finfo );
 	virtual	void	UnlockFrame();
-
-	void			LockFrame( DDSURFACEDESC2 *descp );
 
 private:
 	PError rebuildOffscreenSurf( const DDSURFACEDESC2 *prim_descp );

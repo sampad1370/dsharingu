@@ -177,17 +177,45 @@ bool ScreenGrabberDDraw::GrabFrame()
 }
 
 //==================================================================
-void ScreenGrabberDDraw::LockFrame( DDSURFACEDESC2 *descp )
+bool ScreenGrabberDDraw::LockFrame( FrameInfo &out_finfo )
 {
 	if ERR_NULL( _offscreen_surfp )
-		return;
+		return false;
 
-	descp->dwSize = sizeof(*descp);
+	DDSURFACEDESC2	desc;
+	desc.dwSize = sizeof(desc);
 
-	DDERR_BEGIN( _offscreen_surfp->Lock( NULL, descp, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL ) );
+	DDERR_BEGIN( _offscreen_surfp->Lock( NULL, &desc, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL ) );
 		if ERR_ERROR( PERROR )
-			return;
+			return false;
 	DDERR_END;
+
+	out_finfo._w = desc.dwWidth;
+	out_finfo._h = desc.dwHeight;
+	out_finfo._depth = desc.ddpfPixelFormat.dwRGBBitCount;
+	
+	switch ( desc.ddpfPixelFormat.dwRGBBitCount )
+	{
+	case 16:
+		if ( desc.ddpfPixelFormat.dwGBitMask == 63<<5 )
+			out_finfo._data_format = FrameInfo::DF_RGB565;
+		else
+			out_finfo._data_format = FrameInfo::DF_XRGB1555;
+		break;
+
+	case 24:
+		out_finfo._data_format = FrameInfo::DF_BGR888;
+		break;
+
+	case 32:
+		out_finfo._data_format = FrameInfo::DF_BGRA8888;
+		break;
+	}
+
+	out_finfo._pitch = desc.lPitch;
+	out_finfo._datap = (u_char *)desc.lpSurface;
+
+	return true;
 }
 
 //==================================================================
