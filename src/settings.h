@@ -39,8 +39,8 @@ public:
 	sha1_t		_password;
 	bool		_listen_for_connections;
 	int			_listen_port;
-	bool		_forbid_show_my_desktop;
-	bool		_forbid_share_my_desktop;
+	bool		_nobody_can_watch_my_computer;
+	bool		_nobody_can_use_my_computer;
 	bool		_run_after_login;
 	bool		_start_minimized;
 

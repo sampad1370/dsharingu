@@ -163,8 +163,8 @@ Settings::Settings() :
 	_username[0] = 0;
 	_listen_for_connections = true;
 	_listen_port = DEF_PORT_NUMBER;
-	_forbid_show_my_desktop = false;
-	_forbid_share_my_desktop = true;
+	_nobody_can_watch_my_computer = false;
+	_nobody_can_use_my_computer = true;
 	_run_after_login = IsApplicationInRegistryRun( APP_NAME );
 	_start_minimized = false;
 
@@ -172,8 +172,8 @@ Settings::Settings() :
 	_schema.AddSHA1Hash( "_password", &_password );
 	_schema.AddBool(	"_listen_for_connections", &_listen_for_connections );
 	_schema.AddInt(		"_listen_port", &_listen_port, 1, 65535 );
-	_schema.AddBool(	"_forbid_show_my_desktop", &_forbid_show_my_desktop );
-	_schema.AddBool(	"_forbid_share_my_desktop", &_forbid_share_my_desktop  );
+	_schema.AddBool(	"_nobody_can_watch_my_computer", &_nobody_can_watch_my_computer, "_forbid_show_my_desktop" );
+	_schema.AddBool(	"_nobody_can_use_my_computer", &_nobody_can_use_my_computer, "_forbid_share_my_desktop"  );
 	_schema.AddBool(	"_run_after_login", &_run_after_login );
 	_schema.AddBool(	"_start_minimized", &_start_minimized );
 }
@@ -296,9 +296,9 @@ BOOL CALLBACK Settings::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM l
 		SetDlgItemInt( hwnd, IDC_ST_LOCAL_PORT, _listen_port );
 		enableListenGroup( hwnd );
 
-		CheckDlgButton( hwnd, IDC_FORBID_SHOW_MY_DESKTOP_CHECK, _forbid_show_my_desktop );
-		CheckDlgButton( hwnd, IDC_FORBID_SHARE_MY_DESKTOP_CHECK, _forbid_share_my_desktop );
-		DlgEnableItem( hwnd, IDC_FORBID_SHARE_MY_DESKTOP_CHECK, !_forbid_show_my_desktop );
+		CheckDlgButton( hwnd, IDC_FORBID_SHOW_MY_DESKTOP_CHECK, _nobody_can_watch_my_computer );
+		CheckDlgButton( hwnd, IDC_FORBID_SHARE_MY_DESKTOP_CHECK, _nobody_can_use_my_computer );
+		DlgEnableItem( hwnd, IDC_FORBID_SHARE_MY_DESKTOP_CHECK, !_nobody_can_watch_my_computer );
 
 		_run_after_login = IsApplicationInRegistryRun( APP_NAME );
 		CheckDlgButton( hwnd, IDC_RUN_AFTER_LOGIN, _run_after_login );
@@ -351,8 +351,8 @@ BOOL CALLBACK Settings::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM l
 				_listen_for_connections = IsDlgButtonON( hwnd, IDC_LISTEN_CONNECTIONS_CHECK );
 				_listen_port = GetDlgItemInt( hwnd, IDC_ST_LOCAL_PORT );
 
-				_forbid_show_my_desktop = IsDlgButtonON( hwnd, IDC_FORBID_SHOW_MY_DESKTOP_CHECK );
-				_forbid_share_my_desktop = IsDlgButtonON( hwnd, IDC_FORBID_SHARE_MY_DESKTOP_CHECK );
+				_nobody_can_watch_my_computer = IsDlgButtonON( hwnd, IDC_FORBID_SHOW_MY_DESKTOP_CHECK );
+				_nobody_can_use_my_computer = IsDlgButtonON( hwnd, IDC_FORBID_SHARE_MY_DESKTOP_CHECK );
 
 				_run_after_login = IsDlgButtonON( hwnd, IDC_RUN_AFTER_LOGIN );
 				if ( _run_after_login )
