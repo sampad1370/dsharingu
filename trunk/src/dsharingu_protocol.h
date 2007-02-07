@@ -130,6 +130,8 @@ struct RemoConMsg
 
 	u_int	_time_delta;
 
+	RemoConMsg(){}
+
 	void SetMouseMove( u_short pos_x, u_short pos_y, u_int time_delta )
 	{
 		_type = TYPE_MOUSEMOVE;

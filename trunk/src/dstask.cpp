@@ -123,7 +123,7 @@ void DSTaskManager::AddTask( const char *task_namep, u_int task_butt_id, DSTask:
 
 	DSTask	*taskp = new DSTask( this, task_namep, task_butt_id );
 	taskp->_view_state = init_view_state;
-	_tasks.append( taskp );
+	_tasks.push_back( taskp );
 	updateViewState( taskp );
 	_dstaskCallBack( _cb_userdatap, taskp, taskp->GetViewState() );
 }

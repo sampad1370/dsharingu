@@ -39,7 +39,7 @@
 
 #define CHNTAG				"* "
 #define APP_NAME			"DSharingu"
-#define APP_VERSION_STR		"0.23a"
+#define APP_VERSION_STR		"0.24a"
 
 /*
 //==================================================================

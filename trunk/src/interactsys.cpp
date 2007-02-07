@@ -67,7 +67,7 @@ void InteractiveSystem::FeedMessage( u_int message, u_int lparam, u_int wparam,
 							    (HIWORD(lparam) - disp_off_y) / scale_y,
 							    diff_time );
 
-		_remocon_queue.append( remconmsg );
+		_remocon_queue.push_back( remconmsg );
 		}
 		break;
 
@@ -118,7 +118,7 @@ void InteractiveSystem::FeedMessage( u_int message, u_int lparam, u_int wparam,
 								(HIWORD(lparam) - disp_off_y) / scale_y,
 								diff_time );
 
-			_remocon_queue.append( remconmsg );
+			_remocon_queue.push_back( remconmsg );
 		}
 		break;
 	}

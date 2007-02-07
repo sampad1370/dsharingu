@@ -635,12 +635,12 @@ void DSharinguApp::handleChangedSettings()
 //==================================================================
 bool DSharinguApp::channelCanWatch( const DSChannel *chanp )
 {
-	return !_settings._forbid_show_my_desktop && chanp->_session_remotep->_can_watch_my_desk;
+	return !_settings._nobody_can_watch_my_computer && chanp->_session_remotep->_can_watch_my_desk;
 }
 //==================================================================
 bool DSharinguApp::channelCanUse( const DSChannel *chanp )
 {
-	return !_settings._forbid_share_my_desktop && chanp->_session_remotep->_can_use_my_desk;
+	return !_settings._nobody_can_use_my_computer && chanp->_session_remotep->_can_use_my_desk;
 }
 //==================================================================
 void DSharinguApp::sendUsageAbility( DSChannel *chanp )

@@ -403,7 +403,7 @@ BOOL CALLBACK RemoteMng::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM 
 				setNewEntryRemoteDef( hwnd );
 
 				RemoteDef	*remotep = new RemoteDef();
-				_remotes_list.append( remotep );
+				_remotes_list.push_back( remotep );
 				AddDlgListTextAndSelect( hwnd, IDC_RM_REMOTES_LIST, remotep->_rm_username, (DWORD)remotep, true );
 				setRemoteToForm( remotep, hwnd );
 				refreshEnabledStatus( hwnd );
@@ -579,7 +579,7 @@ DataSchema *RemoteMng::RemoteDefLoaderProc( FILE *fp )
 		SAFE_DELETE( remotep );
 		return NULL;
 	}
-	_remotes_list.append( remotep );
+	_remotes_list.push_back( remotep );
 
 	return &remotep->_schema;
 }
@@ -596,7 +596,7 @@ RemoteDef *RemoteMng::FindOrAddRemoteDefAndSelect( const char *namep )
 
 	remotep = new RemoteDef();
 	psys_strcpy( remotep->_rm_username, namep, sizeof(remotep->_rm_username) );
-	_remotes_list.append( remotep );
+	_remotes_list.push_back( remotep );
 	setRemoteToForm( remotep, NULL );
 
 	return remotep;

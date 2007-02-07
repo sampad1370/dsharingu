@@ -32,7 +32,13 @@
 //==================================================================
 enum {
 	BACKGROUND_STATIC,
+
 	HOME_TXT_STATIC,
+	MYUSERNAME_TXT_STATIC,
+	ACCEPTING_CONS_TXT_STATIC,
+	SEL_USERS_CAN_WATCH_TXT_STATIC,
+	SEL_USERS_CAN_USE_TXT_STATIC,
+
 	CONNECTIONS_BUTT,
 
 	SETTINGS_BUTT,
@@ -66,12 +72,15 @@ void DSharinguApp::homeWinCreate()
 	if ( stextp )
 		stextp->SetFillType( GGET_StaticText::FILL_TYPE_HTOOLBAR );
 
-	#define BUTT_WD	140
-	#define BUTT_HE	22
-	#define OFF_Y	(BUTT_HE+12)
+	int	BUTT_WD = (int)(FONT_TextHeight() * 12);
+	int	BUTT_HE = (int)(FONT_TextHeight() * 1.5f);
+
+	int	OFF_Y = BUTT_HE + 6;
 
 	int	x = 16;
 	int	y = 6;
+
+	int	static_off_y = FONT_TextHeight() + 3;
 
 	GGET_StaticText *stxtp;
 	stxtp =	gam.AddStaticText( HOME_TXT_STATIC, 0, y, _home_winp->GetWidth(), BUTT_HE,
@@ -80,11 +89,46 @@ void DSharinguApp::homeWinCreate()
 	//stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	y += OFF_Y;
 
+	tstring	str;
 
-	gam.AddButton( CONNECTIONS_BUTT,	x, y, BUTT_WD, BUTT_HE, "Connections..." );
+	str = tstring( "My Username: " ) + tstring( _settings._username );
+	stxtp =	gam.AddStaticText( MYUSERNAME_TXT_STATIC, x, y, _home_winp->GetWidth(), 0, str.c_str() );
+	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
+	y += static_off_y;
+
+	if ( _settings._listen_for_connections )
+		str = tstring( "* Accepting connections on port " ) + Stringify( _settings._listen_port );
+	else
+		str = tstring( "* Not accepting any connections" );
+
+	stxtp =	gam.AddStaticText( ACCEPTING_CONS_TXT_STATIC, x, y, _home_winp->GetWidth(), 0, str.c_str() );
+	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
+	y += static_off_y;
+
+	if ( _settings._nobody_can_watch_my_computer )
+		str = tstring( "* Nobody can watch my computer" );
+	else
+		str = tstring( "* Selected users may watch my computer" );
+
+	stxtp =	gam.AddStaticText( SEL_USERS_CAN_WATCH_TXT_STATIC, x, y, _home_winp->GetWidth(), 0, str.c_str() );
+	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
+	y += static_off_y;
+
+	if ( _settings._nobody_can_use_my_computer || _settings._nobody_can_watch_my_computer )
+		str = tstring( "* Nobody can use my computer" );
+	else
+		str = tstring( "* Selected users may use my computer" );
+
+	stxtp =	gam.AddStaticText( SEL_USERS_CAN_USE_TXT_STATIC, x, y, _home_winp->GetWidth(), 0, str.c_str() );
+	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
+	y += static_off_y;
+	y += static_off_y;
+
+
+	gam.AddButton( CONNECTIONS_BUTT,	x, y, BUTT_WD, BUTT_HE, "Call or Manage users..." );
 
 	stxtp =	gam.AddStaticText( -1, x + BUTT_WD + 4, y, 400, BUTT_HE,
-						"Create entries of remote computers and connect to them." );
+								"Call, add, remove or modify users." );
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	y += OFF_Y;
 
@@ -167,6 +211,9 @@ int DSharinguApp::homeWinEventFilter( win_event_type etype, win_event_t *eventp 
 	case WIN_ETYPE_WINRESIZE:
 		if ( _home_winp )
 		{
+			int	BUTT_WD = (int)(FONT_TextHeight() * 12);
+			int	BUTT_HE = (int)(FONT_TextHeight() * 1.5f);
+
 			GGET_Manager	&gam = eventp->winp->GetGGETManager();
 			gam.FindGadget( BACKGROUND_STATIC )->SetRect( 0, 0, eventp->winp->GetWidth(), eventp->winp->GetHeight() );
 			gam.FindGadget( HOME_TXT_STATIC )->SetSize( eventp->winp->GetWidth(), BUTT_HE );
