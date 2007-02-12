@@ -48,9 +48,9 @@ enum {
 //==================================================================
 static const int	TAB_BASE_X = 4;
 static const int	TAB_BASE_Y = 3;
-static const int	TAB_BASE_WD = 120;
+static const int	TAB_BASE_WD = 140;
 static const int	TAB_BASE_PAD_X = 4;
-static const int	TAB_BASE_HE = 19;
+static const int	TAB_BASE_HE = 22;
 static const int	TAB_BASE_STRIDE_X = TAB_BASE_WD + TAB_BASE_PAD_X;
 
 //==================================================================
@@ -70,7 +70,7 @@ DSChannelManager::DSChannelManager( Window *parent_winp, DSharinguApp *superp,
 							WIN_ANCH_TYPE_PARENT_X1, 0,
 							WIN_ANCH_TYPE_PARENT_Y1, 0,
 							WIN_ANCH_TYPE_PARENT_X2, 0,
-							WIN_ANCH_TYPE_PARENT_Y1, 22,
+							WIN_ANCH_TYPE_PARENT_Y1, TAB_BASE_HE+TAB_BASE_Y,
 							(win_init_flags)(WIN_INIT_FLG_OPENGL | WIN_INTFLG_DONT_CLEAR),
 							0 );
 
@@ -80,7 +80,9 @@ DSChannelManager::DSChannelManager( Window *parent_winp, DSharinguApp *superp,
 
 	gam.SetCallback( gadgetCallback_s, this );
 
-	GGET_StaticText *stextp = gam.AddStaticText( BACKGROUND_STATIC, 0, 0, _tabs_winp->GetWidth(), _tabs_winp->GetHeight(), NULL );
+	GGET_StaticText *stextp = gam.AddStaticText( BACKGROUND_STATIC, 0, 0,
+				_tabs_winp->GetWidth(),
+				_tabs_winp->GetHeight(), NULL );
 	if ( stextp )
 		stextp->SetFillType( GGET_StaticText::FILL_TYPE_HTOOLBAR );
 
@@ -209,6 +211,12 @@ void DSChannelManager::AddChannelToList( DSChannel *chanp, const char *namep )
 	_channelsp[ _n_channels ] = chanp;
 	addTab( _n_channels, namep );
 	++_n_channels;
+}
+
+//==================================================================
+u_int DSChannelManager::GetTabsWinHeight() const
+{
+	return TAB_BASE_HE+TAB_BASE_Y;//_tabs_winp->GetHeight();
 }
 
 //==================================================================

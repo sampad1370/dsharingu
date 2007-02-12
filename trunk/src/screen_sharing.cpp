@@ -224,9 +224,8 @@ bool ScrShare::Writer::captureAndPack( const ScreenGrabberBase::FrameInfo &finfo
 		break;
 	}
 
-
-	int	height = finfo._w;
-	int	width = finfo._h;
+	int	width = finfo._w;
+	int	height = finfo._h;
 
 	int	blk_max_size = ScrShare::BLOCK_WD * ScrShare::BLOCK_HE * sbypp;
 	int	tmp_blk_pitch = sbypp * ScrShare::BLOCK_WD;

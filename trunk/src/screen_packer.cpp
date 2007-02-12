@@ -44,8 +44,8 @@ static const int	MAX_SUBBLK_PIXELS = SUBBLK_DIM * SUBBLK_DIM;
 static const int	PAK_PAL_DIM = 4;
 
 static const int	BLK_BITS_Y			= 3;//5;
-static const int	BLK_BITS_U			= 0;//5;
-static const int	BLK_BITS_V			= 0;//5;
+static const int	BLK_BITS_U			= 3;//5;
+static const int	BLK_BITS_V			= 3;//5;
 
 static const int	BLK_BITS_Y_MASK		= (1 << BLK_BITS_Y) - 1;
 static const int	BLK_BITS_U_MASK		= (1 << BLK_BITS_U) - 1;

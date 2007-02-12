@@ -28,6 +28,7 @@
 #include "data_schema.h"
 #include "appbase3.h"
 #include "dsinstance.h"
+#include "dschannel_manager.h"
 
 //==================================================================
 enum {
@@ -55,7 +56,7 @@ void DSharinguApp::homeWinCreate()
 	_home_winp = new Window( "home win", &_main_win,
 		this, homeWinEventFilter_s,
 		WIN_ANCH_TYPE_FIXED, 0,
-		WIN_ANCH_TYPE_PARENT_Y1, 22,
+		WIN_ANCH_TYPE_PARENT_Y1, _chmanagerp->GetTabsWinHeight(),
 		WIN_ANCH_TYPE_PARENT_X2, 0,
 		WIN_ANCH_TYPE_PARENT_Y2, 0,
 		(win_init_flags)(WIN_INIT_FLG_OPENGL | WIN_INTFLG_DONT_CLEAR) );

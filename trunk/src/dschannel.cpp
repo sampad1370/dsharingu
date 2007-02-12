@@ -178,10 +178,11 @@ void DSChannel::create()
 							WIN_ANCH_TYPE_PARENT_X2, 0, WIN_ANCH_TYPE_PARENT_Y1, 30,
 							(win_init_flags)(WIN_INIT_FLG_OPENGL | WIN_INTFLG_DONT_CLEAR) );
 */
+	
 	_view_winp = new Window( "view win", &((DSharinguApp *)_managerp->_superp)->_main_win,
 							this, viewEventFilter_s,
 							WIN_ANCH_TYPE_FIXED, 0,
-							WIN_ANCH_TYPE_PARENT_Y1, 22,
+							WIN_ANCH_TYPE_PARENT_Y1, _managerp->GetTabsWinHeight(),
 							WIN_ANCH_TYPE_PARENT_X2, 0,
 							WIN_ANCH_TYPE_PARENT_Y2, -160,
 							(win_init_flags)(WIN_INIT_FLG_OPENGL | WIN_INTFLG_DONT_CLEAR | 0*WIN_INIT_FLG_HSCROLL | 0*WIN_INIT_FLG_VSCROLL) );
