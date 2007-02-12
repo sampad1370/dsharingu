@@ -395,6 +395,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\screen_haar_compr.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\screen_haar_compr.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\screen_packer.cpp"
 				>
 			</File>

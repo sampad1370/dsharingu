@@ -74,6 +74,8 @@ public:
 
 	void		AddChannelToList( DSChannel *chanp, const char *namep );
 
+	u_int		GetTabsWinHeight() const;
+
 private:
 	static void	gadgetCallback_s( void *superp, int gget_id, GGET_Item *itemp, GGET_CB_Action action );
 	void		gadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB_Action action  );
