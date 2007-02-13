@@ -25,10 +25,11 @@
 #ifndef SCREEN_PACKER_H
 #define SCREEN_PACKER_H
 
+#include <vector>
 #include "psys.h"
 #include "memfile.h"
 #include "lzw_packer.h"
-#include <vector>
+#include "screen_haar_compr.h"
 
 //==================================================================
 struct BlockPackWork
@@ -140,7 +141,8 @@ private:
 //==================================================================
 class ScreenUnpacker : public SPAKMM
 {
-	LZWUnpacker			_lzwunpacker;
+	ScreenHaarComprUnpack	_haar_unpack;
+	LZWUnpacker				_lzwunpacker;
 
 public:
 	//==================================================================
@@ -165,7 +167,8 @@ private:
 //==================================================================
 class ScreenPacker : public SPAKMM
 {
-	LZWPacker		_lzwpacker;
+	ScreenHaarComprPack	_haar_pack;
+	LZWPacker			_lzwpacker;
 
 public:
 	//==================================================================

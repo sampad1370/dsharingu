@@ -26,6 +26,7 @@
 #define SCREEN_HAAR_COMPR_H
 
 #include "psys.h"
+#include "memfile.h"
 
 //==================================================================
 class ScreenHaarComprPack
@@ -40,7 +41,7 @@ public:
 	{
 	}
 
-	void PackData( const u_char *in_blockp, u_char * &out_datap, u_int &out_data_len );
+	PUtils::Memfile PackData( const u_char *in_blockp );
 };
 
 //==================================================================

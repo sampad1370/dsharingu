@@ -23,13 +23,15 @@
 //==================================================================
 
 #include <math.h>
-#include "screen_packer.h"
 #include "lzw_packer.h"
 #include "memfile.h"
 #include "crc32.h"
+#include "screen_haar_compr.h"
+#include "screen_packer.h"
 
 //#define DISP_FLAT_BLOCKS
 //#define FORCE_ALL_BLOCKS
+#define USE_HAAR
 
 //==================================================================
 using namespace PUtils;
@@ -802,6 +804,16 @@ static void blockPAK_to_RGB( u_char *des_rgbp, const u_char *src_pakp )
 }
 
 //==================================================================
+static void blockY_to_RGB( u_char *des_rgbp, const u_char *src_yp )
+{
+	u_char const	*des_rgbp_end = des_rgbp + MAX_BLK_RGB_SIZE;
+	for (u_char *des_rgbp2 = des_rgbp; des_rgbp != des_rgbp_end; des_rgbp += 3)
+	{
+		YUVtoRGB( *src_yp++, 0, 0, des_rgbp );
+	}
+}
+
+//==================================================================
 bool ScreenPacker::IsBlockChanged( u_int new_checksum ) const
 {
 #ifdef FORCE_ALL_BLOCKS
@@ -858,17 +870,21 @@ bool ScreenPacker::AddBlock( const void *block_datap, int size, u_int new_checks
 	}
 	else
 	{
-		// YC BLOCK
-		u_char	pak_block[ MAX_BLK_PAK_SIZE ];
-
-		blockYUV_to_PAK( pak_block, y_block, u_block, v_block );
-
 		head._sub_type = 0;
 		_data._blkdata_head_file.WriteData( &head, sizeof(head) );
-
 		bpworkp->_sub_level_sent = 4;
 
-		_lzwpacker.PackData( &Memfile( pak_block, MAX_BLK_PAK_SIZE ) );
+#ifdef USE_HAAR
+		Memfile	&memf = _haar_pack.PackData( y_block );
+#else
+		// YC BLOCK
+		u_char	pak_block[ MAX_BLK_PAK_SIZE ];
+		blockYUV_to_PAK( pak_block, y_block, u_block, v_block );
+
+		Memfile	memf( pak_block, MAX_BLK_PAK_SIZE );
+#endif
+
+		_lzwpacker.PackData( &memf );
 //		_lzwpacker.EndData();
 /*
 		if ERR_FALSE( LZW_PackCompress( &Memfile( pak_block, MAX_BLK_PAK_SIZE ), &_data._blkdata_file ) )
@@ -1023,10 +1039,24 @@ bool ScreenUnpacker::ParseNextBlock( void *out_block_datap, int &blk_px, int &bl
 			}
 			else
 			{
+			#ifdef USE_HAAR
 				u_char	pak_block[ MAX_BLK_PAK_SIZE ];
 				Memfile	pak_block_memf( pak_block, MAX_BLK_PAK_SIZE );
 
 				_lzwunpacker.UnpackData( &pak_block_memf, MAX_BLK_PAK_SIZE );
+				_haar_unpack.UnpackData( pak_block, pak_block_memf.GetDataSize(), pak_block );
+
+				blockY_to_RGB( local_destp, pak_block );
+			#else
+				u_char	pak_block[ MAX_BLK_PAK_SIZE ];
+				Memfile	pak_block_memf( pak_block, MAX_BLK_PAK_SIZE );
+
+				_lzwunpacker.UnpackData( &pak_block_memf, MAX_BLK_PAK_SIZE );
+				Memfile	memf( pak_block, MAX_BLK_PAK_SIZE );
+
+				blockPAK_to_RGB( (u_char *)local_destp, pak_block );
+			#endif
+
 //				_lzwunpacker.SeekEnd();
 //				PSYS_ASSERT( _lzwunpacker.IsCompleted() );
 				/*
@@ -1038,7 +1068,6 @@ bool ScreenUnpacker::ParseNextBlock( void *out_block_datap, int &blk_px, int &bl
 				*/
 //				_data._blkdata_bits_file.ReadAlignByte();
 
-				blockPAK_to_RGB( (u_char *)local_destp, pak_block );
 			}
 
 			memcpy( out_block_datap, local_destp, MAX_BLK_RGB_SIZE );
