@@ -794,7 +794,7 @@ static void blockPAK_to_RGB( u_char *des_rgbp, const u_char *src_pakp )
 	Memfile	pack_v_mf( src_pakp + MAX_BLK_PAK_OFF_V, MAX_BLK_PAK_SIZE_V );
 
 	u_char const	*des_rgbp_end = des_rgbp + MAX_BLK_RGB_SIZE;
-	for (u_char *des_rgbp2 = des_rgbp; des_rgbp != des_rgbp_end; des_rgbp += 3)
+	for (; des_rgbp != des_rgbp_end; des_rgbp += 3)
 	{
 		YUVtoRGB( (u_char)(pack_y_mf.ReadBits( BLK_BITS_Y ) << 8-BLK_BITS_Y),
 				  unpack_sign8( pack_u_mf.ReadBits( BLK_BITS_U ) << 8-BLK_BITS_U ) << 1,
@@ -807,7 +807,7 @@ static void blockPAK_to_RGB( u_char *des_rgbp, const u_char *src_pakp )
 static void blockY_to_RGB( u_char *des_rgbp, const u_char *src_yp )
 {
 	u_char const	*des_rgbp_end = des_rgbp + MAX_BLK_RGB_SIZE;
-	for (u_char *des_rgbp2 = des_rgbp; des_rgbp != des_rgbp_end; des_rgbp += 3)
+	for (; des_rgbp != des_rgbp_end; des_rgbp += 3)
 	{
 		YUVtoRGB( *src_yp++, 0, 0, des_rgbp );
 	}
@@ -1040,13 +1040,17 @@ bool ScreenUnpacker::ParseNextBlock( void *out_block_datap, int &blk_px, int &bl
 			else
 			{
 			#ifdef USE_HAAR
-				u_char	pak_block[ MAX_BLK_PAK_SIZE ];
-				Memfile	pak_block_memf( pak_block, MAX_BLK_PAK_SIZE );
+				u_char	pak_block[ MAX_BLK_PIXELS*2 ];
+				Memfile	pak_block_memf( pak_block, MAX_BLK_PIXELS*2 );
+
+				u_char	y_block[ MAX_BLK_PIXELS ];
+				u_char	u_block[ MAX_BLK_PIXELS ];
+				u_char	v_block[ MAX_BLK_PIXELS ];
 
 				_lzwunpacker.UnpackData( &pak_block_memf, MAX_BLK_PAK_SIZE );
-				_haar_unpack.UnpackData( pak_block, pak_block_memf.GetDataSize(), pak_block );
+				_haar_unpack.UnpackData( pak_block, pak_block_memf.GetDataSize(), y_block );
 
-				blockY_to_RGB( local_destp, pak_block );
+				blockY_to_RGB( local_destp, y_block );
 			#else
 				u_char	pak_block[ MAX_BLK_PAK_SIZE ];
 				Memfile	pak_block_memf( pak_block, MAX_BLK_PAK_SIZE );
