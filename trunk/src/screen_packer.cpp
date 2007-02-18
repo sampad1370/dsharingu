@@ -46,8 +46,8 @@ static const int	MAX_SUBBLK_PIXELS = SUBBLK_DIM * SUBBLK_DIM;
 static const int	PAK_PAL_DIM = 4;
 
 static const int	BLK_BITS_Y			= 3;//5;
-static const int	BLK_BITS_U			= 3;//5;
-static const int	BLK_BITS_V			= 3;//5;
+static const int	BLK_BITS_U			= 0;//5;
+static const int	BLK_BITS_V			= 0;//5;
 
 static const int	BLK_BITS_Y_MASK		= (1 << BLK_BITS_Y) - 1;
 static const int	BLK_BITS_U_MASK		= (1 << BLK_BITS_U) - 1;
@@ -1047,7 +1047,10 @@ bool ScreenUnpacker::ParseNextBlock( void *out_block_datap, int &blk_px, int &bl
 				u_char	u_block[ MAX_BLK_PIXELS ];
 				u_char	v_block[ MAX_BLK_PIXELS ];
 
-				_lzwunpacker.UnpackData( &pak_block_memf, MAX_BLK_PAK_SIZE );
+				_lzwunpacker.UnpackData( &pak_block_memf, MAX_BLK_PIXELS*2 );
+
+				PSYS_ASSERT( pak_block_memf.GetDataSize() == MAX_BLK_PIXELS*2 );
+
 				_haar_unpack.UnpackData( pak_block, pak_block_memf.GetDataSize(), y_block );
 
 				blockY_to_RGB( local_destp, y_block );

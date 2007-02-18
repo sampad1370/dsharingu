@@ -40,7 +40,22 @@ static inline int div2( int val )
 }
 
 //==================================================================
-static inline void swap( short * &a, short * &b )
+static PFORCEINLINE u_int pack_sign( int val )
+{
+	int	sign_mask = val >> 31;	
+	return ((val ^ sign_mask) << 1) | (sign_mask & 1);
+}
+
+//==================================================================
+static PFORCEINLINE int unpack_sign( u_int val )
+{
+	int	sign_mask = (int)((val & 1) ^ 1) - 1;
+	return (val >> 1) ^ sign_mask;
+}
+
+
+//==================================================================
+static PFORCEINLINE void swap( short * &a, short * &b )
 {
 	short	*t = a;
 	a = b;
@@ -48,7 +63,7 @@ static inline void swap( short * &a, short * &b )
 }
 
 //==================================================================
-static void makeAvgAndDiff( const short *srcp, short *desp, u_int n )
+static PFORCEINLINE void makeAvgAndDiff( const short *srcp, short *desp, u_int n )
 {
 	short	*avgp = desp;
 	short	*difp = desp + n/2;
@@ -66,7 +81,7 @@ static void makeAvgAndDiff( const short *srcp, short *desp, u_int n )
 }
 
 //==================================================================
-static void makeV1AndV2( const short *srcp, short *desp, u_int n )
+static PFORCEINLINE void makeV1AndV2( const short *srcp, short *desp, u_int n )
 {
 	const short	*avgp = srcp;
 	const short	*difp = srcp + n/2;
@@ -92,7 +107,7 @@ static void blockToHaar( const u_char *in_blockp,
 {
 	PSYS_ASSERT( min_dim >= 2 );
 
-#if 1
+#if 0
 	for (int y=0; y < block_dim; ++y)
 	{
 		for (int x=0; x < block_dim; ++x)
@@ -108,34 +123,38 @@ static void blockToHaar( const u_char *in_blockp,
 
 	for (int y=0; y < block_dim; ++y)
 	{
-		const u_char *in_blockp_line = in_blockp + y * block_dim;
+		int	y_off = y * block_dim;
 
 		for (int i=0; i < block_dim; ++i)
-			srcp[i] = in_blockp_line[i];
+			tmp_line1[i] = in_blockp[ i + y_off ];
 
-		for (int n = block_dim; n > min_dim; n /= 2)
+		for (int n = block_dim; n >= min_dim; n /= 2)
 		{
-			makeAvgAndDiff( srcp, desp, n );
-			swap( srcp, desp );
+			for (int i=0; i < n; ++i)
+				tmp_line2[i] = tmp_line1[i];
+
+			makeAvgAndDiff( tmp_line2, tmp_line1, n );
 		}
 
 		for (int i=0; i < block_dim; ++i)
-			out_haarp[i] = desp[i];
+			out_haarp[ i + y_off ] = tmp_line1[i];
 	}
 
 	for (int x=0; x < block_dim; ++x)
 	{
-		for (int i=0, ii=0; i < block_dim; ++i, ii += block_dim)
-			srcp[i] = out_haarp[ii+x];
+		for (int i=0, y_off=0; i < block_dim; ++i, y_off += block_dim)
+			tmp_line1[i] = out_haarp[ x + y_off ];
 
-		for (int n = block_dim; n; n /= 2)
+		for (int n = block_dim; n >= min_dim; n /= 2)
 		{
-			makeAvgAndDiff( srcp, desp, n );
-			swap( srcp, desp );
+			for (int i=0; i < n; ++i)
+				tmp_line2[i] = tmp_line1[i];
+
+			makeAvgAndDiff( tmp_line2, tmp_line1, n );
 		}
 
-		for (int i=0, ii=0; i < block_dim; ++i, ii += block_dim)
-			out_haarp[ii+x] = right_shift( desp[i], shift_bits );
+		for (int i=0, y_off=0; i < block_dim; ++i, y_off += block_dim)
+			out_haarp[ x + y_off ] = pack_sign( right_shift( tmp_line1[i], shift_bits ) );
 	}
 }
 
@@ -151,7 +170,7 @@ static void haarToBlock( const short *in_haarp,
 {
 	PSYS_ASSERT( min_dim >= 2 );
 
-#if 1
+#if 0
 	for (int y=0; y < block_dim; ++y)
 	{
 		for (int x=0; x < block_dim; ++x)
@@ -162,43 +181,48 @@ static void haarToBlock( const short *in_haarp,
 	return;
 #endif
 
-	short *srcp = tmp_line1;
-	short *desp = tmp_line2;
+	//short *srcp = tmp_line1;
+	//short *desp = tmp_line2;
 
 	for (int x=0; x < block_dim; ++x)
 	{
-		for (int i=0, ii=0; i < block_dim; ++i, ii += block_dim)
-			srcp[i] = in_haarp[ii+x] << shift_bits;
+		for (int i=0, y_off=0; i < block_dim; ++i, y_off += block_dim)
+			tmp_line1[i] = unpack_sign( in_haarp[ x + y_off ] ) << shift_bits;
 
-		for (int n = min_dim; n < block_dim; n *= 2)
+		for (int n = min_dim; n <= block_dim; n *= 2)
 		{
-			makeV1AndV2( srcp, desp, n );
-			swap( srcp, desp );
+			for (int i=0; i < n; ++i)
+				tmp_line2[i] = tmp_line1[i];
+
+			makeV1AndV2( tmp_line2, tmp_line1, n );
 		}
 
-		for (int i=0, ii=0; i < block_dim; ++i, ii += block_dim)
-			tmp_haar[ii+x] = desp[i];
+		for (int i=0, y_off=0; i < block_dim; ++i, y_off += block_dim)
+			tmp_haar[ x + y_off ] = tmp_line1[i];
 	}
 
 	for (int y=0; y < block_dim; ++y)
 	{
-		for (int i=0; i < block_dim; ++i)
-			srcp[i] = tmp_haar[i];
+		int	y_off = y * block_dim;
 
-		for (int n = min_dim; n < block_dim; n *= 2)
+		for (int i=0; i < block_dim; ++i)
+			tmp_line1[i] = tmp_haar[ i + y_off ];
+
+		for (int n = min_dim; n <= block_dim; n *= 2)
 		{
-			makeV1AndV2( srcp, desp, n );
-			swap( srcp, desp );
+			for (int i=0; i < n; ++i)
+				tmp_line2[i] = tmp_line1[i];
+
+			makeV1AndV2( tmp_line2, tmp_line1, n );
 		}
 
 		for (int i=0; i < block_dim; ++i)
 		{
-			int clamped_des = desp[i];
+			int clamped_des = tmp_line1[i];
 			PCLAMP( clamped_des, 0, 255 );
-			out_blockp[i] = clamped_des;
+			out_blockp[ i + y_off ] = clamped_des;
 		}
 	}
-
 }
 
 //==================================================================
