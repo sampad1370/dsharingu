@@ -25,7 +25,7 @@
 #include "screen_haar_compr.h"
 
 //==================================================================
-static inline int right_shift( int val, int cnt )
+static PFORCEINLINE int right_shift( int val, int cnt )
 {
 	int	sign = val >> 31;
 	int	abs_val = ((val ^ sign) + (1 & sign)) >> cnt;
@@ -34,7 +34,7 @@ static inline int right_shift( int val, int cnt )
 }
 
 //==================================================================
-static inline int div2( int val )
+static PFORCEINLINE int div2( int val )
 {
 	return right_shift( val, 1 );
 }
@@ -97,7 +97,8 @@ static PFORCEINLINE void makeV1AndV2( const short *srcp, short *desp, u_int n )
 }
 
 //==================================================================
-static void blockToHaar( const u_char *in_blockp,
+template<typename TBLOCK>
+static void blockToHaar( const TBLOCK *in_blockp,
 						 short *out_haarp,
 						 short *tmp_line1,
 						 short *tmp_line2,
@@ -159,14 +160,17 @@ static void blockToHaar( const u_char *in_blockp,
 }
 
 //==================================================================
+template<typename TBLOCK>
 static void haarToBlock( const short *in_haarp,
-						 u_char *out_blockp,
+						 TBLOCK *out_blockp,
 						 short *tmp_line1,
 						 short *tmp_line2,
 						 short *tmp_haar,
 						 u_int block_dim,
 						 u_int min_dim,
-						 u_int shift_bits )
+						 u_int shift_bits,
+						 int clamp_min,
+						 int clamp_max )
 {
 	PSYS_ASSERT( min_dim >= 2 );
 
@@ -219,32 +223,68 @@ static void haarToBlock( const short *in_haarp,
 		for (int i=0; i < block_dim; ++i)
 		{
 			int clamped_des = tmp_line1[i];
-			PCLAMP( clamped_des, 0, 255 );
+			PCLAMP( clamped_des, clamp_min, clamp_max );
 			out_blockp[ i + y_off ] = clamped_des;
 		}
 	}
 }
 
 //==================================================================
-PUtils::Memfile ScreenHaarComprPack::PackData( const u_char *in_blockp )
+PUtils::Memfile ScreenHaarComprPack::PackData( const u_char *in_blockp, u_int quant_rshift )
 {
 	short	tmp_line1[BLOCK_DIM];
 	short	tmp_line2[BLOCK_DIM];
 
-	blockToHaar( in_blockp, (short *)_out_data, tmp_line1, tmp_line2, BLOCK_DIM, 4, 3 );
+	blockToHaar<u_char>( in_blockp, (short *)_out_data, tmp_line1, tmp_line2,
+				 BLOCK_DIM, 4, quant_rshift );
 
 	return PUtils::Memfile( (const void *)_out_data, BLOCK_DIM*BLOCK_DIM*sizeof(short) );
 }
 
 //==================================================================
-void ScreenHaarComprUnpack::UnpackData( const u_char *in_datap, u_int in_data_len, u_char *out_blockp )
+PUtils::Memfile ScreenHaarComprPack::PackData( const s_char *in_blockp, u_int quant_rshift )
+{
+	short	tmp_line1[BLOCK_DIM];
+	short	tmp_line2[BLOCK_DIM];
+
+	blockToHaar<s_char>( in_blockp, (short *)_out_data, tmp_line1, tmp_line2,
+				 BLOCK_DIM, 4, quant_rshift );
+
+	return PUtils::Memfile( (const void *)_out_data, BLOCK_DIM*BLOCK_DIM*sizeof(short) );
+}
+
+//==================================================================
+void ScreenHaarComprUnpack::UnpackData( const u_char *in_datap,
+										u_int in_data_len,
+										u_char *out_blockp,
+										u_int quant_rshift )
 {
 	short	tmp_line1[BLOCK_DIM];
 	short	tmp_line2[BLOCK_DIM];
 	short	tmp_haar[BLOCK_DIM*BLOCK_DIM];
 
-	haarToBlock( (const short *)in_datap, out_blockp, tmp_line1, tmp_line2, tmp_haar, BLOCK_DIM, 4, 3 );
+	haarToBlock<u_char>( (const short *)in_datap,
+						 out_blockp,
+						 tmp_line1,
+						 tmp_line2,
+						 tmp_haar,
+						 BLOCK_DIM, 4, quant_rshift, 0, 255 );
+}
 
-	//out_datap = _out_data;
-	//out_data_len = ;
+//==================================================================
+void ScreenHaarComprUnpack::UnpackData( const u_char *in_datap,
+										u_int in_data_len,
+										signed char *out_blockp,
+										u_int quant_rshift )
+{
+	short	tmp_line1[BLOCK_DIM];
+	short	tmp_line2[BLOCK_DIM];
+	short	tmp_haar[BLOCK_DIM*BLOCK_DIM];
+
+	haarToBlock<signed char>( (const short *)in_datap,
+							  out_blockp,
+							  tmp_line1,
+							  tmp_line2,
+							  tmp_haar,
+							  BLOCK_DIM, 4, quant_rshift, -256, 255 );
 }

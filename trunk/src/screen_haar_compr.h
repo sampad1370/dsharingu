@@ -41,7 +41,8 @@ public:
 	{
 	}
 
-	PUtils::Memfile PackData( const u_char *in_blockp );
+	PUtils::Memfile PackData( const u_char *in_blockp, u_int quant_rshift );
+	PUtils::Memfile PackData( const s_char *in_blockp, u_int quant_rshift );
 };
 
 //==================================================================
@@ -51,14 +52,21 @@ public:
 	static const int	BLOCK_DIM = 32;
 
 	short		_tmp_haar[BLOCK_DIM*BLOCK_DIM * sizeof(short)];
-	u_char		_out_data[BLOCK_DIM*BLOCK_DIM * sizeof(short)];
 
 public:
 	ScreenHaarComprUnpack()
 	{
 	}
 
-	void UnpackData( const u_char *in_datap, u_int in_data_len, u_char *out_blockp );
+	void UnpackData( const u_char *in_datap,
+					 u_int in_data_len,
+					 u_char *out_blockp,
+					 u_int quant_rshift );
+
+	void UnpackData( const u_char *in_datap,
+					 u_int in_data_len,
+					 s_char *out_blockp,
+					 u_int quant_rshift );
 };
 
 #endif

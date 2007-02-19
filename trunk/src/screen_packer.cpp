@@ -32,6 +32,9 @@
 //#define DISP_FLAT_BLOCKS
 //#define FORCE_ALL_BLOCKS
 #define USE_HAAR
+#define HAAR_QUANT_RSHBITS_Y	3
+#define HAAR_QUANT_RSHBITS_U	4
+#define HAAR_QUANT_RSHBITS_V	4
 
 //==================================================================
 using namespace PUtils;
@@ -633,7 +636,7 @@ static int rshift_sign( int val, int cnt )
 }
 
 //==================================================================
-static inline void YUVtoRGB( int y, int u, int v, u_char *des_rgbp )
+static PFORCEINLINE void YUVtoRGB( int y, int u, int v, u_char *des_rgbp )
 {
 	int	g = y - rshift_sign( u + v, 2 );
 	int	r = u + g;
@@ -671,7 +674,7 @@ static inline void YUVtoRGB( int y, int u, int v, u_char *des_rgbp )
 }
 
 //==================================================================
-static int convertBlockToYUV( const u_char *const srcp,
+static int convertBlockToYUV_PS( const u_char *const srcp,
 							  u_char out_y[MAX_BLK_PIXELS],
 							  u_char out_u[MAX_BLK_PIXELS],
 							  u_char out_v[MAX_BLK_PIXELS] )
@@ -750,6 +753,64 @@ static int convertBlockToYUV( const u_char *const srcp,
 }
 
 //==================================================================
+static int convertBlockToYUV_sign( const u_char *const srcp,
+								  u_char out_y[MAX_BLK_PIXELS],
+								  signed char out_u[MAX_BLK_PIXELS],
+								  signed char out_v[MAX_BLK_PIXELS] )
+{
+	u_char const	*srcendp = srcp + MAX_BLK_RGB_SIZE;
+
+	{
+		u_char	*out_yp = out_y;
+
+		for (const u_char *srcp2 = srcp; srcp2 < srcendp; srcp2 += 3)
+		{
+			int	r = srcp2[0];
+			int	g = srcp2[1];
+			int	b = srcp2[2];
+			*out_yp++ = (r + 2*g + b) / 4;
+		}
+	}
+
+	int	complexity = 0;
+
+	{
+		u_char	*out_yp = out_y;
+		u_char const *out_yp_end = out_y + ScreenPackerData::BLOCK_N_PIX;
+
+		for (int y=ScreenPackerData::BLOCK_HE-1; y > 0; --y)
+		{
+			for (int x=ScreenPackerData::BLOCK_WD-1; x > 0; --x)
+			{
+				complexity +=	(0 != ((out_yp[0] ^ out_yp[1]) |
+									   (out_yp[0] ^ out_yp[ScreenPackerData::BLOCK_WD])) );
+
+				++out_yp;
+			}
+			++out_yp;
+		}
+	}
+
+	// if flat, no need to calculate U and V
+	if ( complexity == 0 )
+		return COMPLEXITY_FLAT;
+
+	s_char	*out_up = out_u;
+	s_char	*out_vp = out_v;
+	for (const u_char *srcp2 = srcp; srcp2 < srcendp; )
+	{
+		*out_up++ = rshift_sign( (int)srcp2[0] - (int)srcp2[1], 1 );
+		*out_vp++ = rshift_sign( (int)srcp2[2] - (int)srcp2[1], 1 );
+		srcp2 += 3;
+	}
+
+	if ( complexity <= ScreenPackerData::BLOCK_N_PIX/16 )
+		return COMPLEXITY_TEXT;
+	else
+		return COMPLEXITY_IMAGE;
+}
+
+//==================================================================
 //==================================================================
 static void blockYUV_to_PAK( u_char *pak_blockp,
 							 const u_char *src_yp,
@@ -812,6 +873,18 @@ static void blockY_to_RGB( u_char *des_rgbp, const u_char *src_yp )
 		YUVtoRGB( *src_yp++, 0, 0, des_rgbp );
 	}
 }
+//==================================================================
+static void blockYUV_to_RGB( u_char *des_rgbp,
+							 const u_char *src_yp,
+							 const s_char *src_up,
+							 const s_char *src_vp )
+{
+	u_char const	*des_rgbp_end = des_rgbp + MAX_BLK_RGB_SIZE;
+	for (; des_rgbp != des_rgbp_end; des_rgbp += 3)
+	{
+		YUVtoRGB( *src_yp++, *src_up++, *src_vp++, des_rgbp );
+	}
+}
 
 //==================================================================
 bool ScreenPacker::IsBlockChanged( u_int new_checksum ) const
@@ -844,10 +917,10 @@ bool ScreenPacker::AddBlock( const void *block_datap, int size, u_int new_checks
 	BlockPackHead	head;
 
 	u_char	y_block[ MAX_BLK_PIXELS ];
-	u_char	u_block[ MAX_BLK_PIXELS ];
-	u_char	v_block[ MAX_BLK_PIXELS ];
+	signed char	u_block[ MAX_BLK_PIXELS ];
+	signed char	v_block[ MAX_BLK_PIXELS ];
 
-	head._complexity = convertBlockToYUV( (const u_char *)block_datap, y_block, u_block, v_block );
+	head._complexity = convertBlockToYUV_sign( (const u_char *)block_datap, y_block, u_block, v_block );
 	head._sub_type = 0;
 	head._pad = 0;
 	// at complexity 0, we can't rely on having the block converted
@@ -875,16 +948,19 @@ bool ScreenPacker::AddBlock( const void *block_datap, int size, u_int new_checks
 		bpworkp->_sub_level_sent = 4;
 
 #ifdef USE_HAAR
-		Memfile	&memf = _haar_pack.PackData( y_block );
+		_lzwpacker.PackData( &_haar_pack.PackData( y_block, HAAR_QUANT_RSHBITS_Y ) );
+		_lzwpacker.PackData( &_haar_pack.PackData( u_block, HAAR_QUANT_RSHBITS_U ) );
+		_lzwpacker.PackData( &_haar_pack.PackData( v_block, HAAR_QUANT_RSHBITS_V ) );
 #else
 		// YC BLOCK
 		u_char	pak_block[ MAX_BLK_PAK_SIZE ];
 		blockYUV_to_PAK( pak_block, y_block, u_block, v_block );
 
 		Memfile	memf( pak_block, MAX_BLK_PAK_SIZE );
-#endif
 
 		_lzwpacker.PackData( &memf );
+#endif
+
 //		_lzwpacker.EndData();
 /*
 		if ERR_FALSE( LZW_PackCompress( &Memfile( pak_block, MAX_BLK_PAK_SIZE ), &_data._blkdata_file ) )
@@ -1044,16 +1120,25 @@ bool ScreenUnpacker::ParseNextBlock( void *out_block_datap, int &blk_px, int &bl
 				Memfile	pak_block_memf( pak_block, MAX_BLK_PIXELS*2 );
 
 				u_char	y_block[ MAX_BLK_PIXELS ];
-				u_char	u_block[ MAX_BLK_PIXELS ];
-				u_char	v_block[ MAX_BLK_PIXELS ];
+				s_char	u_block[ MAX_BLK_PIXELS ];
+				s_char	v_block[ MAX_BLK_PIXELS ];
 
+				pak_block_memf.SeekFromStart(0);
 				_lzwunpacker.UnpackData( &pak_block_memf, MAX_BLK_PIXELS*2 );
-
 				PSYS_ASSERT( pak_block_memf.GetDataSize() == MAX_BLK_PIXELS*2 );
+				_haar_unpack.UnpackData( pak_block, pak_block_memf.GetDataSize(), y_block, HAAR_QUANT_RSHBITS_Y );
 
-				_haar_unpack.UnpackData( pak_block, pak_block_memf.GetDataSize(), y_block );
+				pak_block_memf.SeekFromStart(0);
+				_lzwunpacker.UnpackData( &pak_block_memf, MAX_BLK_PIXELS*2 );
+				PSYS_ASSERT( pak_block_memf.GetDataSize() == MAX_BLK_PIXELS*2 );
+				_haar_unpack.UnpackData( pak_block, pak_block_memf.GetDataSize(), u_block, HAAR_QUANT_RSHBITS_U );
 
-				blockY_to_RGB( local_destp, y_block );
+				pak_block_memf.SeekFromStart(0);
+				_lzwunpacker.UnpackData( &pak_block_memf, MAX_BLK_PIXELS*2 );
+				PSYS_ASSERT( pak_block_memf.GetDataSize() == MAX_BLK_PIXELS*2 );
+				_haar_unpack.UnpackData( pak_block, pak_block_memf.GetDataSize(), v_block, HAAR_QUANT_RSHBITS_V );
+
+				blockYUV_to_RGB( local_destp, y_block, u_block, v_block );
 			#else
 				u_char	pak_block[ MAX_BLK_PAK_SIZE ];
 				Memfile	pak_block_memf( pak_block, MAX_BLK_PAK_SIZE );
