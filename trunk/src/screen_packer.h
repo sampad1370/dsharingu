@@ -65,13 +65,29 @@ struct BlockPackHead
 	u_char	_complexity	: 2;
 	u_char	_sub_type	: 2;
 	u_char	_pad		: 4;
+
+	union {
+		struct {
+			s_char	_y;
+			s_char	_u;
+			s_char	_v;
+		} _mean;
+
+		struct {
+			u_char	_r;
+			u_char	_g;
+			u_char	_b;
+		} _fixedrgb;
+	};
 };
 
 //==================================================================
 struct ScreenPackerData
 {
-	static const int	BLOCK_WD	= 32;
-	static const int	BLOCK_HE	= 32;
+	static const int	BLOCK_BWD	= 5;
+	static const int	BLOCK_BHE	= 5;
+	static const int	BLOCK_WD	= 1 << BLOCK_BWD;
+	static const int	BLOCK_HE	= 1 << BLOCK_BHE;
 	static const int	BLOCK_N_PIX	= BLOCK_WD * BLOCK_HE;
 
 	int					_w, _h;
