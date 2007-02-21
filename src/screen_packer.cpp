@@ -600,12 +600,6 @@ static __inline int unpack_sign8( u_int t )
 }
 
 //==================================================================
-enum {
-	COMPLEXITY_FLAT,
-	COMPLEXITY_TEXT,
-	COMPLEXITY_IMAGE
-};
-//==================================================================
 static inline void RGBtoYUV( const u_char *src_rgbp, int des_yuv[3] )
 {
 	int r = src_rgbp[0];
@@ -672,6 +666,13 @@ static PFORCEINLINE void YUVtoRGB( int y, int u, int v, u_char *des_rgbp )
 	des_rgbp[1] = g;
 	des_rgbp[2] = b;
 }
+
+//==================================================================
+enum {
+	COMPLEXITY_FLAT,
+	COMPLEXITY_TEXT,
+	COMPLEXITY_IMAGE
+};
 
 //==================================================================
 static int convertBlockToYUV_PS( const u_char *const srcp,
@@ -753,37 +754,78 @@ static int convertBlockToYUV_PS( const u_char *const srcp,
 }
 
 //==================================================================
-static int convertBlockToYUV_sign( const u_char *const srcp,
-								  u_char out_y[MAX_BLK_PIXELS],
-								  signed char out_u[MAX_BLK_PIXELS],
-								  signed char out_v[MAX_BLK_PIXELS] )
+struct ConvertBlockYUVSignOut
+{
+	u_char	_fixed_r;
+	u_char	_fixed_g;
+	u_char	_fixed_b;
+
+	int		_complexity;
+
+	u_int	_mean_y;
+	u_int	_mean_u;
+	u_int	_mean_v;
+};
+
+//==================================================================
+static void subtractMeanU( u_char *buffp, int mean )
+{
+	u_char	*buffp_end = buffp + MAX_BLK_PIXELS;
+
+	for (; buffp < buffp_end; ++buffp)
+		*(s_char *)buffp = *(u_char *)buffp - mean;
+}
+
+//==================================================================
+static void subtractMeanS( s_char *buffp, int mean )
+{
+	s_char	*buffp_end = buffp + MAX_BLK_PIXELS;
+
+	for (; buffp < buffp_end; ++buffp)
+		*buffp = *buffp - mean;
+}
+
+//==================================================================
+static void convertBlockToYUV_sign( const u_char *const srcp,
+								  s_char out_y[MAX_BLK_PIXELS],
+								  s_char out_u[MAX_BLK_PIXELS],
+								  s_char out_v[MAX_BLK_PIXELS],
+								  ConvertBlockYUVSignOut &outinfo )
 {
 	u_char const	*srcendp = srcp + MAX_BLK_RGB_SIZE;
 
+	outinfo._mean_y = 0;
+	outinfo._mean_u = 0;
+	outinfo._mean_v = 0;
+
 	{
-		u_char	*out_yp = out_y;
+		u_char	*out_yp = (u_char *)out_y;
 
 		for (const u_char *srcp2 = srcp; srcp2 < srcendp; srcp2 += 3)
 		{
 			int	r = srcp2[0];
 			int	g = srcp2[1];
 			int	b = srcp2[2];
-			*out_yp++ = (r + 2*g + b) / 4;
+			int y = (r + 2*g + b) / 4;
+
+			*out_yp++ = y;
+			outinfo._mean_y += y;
 		}
+		outinfo._mean_y /= MAX_BLK_PIXELS;
 	}
 
-	int	complexity = 0;
+	int	count = 0;
 
 	{
-		u_char	*out_yp = out_y;
-		u_char const *out_yp_end = out_y + ScreenPackerData::BLOCK_N_PIX;
+		s_char	*out_yp = out_y;
+		s_char const *out_yp_end = out_y + ScreenPackerData::BLOCK_N_PIX;
 
 		for (int y=ScreenPackerData::BLOCK_HE-1; y > 0; --y)
 		{
 			for (int x=ScreenPackerData::BLOCK_WD-1; x > 0; --x)
 			{
-				complexity +=	(0 != ((out_yp[0] ^ out_yp[1]) |
-									   (out_yp[0] ^ out_yp[ScreenPackerData::BLOCK_WD])) );
+				count += (0 != ((out_yp[0] ^ out_yp[1]) |
+							(out_yp[0] ^ out_yp[ScreenPackerData::BLOCK_WD])) );
 
 				++out_yp;
 			}
@@ -792,22 +834,45 @@ static int convertBlockToYUV_sign( const u_char *const srcp,
 	}
 
 	// if flat, no need to calculate U and V
-	if ( complexity == 0 )
-		return COMPLEXITY_FLAT;
+	if ( count == 0 )
+	{
+		outinfo._fixed_r = srcp[0];
+		outinfo._fixed_g = srcp[1];
+		outinfo._fixed_b = srcp[2];
+		outinfo._complexity = COMPLEXITY_FLAT;
+		return;
+	}
+
+
+	subtractMeanU( (u_char *)out_y, outinfo._mean_y );
 
 	s_char	*out_up = out_u;
 	s_char	*out_vp = out_v;
 	for (const u_char *srcp2 = srcp; srcp2 < srcendp; )
 	{
-		*out_up++ = rshift_sign( (int)srcp2[0] - (int)srcp2[1], 1 );
-		*out_vp++ = rshift_sign( (int)srcp2[2] - (int)srcp2[1], 1 );
+		int u = rshift_sign( (int)srcp2[0] - (int)srcp2[1], 1 );
+		int	v = rshift_sign( (int)srcp2[2] - (int)srcp2[1], 1 );
+		outinfo._mean_u += u;
+		outinfo._mean_v += v;
+		*out_up++ = u;
+		*out_vp++ = v;
 		srcp2 += 3;
 	}
 
-	if ( complexity <= ScreenPackerData::BLOCK_N_PIX/16 )
-		return COMPLEXITY_TEXT;
+	static const int	RSHIFT_TO_MEAN = ScreenPackerData::BLOCK_BWD +
+										 ScreenPackerData::BLOCK_BHE;
+
+	outinfo._mean_u = rshift_sign( outinfo._mean_u, RSHIFT_TO_MEAN );	// /= MAX_BLK_PIXELS
+	outinfo._mean_v = rshift_sign( outinfo._mean_v, RSHIFT_TO_MEAN );	// /= MAX_BLK_PIXELS
+
+	subtractMeanS( out_u, outinfo._mean_u );
+	subtractMeanS( out_v, outinfo._mean_v );
+
+
+	if ( count <= ScreenPackerData::BLOCK_N_PIX/16 )
+		outinfo._complexity = COMPLEXITY_TEXT;
 	else
-		return COMPLEXITY_IMAGE;
+		outinfo._complexity = COMPLEXITY_IMAGE;
 }
 
 //==================================================================
@@ -885,6 +950,24 @@ static void blockYUV_to_RGB( u_char *des_rgbp,
 		YUVtoRGB( *src_yp++, *src_up++, *src_vp++, des_rgbp );
 	}
 }
+//==================================================================
+static void blockYUVmean_to_RGB( u_char *des_rgbp,
+								 const s_char *src_yp,
+								 const s_char *src_up,
+								 const s_char *src_vp,
+								 int mean_y,
+								 int mean_u,
+								 int mean_v )
+{
+	u_char const	*des_rgbp_end = des_rgbp + MAX_BLK_RGB_SIZE;
+	for (; des_rgbp != des_rgbp_end; des_rgbp += 3)
+	{
+		YUVtoRGB( *src_yp++ + mean_y,
+				  *src_up++ + mean_u,
+				  *src_vp++ + mean_v,
+				  des_rgbp );
+	}
+}
 
 //==================================================================
 bool ScreenPacker::IsBlockChanged( u_int new_checksum ) const
@@ -916,33 +999,30 @@ bool ScreenPacker::AddBlock( const void *block_datap, int size, u_int new_checks
 
 	BlockPackHead	head;
 
-	u_char	y_block[ MAX_BLK_PIXELS ];
-	signed char	u_block[ MAX_BLK_PIXELS ];
-	signed char	v_block[ MAX_BLK_PIXELS ];
+	s_char	y_block[ MAX_BLK_PIXELS ];
+	s_char	u_block[ MAX_BLK_PIXELS ];
+	s_char	v_block[ MAX_BLK_PIXELS ];
 
-	head._complexity = convertBlockToYUV_sign( (const u_char *)block_datap, y_block, u_block, v_block );
+	ConvertBlockYUVSignOut	block_info;
+	convertBlockToYUV_sign( (const u_char *)block_datap, y_block, u_block, v_block, block_info );
+	head._complexity = block_info._complexity;
 	head._sub_type = 0;
 	head._pad = 0;
+
 	// at complexity 0, we can't rely on having the block converted
 	if ( head._complexity == COMPLEXITY_FLAT )
 	{
+		head._fixedrgb._r = block_info._fixed_r;
+		head._fixedrgb._g = block_info._fixed_g;
+		head._fixedrgb._b = block_info._fixed_b;
 		_data._blkdata_head_file.WriteData( &head, sizeof(head) );
-
 		bpworkp->_sub_level_sent = 4;
-
-		u_char	adapted_rgb[3];
-
-		//pixelRGB2YC2RGB( adapted_rgb, (const u_char *)block_datap );
-		adapted_rgb[0] = ((const u_char *)block_datap)[0];
-		adapted_rgb[1] = ((const u_char *)block_datap)[1];
-		adapted_rgb[2] = ((const u_char *)block_datap)[2];
-
-		_data._blkdata_head_file.WriteUChar( adapted_rgb[0] );
-		_data._blkdata_head_file.WriteUChar( adapted_rgb[1] );
-		_data._blkdata_head_file.WriteUChar( adapted_rgb[2] );
 	}
 	else
 	{
+		head._mean._y = block_info._mean_y;
+		head._mean._u = block_info._mean_u;
+		head._mean._v = block_info._mean_v;
 		head._sub_type = 0;
 		_data._blkdata_head_file.WriteData( &head, sizeof(head) );
 		bpworkp->_sub_level_sent = 4;
@@ -1108,10 +1188,10 @@ bool ScreenUnpacker::ParseNextBlock( void *out_block_datap, int &blk_px, int &bl
 
 			if ( head._complexity == COMPLEXITY_FLAT )
 			{
-				u_char	r = _data._blkdata_head_file.ReadUChar();
-				u_char	g = _data._blkdata_head_file.ReadUChar();
-				u_char	b = _data._blkdata_head_file.ReadUChar();
-				fillFlatBlock( local_destp, r, g, b );
+				fillFlatBlock( local_destp, 
+							   head._fixedrgb._r,
+							   head._fixedrgb._g,
+							   head._fixedrgb._b );
 			}
 			else
 			{
@@ -1119,7 +1199,7 @@ bool ScreenUnpacker::ParseNextBlock( void *out_block_datap, int &blk_px, int &bl
 				u_char	pak_block[ MAX_BLK_PIXELS*2 ];
 				Memfile	pak_block_memf( pak_block, MAX_BLK_PIXELS*2 );
 
-				u_char	y_block[ MAX_BLK_PIXELS ];
+				s_char	y_block[ MAX_BLK_PIXELS ];
 				s_char	u_block[ MAX_BLK_PIXELS ];
 				s_char	v_block[ MAX_BLK_PIXELS ];
 
@@ -1138,7 +1218,11 @@ bool ScreenUnpacker::ParseNextBlock( void *out_block_datap, int &blk_px, int &bl
 				PSYS_ASSERT( pak_block_memf.GetDataSize() == MAX_BLK_PIXELS*2 );
 				_haar_unpack.UnpackData( pak_block, pak_block_memf.GetDataSize(), v_block, HAAR_QUANT_RSHBITS_V );
 
-				blockYUV_to_RGB( local_destp, y_block, u_block, v_block );
+				blockYUVmean_to_RGB( local_destp, y_block, u_block, v_block,
+													 head._mean._y,
+													 head._mean._u,
+													 head._mean._v );
+				
 			#else
 				u_char	pak_block[ MAX_BLK_PAK_SIZE ];
 				Memfile	pak_block_memf( pak_block, MAX_BLK_PAK_SIZE );
