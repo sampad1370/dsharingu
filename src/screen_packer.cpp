@@ -713,8 +713,6 @@ static int convertBlockToYUV_PS( const u_char *const srcp,
 
 	{
 		u_char	*out_yp = out_y;
-		u_char const *out_yp_end = out_y + ScreenPackerData::BLOCK_N_PIX;
-
 		for (int y=ScreenPackerData::BLOCK_HE-1; y > 0; --y)
 		{
 			for (int x=ScreenPackerData::BLOCK_WD-1; x > 0; --x)
@@ -770,19 +768,15 @@ struct ConvertBlockYUVSignOut
 //==================================================================
 static void subtractMeanU( u_char *buffp, int mean )
 {
-	u_char	*buffp_end = buffp + MAX_BLK_PIXELS;
-
-	for (; buffp < buffp_end; ++buffp)
-		*(s_char *)buffp = *(u_char *)buffp - mean;
+	for (int i=0; i < MAX_BLK_PIXELS; ++i)
+		((s_char *)buffp)[i] = ((u_char *)buffp)[i] - mean;
 }
 
 //==================================================================
 static void subtractMeanS( s_char *buffp, int mean )
 {
-	s_char	*buffp_end = buffp + MAX_BLK_PIXELS;
-
-	for (; buffp < buffp_end; ++buffp)
-		*buffp = *buffp - mean;
+	for (int i=0; i < MAX_BLK_PIXELS; ++i)
+		buffp[i] -= mean;
 }
 
 //==================================================================
@@ -798,43 +792,27 @@ static void convertBlockToYUV_sign( const u_char *const srcp,
 	outinfo._mean_u = 0;
 	outinfo._mean_v = 0;
 
+	int	diff_mask = 0;
+	int	r_0 = srcp[0];
+	int	g_0 = srcp[1];
+	int	b_0 = srcp[2];
+
+	for (int i=0, ii=0; i < MAX_BLK_PIXELS; ++i, ii += 3)
 	{
-		u_char	*out_yp = (u_char *)out_y;
+		int	r = srcp[ii+0];
+		int	g = srcp[ii+1];
+		int	b = srcp[ii+2];
+		int y = (r + 2*g + b) / 4;
 
-		for (const u_char *srcp2 = srcp; srcp2 < srcendp; srcp2 += 3)
-		{
-			int	r = srcp2[0];
-			int	g = srcp2[1];
-			int	b = srcp2[2];
-			int y = (r + 2*g + b) / 4;
+		diff_mask |= (r ^ r_0) | (g ^ g_0) | (b ^ b_0);
 
-			*out_yp++ = y;
-			outinfo._mean_y += y;
-		}
-		outinfo._mean_y /= MAX_BLK_PIXELS;
+		((u_char *)out_y)[i] = y;
+		outinfo._mean_y += y;
 	}
+	outinfo._mean_y /= MAX_BLK_PIXELS;
 
-	int	count = 0;
-
-	{
-		s_char	*out_yp = out_y;
-		s_char const *out_yp_end = out_y + ScreenPackerData::BLOCK_N_PIX;
-
-		for (int y=ScreenPackerData::BLOCK_HE-1; y > 0; --y)
-		{
-			for (int x=ScreenPackerData::BLOCK_WD-1; x > 0; --x)
-			{
-				count += (0 != ((out_yp[0] ^ out_yp[1]) |
-							(out_yp[0] ^ out_yp[ScreenPackerData::BLOCK_WD])) );
-
-				++out_yp;
-			}
-			++out_yp;
-		}
-	}
-
-	// if flat, no need to calculate U and V
-	if ( count == 0 )
+	// if flat, no need to calculate anything
+	if ( diff_mask == 0 )
 	{
 		outinfo._fixed_r = srcp[0];
 		outinfo._fixed_g = srcp[1];
@@ -843,20 +821,34 @@ static void convertBlockToYUV_sign( const u_char *const srcp,
 		return;
 	}
 
+	// calculate approximate complexity
+	int	count = 0;
+	for (int y=ScreenPackerData::BLOCK_HE-1, i=0; y > 0; --y)
+	{
+		for (int x=ScreenPackerData::BLOCK_WD-1; x > 0; --x, ++i)
+		{
+			int	right = out_y[i+1];
+			int	bottom = out_y[i+ScreenPackerData::BLOCK_WD];
+
+			int	diff_1 = ((out_y[i] ^ right) | (out_y[i] ^ bottom)) ? 1 : 0;
+			count += diff_1;
+		}
+	}
 
 	subtractMeanU( (u_char *)out_y, outinfo._mean_y );
 
-	s_char	*out_up = out_u;
-	s_char	*out_vp = out_v;
-	for (const u_char *srcp2 = srcp; srcp2 < srcendp; )
+	for (int i=0, ii=0; i < MAX_BLK_PIXELS; ++i, ii += 3)
 	{
-		int u = rshift_sign( (int)srcp2[0] - (int)srcp2[1], 1 );
-		int	v = rshift_sign( (int)srcp2[2] - (int)srcp2[1], 1 );
+		int	r = srcp[ii+0];
+		int	g = srcp[ii+1];
+		int	b = srcp[ii+2];
+
+		int u = rshift_sign( r - g, 1 );
+		int	v = rshift_sign( b - g, 1 );
 		outinfo._mean_u += u;
 		outinfo._mean_v += v;
-		*out_up++ = u;
-		*out_vp++ = v;
-		srcp2 += 3;
+		out_u[i] = u;
+		out_v[i] = v;
 	}
 
 	static const int	RSHIFT_TO_MEAN = ScreenPackerData::BLOCK_BWD +
@@ -867,7 +859,6 @@ static void convertBlockToYUV_sign( const u_char *const srcp,
 
 	subtractMeanS( out_u, outinfo._mean_u );
 	subtractMeanS( out_v, outinfo._mean_v );
-
 
 	if ( count <= ScreenPackerData::BLOCK_N_PIX/16 )
 		outinfo._complexity = COMPLEXITY_TEXT;
@@ -962,9 +953,9 @@ static void blockYUVmean_to_RGB( u_char *des_rgbp,
 	u_char const	*des_rgbp_end = des_rgbp + MAX_BLK_RGB_SIZE;
 	for (; des_rgbp != des_rgbp_end; des_rgbp += 3)
 	{
-		YUVtoRGB( *src_yp++ + mean_y,
-				  *src_up++ + mean_u,
-				  *src_vp++ + mean_v,
+		YUVtoRGB( (int)*src_yp++ + mean_y,
+				  (int)*src_up++ + mean_u,
+				  (int)*src_vp++ + mean_v,
 				  des_rgbp );
 	}
 }
