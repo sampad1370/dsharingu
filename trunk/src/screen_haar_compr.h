@@ -43,6 +43,7 @@ public:
 
 	PUtils::Memfile PackData( const u_char *in_blockp, u_int quant_rshift );
 	PUtils::Memfile PackData( const s_char *in_blockp, u_int quant_rshift );
+	PUtils::Memfile PackData( const short *in_blockp, u_int quant_rshift );
 };
 
 //==================================================================
@@ -66,6 +67,11 @@ public:
 	void UnpackData( const u_char *in_datap,
 					 u_int in_data_len,
 					 s_char *out_blockp,
+					 u_int quant_rshift );
+
+	void UnpackData( const u_char *in_datap,
+					 u_int in_data_len,
+					 short *out_blockp,
 					 u_int quant_rshift );
 };
 

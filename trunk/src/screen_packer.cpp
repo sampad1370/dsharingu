@@ -30,11 +30,13 @@
 #include "screen_packer.h"
 
 //#define DISP_FLAT_BLOCKS
-//#define FORCE_ALL_BLOCKS
+#define FORCE_ALL_BLOCKS
+#define FORCE_COMPLEXITY_IMAGE
+
 #define USE_HAAR
-#define HAAR_QUANT_RSHBITS_Y	3
-#define HAAR_QUANT_RSHBITS_U	4
-#define HAAR_QUANT_RSHBITS_V	4
+#define HAAR_QUANT_RSHBITS_Y	2
+#define HAAR_QUANT_RSHBITS_U	3
+#define HAAR_QUANT_RSHBITS_V	3
 
 //==================================================================
 using namespace PUtils;
@@ -201,6 +203,8 @@ void ScreenPacker::BeginPack()
 
 	_data._blkdata_bits_file.SeekFromStart(0);
 	_lzwpacker.Reset( &_data._blkdata_bits_file );
+
+	_prof_start_time = psys_timer_get_d();
 }
 
 //==================================================================
@@ -214,7 +218,14 @@ void ScreenPacker::EndPack()
 	u_int size_head = _data._blkdata_head_file.GetCurPos();
 	u_int size_bits = _data._blkdata_bits_file.GetCurPos();
 
-	PSYS_DEBUG_PRINTF( "total size = %i (heads: %i  bits: %i)\n", size_head + size_bits, size_head, size_bits );
+#if 1
+//#ifdef _DEBUG
+	psys_debug_printf( "total size = %i (heads: %i  bits: %i), %4.2f\n",
+						size_head + size_bits,
+						size_head,
+						size_bits,
+						(float)(psys_timer_get_d() - _prof_start_time) );
+#endif
 }
 
 //==================================================================
@@ -674,6 +685,7 @@ enum {
 	COMPLEXITY_IMAGE
 };
 
+#if 0
 //==================================================================
 static int convertBlockToYUV_PS( const u_char *const srcp,
 							  u_char out_y[MAX_BLK_PIXELS],
@@ -750,6 +762,7 @@ static int convertBlockToYUV_PS( const u_char *const srcp,
 	else
 		return COMPLEXITY_IMAGE;
 }
+#endif
 
 //==================================================================
 struct ConvertBlockYUVSignOut
@@ -760,34 +773,18 @@ struct ConvertBlockYUVSignOut
 
 	int		_complexity;
 
-	u_int	_mean_y;
-	u_int	_mean_u;
-	u_int	_mean_v;
+	int		_mean_y;
+	int		_mean_u;
+	int		_mean_v;
 };
 
 //==================================================================
-static void subtractMeanU( u_char *buffp, int mean )
-{
-	for (int i=0; i < MAX_BLK_PIXELS; ++i)
-		((s_char *)buffp)[i] = ((u_char *)buffp)[i] - mean;
-}
-
-//==================================================================
-static void subtractMeanS( s_char *buffp, int mean )
-{
-	for (int i=0; i < MAX_BLK_PIXELS; ++i)
-		buffp[i] -= mean;
-}
-
-//==================================================================
 static void convertBlockToYUV_sign( const u_char *const srcp,
-								  s_char out_y[MAX_BLK_PIXELS],
+								  short out_y[MAX_BLK_PIXELS],
 								  s_char out_u[MAX_BLK_PIXELS],
 								  s_char out_v[MAX_BLK_PIXELS],
 								  ConvertBlockYUVSignOut &outinfo )
 {
-	u_char const	*srcendp = srcp + MAX_BLK_RGB_SIZE;
-
 	outinfo._mean_y = 0;
 	outinfo._mean_u = 0;
 	outinfo._mean_v = 0;
@@ -802,15 +799,23 @@ static void convertBlockToYUV_sign( const u_char *const srcp,
 		int	r = srcp[ii+0];
 		int	g = srcp[ii+1];
 		int	b = srcp[ii+2];
-		int y = (r + 2*g + b) / 4;
 
 		diff_mask |= (r ^ r_0) | (g ^ g_0) | (b ^ b_0);
 
-		((u_char *)out_y)[i] = y;
-		outinfo._mean_y += y;
-	}
-	outinfo._mean_y /= MAX_BLK_PIXELS;
+		int y = (r + 2*g + b) / 4;
+		int u = rshift_sign( r - g, 1 );
+		int	v = rshift_sign( b - g, 1 );
 
+		out_y[i] = y;
+		out_u[i] = u;
+		out_v[i] = v;
+
+		outinfo._mean_y += y;
+		outinfo._mean_u += u;
+		outinfo._mean_v += v;
+	}
+
+#ifndef FORCE_COMPLEXITY_IMAGE
 	// if flat, no need to calculate anything
 	if ( diff_mask == 0 )
 	{
@@ -820,6 +825,7 @@ static void convertBlockToYUV_sign( const u_char *const srcp,
 		outinfo._complexity = COMPLEXITY_FLAT;
 		return;
 	}
+#endif
 
 	// calculate approximate complexity
 	int	count = 0;
@@ -835,37 +841,29 @@ static void convertBlockToYUV_sign( const u_char *const srcp,
 		}
 	}
 
-	subtractMeanU( (u_char *)out_y, outinfo._mean_y );
-
-	for (int i=0, ii=0; i < MAX_BLK_PIXELS; ++i, ii += 3)
-	{
-		int	r = srcp[ii+0];
-		int	g = srcp[ii+1];
-		int	b = srcp[ii+2];
-
-		int u = rshift_sign( r - g, 1 );
-		int	v = rshift_sign( b - g, 1 );
-		outinfo._mean_u += u;
-		outinfo._mean_v += v;
-		out_u[i] = u;
-		out_v[i] = v;
-	}
-
 	static const int	RSHIFT_TO_MEAN = ScreenPackerData::BLOCK_BWD +
 										 ScreenPackerData::BLOCK_BHE;
 
+	outinfo._mean_y = rshift_sign( outinfo._mean_y, RSHIFT_TO_MEAN );	// /= MAX_BLK_PIXELS
 	outinfo._mean_u = rshift_sign( outinfo._mean_u, RSHIFT_TO_MEAN );	// /= MAX_BLK_PIXELS
 	outinfo._mean_v = rshift_sign( outinfo._mean_v, RSHIFT_TO_MEAN );	// /= MAX_BLK_PIXELS
 
-	subtractMeanS( out_u, outinfo._mean_u );
-	subtractMeanS( out_v, outinfo._mean_v );
+	for (int i=0; i < MAX_BLK_PIXELS; ++i)
+	{
+		out_y[i] -= outinfo._mean_y;
+		out_u[i] -= outinfo._mean_u;
+		out_v[i] -= outinfo._mean_v;
+	}
 
+#ifndef FORCE_COMPLEXITY_IMAGE
 	if ( count <= ScreenPackerData::BLOCK_N_PIX/16 )
 		outinfo._complexity = COMPLEXITY_TEXT;
 	else
+#endif
 		outinfo._complexity = COMPLEXITY_IMAGE;
 }
 
+#if 0
 //==================================================================
 //==================================================================
 static void blockYUV_to_PAK( u_char *pak_blockp,
@@ -941,9 +939,12 @@ static void blockYUV_to_RGB( u_char *des_rgbp,
 		YUVtoRGB( *src_yp++, *src_up++, *src_vp++, des_rgbp );
 	}
 }
+
+#endif
+
 //==================================================================
 static void blockYUVmean_to_RGB( u_char *des_rgbp,
-								 const s_char *src_yp,
+								 const short *src_yp,
 								 const s_char *src_up,
 								 const s_char *src_vp,
 								 int mean_y,
@@ -990,7 +991,7 @@ bool ScreenPacker::AddBlock( const void *block_datap, int size, u_int new_checks
 
 	BlockPackHead	head;
 
-	s_char	y_block[ MAX_BLK_PIXELS ];
+	short	y_block[ MAX_BLK_PIXELS ];
 	s_char	u_block[ MAX_BLK_PIXELS ];
 	s_char	v_block[ MAX_BLK_PIXELS ];
 
@@ -1190,7 +1191,7 @@ bool ScreenUnpacker::ParseNextBlock( void *out_block_datap, int &blk_px, int &bl
 				u_char	pak_block[ MAX_BLK_PIXELS*2 ];
 				Memfile	pak_block_memf( pak_block, MAX_BLK_PIXELS*2 );
 
-				s_char	y_block[ MAX_BLK_PIXELS ];
+				short	y_block[ MAX_BLK_PIXELS ];
 				s_char	u_block[ MAX_BLK_PIXELS ];
 				s_char	v_block[ MAX_BLK_PIXELS ];
 

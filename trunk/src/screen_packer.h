@@ -68,7 +68,7 @@ struct BlockPackHead
 
 	union {
 		struct {
-			s_char	_y;
+			short	_y;
 			s_char	_u;
 			s_char	_v;
 		} _mean;
@@ -185,6 +185,8 @@ class ScreenPacker : public SPAKMM
 {
 	ScreenHaarComprPack	_haar_pack;
 	LZWPacker			_lzwpacker;
+
+	double				_prof_start_time;
 
 public:
 	//==================================================================
