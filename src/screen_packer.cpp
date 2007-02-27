@@ -15,7 +15,7 @@
 //	along with this program; if not, write to the Free Software
 //	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //==================================================================
-//= Creation: Davide Pasca 2005
+//= Creation: Davide Pasca 2005-2007
 //=
 //=
 //=
@@ -30,8 +30,10 @@
 #include "screen_packer.h"
 
 //#define DISP_FLAT_BLOCKS
-#define FORCE_ALL_BLOCKS
-#define FORCE_COMPLEXITY_IMAGE
+#ifndef RELEASE_BUILD
+//#define FORCE_ALL_BLOCKS
+//#define FORCE_COMPLEXITY_IMAGE
+#endif
 
 #define USE_HAAR
 #define HAAR_QUANT_RSHBITS_Y	2
@@ -218,8 +220,7 @@ void ScreenPacker::EndPack()
 	u_int size_head = _data._blkdata_head_file.GetCurPos();
 	u_int size_bits = _data._blkdata_bits_file.GetCurPos();
 
-#if 1
-//#ifdef _DEBUG
+#ifndef RELEASE_BUILD
 	psys_debug_printf( "total size = %i (heads: %i  bits: %i), %4.2f\n",
 						size_head + size_bits,
 						size_head,
