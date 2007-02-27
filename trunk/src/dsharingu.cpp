@@ -45,7 +45,10 @@ static DSharinguApp		*_extrachannel2;
 #define USE_EXTRA_CHANNEL
 //#define USE_EXTRA_CHANNEL2
 #endif
+
+#ifndef RELEASE_BUILD
 #define USE_EXTRA_CHANNEL
+#endif
 
 //==================================================================
 bool main_start( void *hinstance )

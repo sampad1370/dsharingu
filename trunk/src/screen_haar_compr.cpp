@@ -107,14 +107,15 @@ static PFORCEINLINE void makeV1AndV2( const TMPTYPE * const srcp, TMPTYPE *desp,
 template<typename TBLOCK>
 static void blockToHaar( const TBLOCK *in_blockp,
 						 short out_haarp[ScreenHaarComprPack::BLOCK_DIM][ScreenHaarComprPack::BLOCK_DIM],
-						 TMPTYPE tmp_line1[ScreenHaarComprPack::BLOCK_DIM],
-						 TMPTYPE tmp_line2[ScreenHaarComprPack::BLOCK_DIM],
-						 TMPTYPE tmp_haar[ScreenHaarComprPack::BLOCK_DIM][ScreenHaarComprPack::BLOCK_DIM],
 						 u_int block_dim,
 						 u_int min_dim,
 						 u_int shift_bits )
 {
 	PSYS_ASSERT( min_dim >= 2 );
+
+	TMPTYPE tmp_line1[ScreenHaarComprPack::BLOCK_DIM];
+	TMPTYPE tmp_line2[ScreenHaarComprPack::BLOCK_DIM];
+	TMPTYPE tmp_haar[ScreenHaarComprPack::BLOCK_DIM][ScreenHaarComprPack::BLOCK_DIM];
 
 #if 0
 	for (int y=0; y < block_dim; ++y)
@@ -161,7 +162,12 @@ static void blockToHaar( const TBLOCK *in_blockp,
 		}
 
 		for (int i=0; i < block_dim; ++i)
-			out_haarp[x][i] = pack_sign( right_shift( tmp_line1[i], shift_bits ) );
+		{
+			//if ( x == 0 && i == 0 )
+			//	out_haarp[x][i] = pack_sign( tmp_line1[i] );
+			//else
+				out_haarp[x][i] = pack_sign( right_shift( tmp_line1[i], shift_bits ) );
+		}
 	}
 }
 
@@ -169,9 +175,6 @@ static void blockToHaar( const TBLOCK *in_blockp,
 template<typename TBLOCK>
 static void haarToBlock( const short *in_haarp,
 						 TBLOCK out_blockp[ScreenHaarComprPack::BLOCK_DIM][ScreenHaarComprPack::BLOCK_DIM],
-						 TMPTYPE tmp_line1[ScreenHaarComprPack::BLOCK_DIM],
-						 TMPTYPE tmp_line2[ScreenHaarComprPack::BLOCK_DIM],
-						 TMPTYPE tmp_haar[ScreenHaarComprPack::BLOCK_DIM][ScreenHaarComprPack::BLOCK_DIM],
 						 u_int block_dim,
 						 u_int min_dim,
 						 u_int shift_bits,
@@ -179,6 +182,10 @@ static void haarToBlock( const short *in_haarp,
 						 int clamp_max )
 {
 	PSYS_ASSERT( min_dim >= 2 );
+
+	TMPTYPE tmp_line1[ScreenHaarComprPack::BLOCK_DIM];
+	TMPTYPE tmp_line2[ScreenHaarComprPack::BLOCK_DIM];
+	TMPTYPE tmp_haar[ScreenHaarComprPack::BLOCK_DIM][ScreenHaarComprPack::BLOCK_DIM];
 
 #if 0
 	for (int y=0; y < block_dim; ++y)
@@ -191,15 +198,25 @@ static void haarToBlock( const short *in_haarp,
 	return;
 #endif
 
+	int	expand_val = 0;//(1 << shift_bits) >> 1;
+
 	for (int x=0; x < block_dim; ++x)
 	{
 		int	x_off = x * block_dim;
 
 		for (int i=0; i < block_dim; ++i)
-			tmp_line1[i] = unpack_sign( in_haarp[ i + x_off ] ) << shift_bits;
-
-		//for (int i=0, y_off=0; i < block_dim; ++i, y_off += block_dim)
-		//	tmp_line1[i] = unpack_sign( in_haarp[ x + y_off ] ) << shift_bits;
+		{
+			/*
+			if ( x == 0 && i == 0 )
+			{
+				tmp_line1[i] = unpack_sign( in_haarp[ i + x_off ] );
+			}
+			else*/
+			{
+				int	val = unpack_sign( in_haarp[ i + x_off ] ) << shift_bits;
+				tmp_line1[i] = (val < 0 ? val-expand_val : val+expand_val);
+			}
+		}
 
 		for (int n = min_dim; n <= block_dim; n *= 2)
 		{
@@ -222,8 +239,9 @@ static void haarToBlock( const short *in_haarp,
 
 		for (int n = min_dim; n <= block_dim; n *= 2)
 		{
-			for (int i=0; i < n; ++i)
-				tmp_line2[i] = tmp_line1[i];
+			//for (int i=0; i < n; ++i)
+			//	tmp_line2[i] = tmp_line1[i];
+			memcpy( tmp_line2, tmp_line1, n*sizeof(tmp_line1[0]) );
 
 			makeV1AndV2( tmp_line2, tmp_line1, n );
 		}
@@ -243,11 +261,7 @@ static const int MIN_DIM = 2;
 //==================================================================
 PUtils::Memfile ScreenHaarComprPack::PackData( const u_char *in_blockp, u_int quant_rshift )
 {
-	TMPTYPE	tmp_line1[BLOCK_DIM];
-	TMPTYPE	tmp_line2[BLOCK_DIM];
-	TMPTYPE	tmp_haar[BLOCK_DIM][BLOCK_DIM];
-
-	blockToHaar<u_char>( in_blockp, (short (*)[BLOCK_DIM])_out_data, tmp_line1, tmp_line2, tmp_haar,
+	blockToHaar<u_char>( in_blockp, (short (*)[BLOCK_DIM])_out_data,
 				 BLOCK_DIM, MIN_DIM, quant_rshift );
 
 	return PUtils::Memfile( (const void *)_out_data, BLOCK_DIM*BLOCK_DIM*sizeof(short) );
@@ -256,11 +270,7 @@ PUtils::Memfile ScreenHaarComprPack::PackData( const u_char *in_blockp, u_int qu
 //==================================================================
 PUtils::Memfile ScreenHaarComprPack::PackData( const s_char *in_blockp, u_int quant_rshift )
 {
-	TMPTYPE	tmp_line1[BLOCK_DIM];
-	TMPTYPE	tmp_line2[BLOCK_DIM];
-	TMPTYPE	tmp_haar[BLOCK_DIM][BLOCK_DIM];
-
-	blockToHaar<s_char>( in_blockp, (short (*)[BLOCK_DIM])_out_data, tmp_line1, tmp_line2, tmp_haar,
+	blockToHaar<s_char>( in_blockp, (short (*)[BLOCK_DIM])_out_data,
 				 BLOCK_DIM, MIN_DIM, quant_rshift );
 
 	return PUtils::Memfile( (const void *)_out_data, BLOCK_DIM*BLOCK_DIM*sizeof(short) );
@@ -269,11 +279,7 @@ PUtils::Memfile ScreenHaarComprPack::PackData( const s_char *in_blockp, u_int qu
 //==================================================================
 PUtils::Memfile ScreenHaarComprPack::PackData( const short *in_blockp, u_int quant_rshift )
 {
-	TMPTYPE	tmp_line1[BLOCK_DIM];
-	TMPTYPE	tmp_line2[BLOCK_DIM];
-	TMPTYPE	tmp_haar[BLOCK_DIM][BLOCK_DIM];
-
-	blockToHaar<short>( in_blockp, (short (*)[BLOCK_DIM])_out_data, tmp_line1, tmp_line2, tmp_haar,
+	blockToHaar<short>( in_blockp, (short (*)[BLOCK_DIM])_out_data,
 						BLOCK_DIM, MIN_DIM, quant_rshift );
 
 	return PUtils::Memfile( (const void *)_out_data, BLOCK_DIM*BLOCK_DIM*sizeof(short) );
@@ -285,15 +291,8 @@ void ScreenHaarComprUnpack::UnpackData( const u_char *in_datap,
 										u_char *out_blockp,
 										u_int quant_rshift )
 {
-	TMPTYPE	tmp_line1[BLOCK_DIM];
-	TMPTYPE	tmp_line2[BLOCK_DIM];
-	TMPTYPE	tmp_haar[BLOCK_DIM][BLOCK_DIM];
-
 	haarToBlock<u_char>( (const short *)in_datap,
 						 (u_char (*)[BLOCK_DIM])out_blockp,
-						 tmp_line1,
-						 tmp_line2,
-						 tmp_haar,
 						 BLOCK_DIM, MIN_DIM, quant_rshift, 0, 255 );
 }
 
@@ -303,15 +302,8 @@ void ScreenHaarComprUnpack::UnpackData( const u_char *in_datap,
 										s_char *out_blockp,
 										u_int quant_rshift )
 {
-	TMPTYPE	tmp_line1[BLOCK_DIM];
-	TMPTYPE	tmp_line2[BLOCK_DIM];
-	TMPTYPE	tmp_haar[BLOCK_DIM][BLOCK_DIM];
-
 	haarToBlock<s_char>( (const short *)in_datap,
 						 (s_char (*)[BLOCK_DIM])out_blockp,
-						 tmp_line1,
-						 tmp_line2,
-						 tmp_haar,
 						 BLOCK_DIM, MIN_DIM, quant_rshift, -128, 127 );
 }
 
@@ -321,14 +313,7 @@ void ScreenHaarComprUnpack::UnpackData( const u_char *in_datap,
 										short *out_blockp,
 										u_int quant_rshift )
 {
-	TMPTYPE	tmp_line1[BLOCK_DIM];
-	TMPTYPE	tmp_line2[BLOCK_DIM];
-	TMPTYPE	tmp_haar[BLOCK_DIM][BLOCK_DIM];
-
 	haarToBlock<short>( (const short *)in_datap,
 						(short (*)[BLOCK_DIM])out_blockp,
-						tmp_line1,
-						tmp_line2,
-						tmp_haar,
 						BLOCK_DIM, MIN_DIM, quant_rshift, -32768, 32767 );
 }
