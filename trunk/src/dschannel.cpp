@@ -191,7 +191,7 @@ void DSChannel::create()
 	_console.cons_init( &((DSharinguApp *)_managerp->_superp)->_main_win, (void *)this );
 	_console.cons_line_cb_set( console_line_func_s );
 	_console.cons_cmd_add_defs( _cmd_defs );
-	_console.cons_show( 1 );
+	_console.Show( 1 );
 
 	setShellVisibility();
 	//changeSessionRemote( NULL );
@@ -326,19 +326,19 @@ void DSChannel::setShellVisibility( bool do_switch )
 
 	if ( do_switch )
 	{
-		_console.cons_show( !_console.cons_is_showing() );
+		_console.Show( !_console.IsShowing() );
 	}
 
-	if ( _console.cons_is_showing() )
+	if ( _console.IsShowing() )
 	{
 		win_anchor_y2_offset_set( _view_winp, -160 );
-		_console.cons_show( 1 );
+		_console.Show( 1 );
 //		gam.SetGadgetText( DSharinguApp::BUTT_SHELL, "[O] Shell" );
 	}
 	else
 	{
 		win_anchor_y2_offset_set( _view_winp, 0 );
-		_console.cons_show( 0 );
+		_console.Show( 0 );
 //		gam.SetGadgetText( DSharinguApp::BUTT_SHELL, "[ ] Shell" );
 	}
 
@@ -424,7 +424,7 @@ void DSChannel::handleAutoScroll()
 			if ( _disp_off_x > 0 )
 				_disp_off_x = 0;
 
-			win_invalidate( _view_winp );
+			_view_winp->Invalidate();
 		}
 
 		if ( _disp_curs_y < 32 && _disp_off_y < 0 )
@@ -436,7 +436,7 @@ void DSChannel::handleAutoScroll()
 			if ( _disp_off_y > 0 )
 				_disp_off_y = 0;
 
-			win_invalidate( _view_winp );
+			_view_winp->Invalidate();
 		}
 
 		if ( _disp_curs_x >= _view_winp->GetWidth()-32 && _view_winp->GetWidth() < x2 )
@@ -445,7 +445,7 @@ void DSChannel::handleAutoScroll()
 			if ( _disp_curs_x >= _view_winp->GetWidth()-8 )
 				_disp_off_x -= 16;
 
-			win_invalidate( _view_winp );
+			_view_winp->Invalidate();
 		}
 
 		if ( _disp_curs_y >= _view_winp->GetHeight()-32 && _view_winp->GetHeight() < y2 )
@@ -453,7 +453,7 @@ void DSChannel::handleAutoScroll()
 			_disp_off_y -= 8;
 			if ( _disp_curs_y >= _view_winp->GetHeight()-8 )
 				_disp_off_y -= 16;
-			win_invalidate( _view_winp );
+			_view_winp->Invalidate();
 		}
 	}
 }
@@ -461,7 +461,7 @@ void DSChannel::handleAutoScroll()
 //==================================================================
 int DSChannel::Idle()
 {
-	if ( _console.cons_is_showing() )
+	if ( _console.IsShowing() )
 	{
 		//		win_focus( &_console._win, 1 );
 	}
@@ -708,7 +708,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 		case DESK_IMG_PKID:
 			_scrreader.ParseFrame( datap, data_size );
 			updateViewScale();
-			win_invalidate( _view_winp );
+			_view_winp->Invalidate();
 			break;
 
 		case USAGE_WISH_PKID:
@@ -945,7 +945,7 @@ void DSChannel::taskOnGadgetCB( DSTask *taskp, DSTask::ViewState view_state )
 
 	case VIEW_WIN_TASK_SHELL_BUTTON:
 		win_anchor_y2_offset_set( _view_winp, do_show ? -160 : 0 );
-		_console.cons_show( do_show );
+		_console.Show( do_show );
 		break;
 	}
 }
@@ -1182,5 +1182,5 @@ BOOL CALLBACK DSChannel::connectingDialogProc(HWND hwnd, UINT umsg, WPARAM wpara
 void DSChannel::Show( bool onoff )
 {
 	_view_winp->Show( onoff );
-	_console.cons_show( onoff );
+	_console.Show( onoff );
 }

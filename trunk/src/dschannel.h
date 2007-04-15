@@ -87,7 +87,7 @@ public:
 	bool					_is_transmitting;
 	bool					_is_using_remote;
 
-	console_t				_console;
+	Console				_console;
 
 	bool					_remote_wants_view;
 	bool					_remote_wants_share;
