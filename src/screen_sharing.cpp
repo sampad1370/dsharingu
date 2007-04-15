@@ -422,7 +422,7 @@ static void alloc_textures_matrix( int tot_w, int tot_h,
 	int tex_per_x = (tot_w + tex_w-1) / tex_w;
 	int tex_per_y = (tot_h + tex_h-1) / tex_h;
 
-	int	n_required	= tex_per_x * tex_per_y;		PSYS_ASSERT( n_required < n_max_ids );
+	int	n_required	= tex_per_x * tex_per_y;		PSYS_ASSERT( n_required <= n_max_ids );
 	int	n_to_alloc	= n_required - n_alloc_ids;
 
 	glGenTextures( n_to_alloc, &out_idsp[ n_alloc_ids ] );
@@ -438,7 +438,6 @@ static void alloc_textures_matrix( int tot_w, int tot_h,
 
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
-
 
 		glTexImage2D( GL_TEXTURE_2D, 0, 4, tex_w, tex_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0 );//tmpdata );
 		CHECK_GLERROR;

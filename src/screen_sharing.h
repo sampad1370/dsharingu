@@ -41,7 +41,7 @@ const static int	BLOCK_WD	= 32;
 const static int	BLOCK_HE	= 32;
 
 const static int	MAX_TEXTURES	= ((MAX_SCREEN_WD + TEX_WD-1) / TEX_WD) *
-										((MAX_SCREEN_HE + TEX_HE-1) / TEX_HE);
+									  ((MAX_SCREEN_HE + TEX_HE-1) / TEX_HE);
 
 const static int	MAX_BLOCKS		= ((MAX_SCREEN_WD + BLOCK_WD-1) / BLOCK_WD) *
 										((MAX_SCREEN_HE + BLOCK_HE-1) / BLOCK_HE);

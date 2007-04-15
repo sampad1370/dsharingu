@@ -135,7 +135,7 @@ void DSharinguApp::updateViewMenu( DSChannel *chanp )
 		EnableMenuItem( _main_menu, ID_VIEW_FITWINDOW,	MF_BYCOMMAND | MF_ENABLED );
 		EnableMenuItem( _main_menu, ID_VIEW_ACTUALSIZE, MF_BYCOMMAND | MF_ENABLED );
 
-		if ( chanp->_console.cons_is_showing() )
+		if ( chanp->_console.IsShowing() )
 			CheckMenuItem( _main_menu, ID_VIEW_SHELL, MF_BYCOMMAND | MF_CHECKED );
 		else
 			CheckMenuItem( _main_menu, ID_VIEW_SHELL, MF_BYCOMMAND | MF_UNCHECKED );
