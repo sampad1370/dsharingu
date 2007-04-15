@@ -206,6 +206,7 @@ void DSChannel::create()
 
 	_task_managerp = new DSTaskManager( _view_winp, this, taskOnGadgetCB_s );
 	_task_managerp->AddTask( "Desk", VIEW_WIN_TASK_DESK_BUTTON, DSTask::VS_FITVIEW );
+	//_task_managerp->AddTask( "Video", VIEW_WIN_TASK_VIDEO_BUTTON, DSTask::VS_FITVIEW );
 	_task_managerp->AddTask( "Shell", VIEW_WIN_TASK_SHELL_BUTTON, DSTask::VS_FITVIEW );
 
 	_view_winp->PostResize();
@@ -768,61 +769,53 @@ void DSChannel::handleConnectedFlow()
 	if NOT( _is_transmitting )
 		return;
 
-	if ( _is_transmitting )
+	_intersys.Idle();
+
+	DSharinguApp	&app = *(DSharinguApp *)_managerp->_superp;
+
+	if ( _frame_since_transmission == 1 )
 	{
-		_intersys.Idle();
+		UsageWishMsg	msg(_session_remotep->_see_remote_screen,
+							_is_using_remote );
+		_cpk.SendPacket( USAGE_WISH_PKID, &msg, sizeof(msg), NULL );
 
-		if ( _frame_since_transmission == 1 )
-		{
-			{
-				UsageWishMsg	msg(_session_remotep->_see_remote_screen,
-									_is_using_remote );
-
-				if ERR_ERROR( _cpk.SendPacket( USAGE_WISH_PKID, &msg, sizeof(msg), NULL ) )
-					return;
-			}
-
-			{
-				UsageAbilityMsg	msg(!((DSharinguApp *)_managerp->_superp)->_settings._nobody_can_watch_my_computer,
-									!((DSharinguApp *)_managerp->_superp)->_settings._nobody_can_use_my_computer );
-				if ERR_ERROR( _cpk.SendPacket( USAGE_ABILITY_PKID, &msg, sizeof(msg), NULL ) )
-					return;
-
-			}
-		}
+		UsageAbilityMsg	msg2( !app._settings._nobody_can_watch_my_computer,
+							 !app._settings._nobody_can_use_my_computer );
+		_cpk.SendPacket( USAGE_ABILITY_PKID, &msg2, sizeof(msg2), NULL );
 	}
 
+	bool	do_show =	_remote_wants_view &&
+						!app._settings._nobody_can_watch_my_computer &&
+						_session_remotep->_can_watch_my_desk;
 
-	bool	do_show = (_remote_wants_view && !((DSharinguApp *)_managerp->_superp)->_settings._nobody_can_watch_my_computer);
-
-	if ( ((DSharinguApp *)_managerp->_superp)->_scrwriter.IsGrabbing() != do_show )
+	if ( app._scrwriter.IsGrabbing() != do_show )
 	{
 		if ( do_show )
 		{
-			((DSharinguApp *)_managerp->_superp)->_scrwriter.StartGrabbing( (HWND)((DSharinguApp *)_managerp->_superp)->_main_win._hwnd );
+			app._scrwriter.StartGrabbing( (HWND)app._main_win._hwnd );
 		}
 		else
 		{
-			((DSharinguApp *)_managerp->_superp)->_scrwriter.StopGrabbing();
+			app._scrwriter.StopGrabbing();
 		}
 	}
 
-	if ( ((DSharinguApp *)_managerp->_superp)->_scrwriter.IsGrabbing() )
+	if ( app._scrwriter.IsGrabbing() )
 	{
 		int cnt = _cpk.SearchOUTQueue( DESK_IMG_PKID );
 		if ( cnt <= 2 )
 		{
-			bool has_grabbed = ((DSharinguApp *)_managerp->_superp)->_scrwriter.UpdateWriter();
+			bool has_grabbed = app._scrwriter.UpdateWriter();
 
 			if ( has_grabbed )
-				((DSharinguApp *)_managerp->_superp)->_scrwriter.SendFrame( DESK_IMG_PKID, &_cpk );
+				app._scrwriter.SendFrame( DESK_IMG_PKID, &_cpk );
 		}
 	}
 
 	++_frame_since_transmission;
 
 	if ( (_frame_since_transmission & 7) == 0 )
-		((DSharinguApp *)_managerp->_superp)->_dbg_win.Invalidate();
+		app._dbg_win.Invalidate();
 }
 
 //==================================================================
@@ -941,6 +934,9 @@ void DSChannel::taskOnGadgetCB( DSTask *taskp, DSTask::ViewState view_state )
 			gam.FindGadget( VIEW_WIN_VIEW_REM_NOT_ALLOWED_STXT )->Show( do_show && !_remote_allows_view );
 			gam.FindGadget( VIEW_WIN_USE_REM_NOT_ALLOWED_STXT )->Show( do_show && !_remote_allows_share );
 		}
+		break;
+
+	case VIEW_WIN_TASK_VIDEO_BUTTON:
 		break;
 
 	case VIEW_WIN_TASK_SHELL_BUTTON:

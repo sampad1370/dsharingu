@@ -115,6 +115,8 @@ DSharinguApp::DSharinguApp( const char *config_fnamep ) :
 //===============================================================
 DSharinguApp::~DSharinguApp()
 {
+	saveConfig();
+
 	SAFE_FREE( _inpack_buffp );
 
 //	_intsysmsgparser.StopThread();
