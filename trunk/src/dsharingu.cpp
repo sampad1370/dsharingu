@@ -130,4 +130,16 @@ int main_requestquit(void)
 //==================================================================
 void main_quit(void)
 {
+	if ( _basechannel )
+		delete _basechannel;
+
+#ifdef USE_EXTRA_CHANNEL
+	if ( _extrachannel )
+		delete _extrachannel;
+#endif
+
+#ifdef USE_EXTRA_CHANNEL2
+	if ( _extrachannel2 )
+		delete _extrachannel2;
+#endif
 }
