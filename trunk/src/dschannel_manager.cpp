@@ -47,9 +47,9 @@ enum {
 
 //==================================================================
 static const int	TAB_BASE_X = 4;
-static const int	TAB_BASE_Y = 3;
+static const int	TAB_BASE_Y = 2;
 static const int	TAB_BASE_WD = 140;
-static const int	TAB_BASE_PAD_X = 4;
+static const int	TAB_BASE_PAD_X = 0;
 static const int	TAB_BASE_HE = 22;
 static const int	TAB_BASE_STRIDE_X = TAB_BASE_WD + TAB_BASE_PAD_X;
 
@@ -70,7 +70,7 @@ DSChannelManager::DSChannelManager( Window *parent_winp, DSharinguApp *superp,
 							WIN_ANCH_TYPE_PARENT_X1, 0,
 							WIN_ANCH_TYPE_PARENT_Y1, 0,
 							WIN_ANCH_TYPE_PARENT_X2, 0,
-							WIN_ANCH_TYPE_PARENT_Y1, TAB_BASE_HE+TAB_BASE_Y,
+							WIN_ANCH_TYPE_PARENT_Y1, TAB_BASE_HE+TAB_BASE_Y+4,
 							(win_init_flags)(WIN_INIT_FLG_OPENGL | WIN_INTFLG_DONT_CLEAR),
 							0 );
 
@@ -216,7 +216,7 @@ void DSChannelManager::AddChannelToList( DSChannel *chanp, const char *namep )
 //==================================================================
 u_int DSChannelManager::GetTabsWinHeight() const
 {
-	return TAB_BASE_HE+TAB_BASE_Y;//_tabs_winp->GetHeight();
+	return TAB_BASE_HE+TAB_BASE_Y+4;//_tabs_winp->GetHeight();
 }
 
 //==================================================================

@@ -310,6 +310,12 @@ HWND DSharinguApp::openModelessDialog( void *mythisp, DLGPROC dlg_proc, LPSTR dl
 	return hwnd;
 }
 
+//==================================================================
+int DSharinguApp::mainEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp )
+{
+	DSharinguApp	*mythis = (DSharinguApp *)userobjp;
+	return mythis->mainEventFilter( etype, eventp );
+}
 //=====================================================
 int DSharinguApp::mainEventFilter( win_event_type etype, win_event_t *eventp )
 {
@@ -414,12 +420,6 @@ int DSharinguApp::mainEventFilter( win_event_type etype, win_event_t *eventp )
 	}
 
 	return 0;
-}
-//==================================================================
-int DSharinguApp::mainEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp )
-{
-	DSharinguApp	*mythis = (DSharinguApp *)userobjp;
-	return mythis->mainEventFilter( etype, eventp );
 }
 
 //==================================================================
