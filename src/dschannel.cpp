@@ -206,7 +206,7 @@ void DSChannel::create()
 
 	_task_managerp = new DSTaskManager( _view_winp, this, taskOnGadgetCB_s );
 	_task_managerp->AddTask( "Desk", VIEW_WIN_TASK_DESK_BUTTON, DSTask::VS_FITVIEW );
-	_task_managerp->AddTask( "Video", VIEW_WIN_TASK_VIDEO_BUTTON, DSTask::VS_FITVIEW );
+	//_task_managerp->AddTask( "Video", VIEW_WIN_TASK_VIDEO_BUTTON, DSTask::VS_FITVIEW );
 	_task_managerp->AddTask( "Shell", VIEW_WIN_TASK_SHELL_BUTTON, DSTask::VS_FITVIEW );
 
 	_view_winp->PostResize();
