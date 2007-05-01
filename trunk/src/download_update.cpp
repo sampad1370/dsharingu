@@ -36,11 +36,9 @@ DownloadUpdate::DownloadUpdate( HWND parent_hwnd,
 							    const char *cur_versionp,
 								const char *hostnamep,
 								const char *update_info_pathp,
-								const char *base_exe_pathp,
 								const char *message_box_titlep ) :
 	_cur_versionp(cur_versionp),
 	_hostnamep(hostnamep),
-	_base_exe_pathp(base_exe_pathp),
 	_message_box_titlep(message_box_titlep),
 	_alive(true),
 	_state(0),
@@ -129,9 +127,11 @@ bool DownloadUpdate::Idle()
 			if ( indatap )
 			{
 				char	version[64];
+				char	hostname[128];
 
-				sscanf_s( (const char *)indatap, "%s %s",
+				sscanf_s( (const char *)indatap, "%s %s %s",
 						  version, sizeof(version),
+						  hostname, sizeof(hostname),
 						  _donwload_fname, sizeof(_donwload_fname) );
 
 				double other_version = quantizeVersion( version );
@@ -148,11 +148,11 @@ bool DownloadUpdate::Idle()
 					return false;
 				}
 
-				char	buff[1024];
-				psys_strcpy( buff, _base_exe_pathp, sizeof(buff) );
-				strcat_s( buff, sizeof(buff), _donwload_fname );
+				//char	buff[1024];
+				//psys_strcpy( buff, _base_exe_pathp, sizeof(buff) );
+				//strcat_s( buff, sizeof(buff), _donwload_fname );
 
-				_exe_httpfilep = new HTTPFile( _hostnamep, buff, 80 );
+				_exe_httpfilep = new HTTPFile( hostname, _donwload_fname, 80 );
 			}
 		}
 	}
@@ -172,14 +172,24 @@ bool DownloadUpdate::Idle()
 			{
 				_exe_desk_path_str = std::string( szPath );
 
+				std::string	download_fname_only( _donwload_fname );
+
+				int	pos_fname = download_fname_only.find_last_of( '/' );
+				if ( pos_fname >= 0 )
+					download_fname_only = download_fname_only.substr( pos_fname + 1 );
+
+				//int	b = download_fname_only.find_last_of( '*' );
+
+				//int	c = a;
+
 				if ( _exe_desk_path_str.find_last_of( '\\' ) == _exe_desk_path_str.length()-1 )
 				{
-					_exe_desk_path_str += _donwload_fname;
+					_exe_desk_path_str += download_fname_only;
 				}
 				else
 				{
 					_exe_desk_path_str += '\\';
-					_exe_desk_path_str += _donwload_fname;
+					_exe_desk_path_str += download_fname_only;
 				}
 
 				FILE *fp;
