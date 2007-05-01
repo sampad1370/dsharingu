@@ -35,7 +35,6 @@ class DownloadUpdate
 public:
 	const char			*_cur_versionp;
 	const char			*_hostnamep;
-	const char			*_base_exe_pathp;
 	const char			*_message_box_titlep;
 
 	bool				_alive;
@@ -50,7 +49,6 @@ public:
 					const char *cur_versionp,
 					const char *hostnamep,
 					const char *update_info_pathp,
-					const char *base_exe_pathp,
 					const char *message_box_titlep );
 	~DownloadUpdate();
 
