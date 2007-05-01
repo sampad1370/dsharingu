@@ -39,7 +39,7 @@ static int required_bits( u_int value )
 		value >>= 1;
 	}
 
-	PSYS_ASSERT( 0 );
+	PASSERT( 0 );
 	return 31;
 }
 
@@ -52,7 +52,7 @@ void BitStream_Init( BitStream *T, u_int max_value, void *datap, int data_max_si
 	T->datap			= (u_char *)datap;
 	T->data_max_size	= data_max_size;
 
-	PSYS_ASSERT( T->bits_per_value >= 1 );
+	PASSERT( T->bits_per_value >= 1 );
 }
 
 //==================================================================
@@ -64,7 +64,7 @@ void BitStream_Init( BitStream *T, u_int max_value, const void *datap, int data_
 //==================================================================
 void BitStream_WriteValue( BitStream *T, u_int value )
 {
-	PSYS_ASSERT( value <= T->max_value );
+	PASSERT( value <= T->max_value );
 
 /*
 value: abc
@@ -84,7 +84,7 @@ i |			   |			|
 	// make sure that we are not trying to index outside the maximum data size
 	if NOT( idx / 8 < T->data_max_size )
 	{
-		PSYS_ASSERT( 0 );
+		PASSERT( 0 );
 		return;
 	}
 
@@ -110,7 +110,7 @@ i |			   |			|
 		verify_stream.cur_idx -= verify_stream.bits_per_value;
 		u_int read_back_value = BitStream_ReadValue( &verify_stream );
 
-		PSYS_ASSERT( read_back_value == original_value );
+		PASSERT( read_back_value == original_value );
 	}
 #endif
 }
@@ -120,7 +120,7 @@ void BitStream_WriteEnd( BitStream *T )
 {
 	if NOT( (T->cur_idx+7) / 8 <= T->data_max_size )
 	{
-		PSYS_ASSERT( 0 );
+		PASSERT( 0 );
 		return;
 	}
 
@@ -158,7 +158,7 @@ i |			|			|
 	// make sure that we are not trying to index outside the maximum data size
 	if NOT( (idx + T->bits_per_value-1) / 8 < T->data_max_size )
 	{
-		PSYS_ASSERT( 0 );
+		PASSERT( 0 );
 		return 0;
 	}
 

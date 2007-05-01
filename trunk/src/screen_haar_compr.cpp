@@ -111,7 +111,7 @@ static void blockToHaar( const TBLOCK *in_blockp,
 						 u_int min_dim,
 						 u_int shift_bits )
 {
-	PSYS_ASSERT( min_dim >= 2 );
+	PASSERT( min_dim >= 2 );
 
 	TMPTYPE tmp_line1[ScreenHaarComprPack::BLOCK_DIM];
 	TMPTYPE tmp_line2[ScreenHaarComprPack::BLOCK_DIM];
@@ -181,7 +181,7 @@ static void haarToBlock( const short *in_haarp,
 						 int clamp_min,
 						 int clamp_max )
 {
-	PSYS_ASSERT( min_dim >= 2 );
+	PASSERT( min_dim >= 2 );
 
 	TMPTYPE tmp_line1[ScreenHaarComprPack::BLOCK_DIM];
 	TMPTYPE tmp_line2[ScreenHaarComprPack::BLOCK_DIM];

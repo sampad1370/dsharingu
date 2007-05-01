@@ -50,7 +50,7 @@ va_list	va;
 
 	if ( _n_strings >= MAX_STRINGS )
 	{
-		PSYS_ASSERT( 0 );
+		PASSERT( 0 );
 		return;
 	}
 

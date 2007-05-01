@@ -146,7 +146,7 @@ void RemoteMng::loadRemoteNameFromForm( RemoteDef *remotep, HWND hwnd )
 		for (int i=0; i < _remotes_list.len(); ++i)
 		{
 			RemoteDef *remote_ip = (RemoteDef *)SendDlgItemMessage( hwnd, IDC_RM_REMOTES_LIST, LB_GETITEMDATA, i, 0 );
-			PSYS_ASSERT( remote_ip != NULL );
+			PASSERT( remote_ip != NULL );
 
 			if ( remote_ip == remotep )
 			{
@@ -199,7 +199,7 @@ void RemoteMng::onListCommand( HWND hwnd )
 
 	RemoteDef *remotep = (RemoteDef *)SendDlgItemMessage( hwnd, IDC_RM_REMOTES_LIST, LB_GETITEMDATA, idx, 0 );
 
-	PSYS_ASSERT( remotep != NULL );
+	PASSERT( remotep != NULL );
 	setRemoteToForm( remotep, hwnd );
 }
 
@@ -452,7 +452,7 @@ BOOL CALLBACK RemoteMng::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM 
 				for (int i=0; i < _remotes_list.len(); ++i)
 				{
 					RemoteDef *remote_ip = (RemoteDef *)SendDlgItemMessage( hwnd, IDC_RM_REMOTES_LIST, LB_GETITEMDATA, i, 0 );
-					PSYS_ASSERT( remote_ip != NULL );
+					PASSERT( remote_ip != NULL );
 
 					if ( remote_ip == _cur_remotep )
 					{
@@ -493,7 +493,7 @@ BOOL CALLBACK RemoteMng::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM 
 			}
 			else
 			{
-				PSYS_ASSERT( 0 );
+				PASSERT( 0 );
 			}
 			break;
 

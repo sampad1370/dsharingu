@@ -36,9 +36,9 @@ void InteractiveSystem::FeedMessage( u_int message, u_int lparam, u_int wparam,
 									 float scale_x,
 									 float scale_y )
 {
-	PSYS_ASSERT( _is_active );
-	PSYS_ASSERT( scale_x > 0 );
-	PSYS_ASSERT( scale_y > 0 );
+	PASSERT( _is_active );
+	PASSERT( scale_x > 0 );
+	PASSERT( scale_y > 0 );
 
 	u_int	now_time = GetTickCount();
 
@@ -58,7 +58,7 @@ void InteractiveSystem::FeedMessage( u_int message, u_int lparam, u_int wparam,
 	case WM_MOUSEMOVE:
 		{
 		/*
-		PSYS_DEBUG_PRINTF( "%g %g\n", 
+		PDEBUG_PRINTF( "%g %g\n", 
 			(LOWORD(lparam) - disp_off_x) / scale_x,
 			(HIWORD(lparam) - disp_off_y) / scale_y );
 		*/
@@ -131,7 +131,7 @@ void InteractiveSystem::Idle()
 
 	if ( now_time - _last_send_time >= 1000/8 && _remocon_queue.len() )
 	{
-		PSYS_ASSERT( _remocon_queue.len() > 0 && _remocon_queue.len() < 256 );
+		PASSERT( _remocon_queue.len() > 0 && _remocon_queue.len() < 256 );
 
 		RemoConMsg	buff[256+1];
 		Memfile	memf( buff, sizeof(buff) );
@@ -173,7 +173,7 @@ void InteractiveSystem::onMousePos( int px, int py )
 //==================================================================
 void onMousePos( INPUT *out_inputp, const RemoConMsg &message, int disp_wd, int disp_he )
 {
-	PSYS_ASSERT( message._type == RemoConMsg::TYPE_MOUSEMOVE );
+	PASSERT( message._type == RemoConMsg::TYPE_MOUSEMOVE );
 
 	out_inputp->type = INPUT_MOUSE;
 
@@ -188,7 +188,7 @@ void onMousePos( INPUT *out_inputp, const RemoConMsg &message, int disp_wd, int 
 //==================================================================
 void onMouseButton( INPUT *out_inputp, const RemoConMsg &message, int disp_wd, int disp_he )
 {
-	PSYS_ASSERT( message._type == RemoConMsg::TYPE_MOUSEBUTTON );
+	PASSERT( message._type == RemoConMsg::TYPE_MOUSEBUTTON );
 
 	out_inputp->type = INPUT_MOUSE;
 
@@ -238,7 +238,7 @@ bool InteractiveSystem::ProcessMessage_s( u_int pack_id, const void *datap, int 
 
 			if ( n_inputs > 256 )
 			{
-				PSYS_ASSERT( 0 );
+				PASSERT( 0 );
 				return true;
 			}
 

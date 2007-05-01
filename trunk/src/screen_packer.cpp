@@ -279,7 +279,7 @@ public:
 
 	u_short GetEntryRGB( int i ) const
 	{
-		PSYS_ASSERT( i >= 0 && i < 16 );
+		PASSERT( i >= 0 && i < 16 );
 		return _entries[i].rgb;
 	}
 
@@ -297,7 +297,7 @@ public:
 			}
 		}
 
-		PSYS_ASSERT( _n < 16 );
+		PASSERT( _n < 16 );
 		_entries[ _n ].rgb = rgb;
 		_entries[ _n ].cnt = 1;
 
@@ -417,8 +417,8 @@ static void packSubblk( u_short des_cols[PAK_PAL_DIM],
 		int	sidx = ((u_char *)map)[i];
 		int	didx = palidx_remap[ sidx ];
 
-		PSYS_ASSERT( sidx >= 0 && sidx < 16 );
-		PSYS_ASSERT( didx >= 0 && didx < PAK_PAL_DIM );
+		PASSERT( sidx >= 0 && sidx < 16 );
+		PASSERT( didx >= 0 && didx < PAK_PAL_DIM );
 
 		des_mod |= didx << (i*2);
 	}
@@ -626,9 +626,9 @@ static inline void RGBtoYUV( const u_char *src_rgbp, int des_yuv[3] )
 	des_yuv[1] = r - g;
 	des_yuv[2] = b - g;
 
-	PSYS_ASSERT( des_yuv[0] >= 0 && des_yuv[0] <= 255 );
-	PSYS_ASSERT( des_yuv[1] >= -255 && des_yuv[1] <= 255 );
-	PSYS_ASSERT( des_yuv[2] >= -255 && des_yuv[2] <= 255 );
+	PASSERT( des_yuv[0] >= 0 && des_yuv[0] <= 255 );
+	PASSERT( des_yuv[1] >= -255 && des_yuv[1] <= 255 );
+	PASSERT( des_yuv[2] >= -255 && des_yuv[2] <= 255 );
 }
 
 //==================================================================
@@ -711,9 +711,9 @@ static int convertBlockToYUV_PS( const u_char *const srcp,
 			}
 			YUVtoRGB( tmp_yuv[0], tmp_yuv[1], tmp_yuv[2], tmp_rgb );
 
-			PSYS_ASSERT( tmp_rgb[0] == srcp2[0] );
-			PSYS_ASSERT( tmp_rgb[1] == srcp2[1] );
-			PSYS_ASSERT( tmp_rgb[2] == srcp2[2] );
+			PASSERT( tmp_rgb[0] == srcp2[0] );
+			PASSERT( tmp_rgb[1] == srcp2[1] );
+			PASSERT( tmp_rgb[2] == srcp2[2] );
 */
 			int	r = srcp2[0];
 			int	g = srcp2[1];
@@ -741,7 +741,7 @@ static int convertBlockToYUV_PS( const u_char *const srcp,
 /*
 	for (int i=-128; i < 128; ++i)
 	{
-		PSYS_ASSERT( unpack_sign8( pack_sign8( i ) ) == i );
+		PASSERT( unpack_sign8( pack_sign8( i ) ) == i );
 	}
 */
 
@@ -1198,17 +1198,17 @@ bool ScreenUnpacker::ParseNextBlock( void *out_block_datap, int &blk_px, int &bl
 
 				pak_block_memf.SeekFromStart(0);
 				_lzwunpacker.UnpackData( &pak_block_memf, MAX_BLK_PIXELS*2 );
-				PSYS_ASSERT( pak_block_memf.GetDataSize() == MAX_BLK_PIXELS*2 );
+				PASSERT( pak_block_memf.GetDataSize() == MAX_BLK_PIXELS*2 );
 				_haar_unpack.UnpackData( pak_block, pak_block_memf.GetDataSize(), y_block, HAAR_QUANT_RSHBITS_Y );
 
 				pak_block_memf.SeekFromStart(0);
 				_lzwunpacker.UnpackData( &pak_block_memf, MAX_BLK_PIXELS*2 );
-				PSYS_ASSERT( pak_block_memf.GetDataSize() == MAX_BLK_PIXELS*2 );
+				PASSERT( pak_block_memf.GetDataSize() == MAX_BLK_PIXELS*2 );
 				_haar_unpack.UnpackData( pak_block, pak_block_memf.GetDataSize(), u_block, HAAR_QUANT_RSHBITS_U );
 
 				pak_block_memf.SeekFromStart(0);
 				_lzwunpacker.UnpackData( &pak_block_memf, MAX_BLK_PIXELS*2 );
-				PSYS_ASSERT( pak_block_memf.GetDataSize() == MAX_BLK_PIXELS*2 );
+				PASSERT( pak_block_memf.GetDataSize() == MAX_BLK_PIXELS*2 );
 				_haar_unpack.UnpackData( pak_block, pak_block_memf.GetDataSize(), v_block, HAAR_QUANT_RSHBITS_V );
 
 				blockYUVmean_to_RGB( local_destp, y_block, u_block, v_block,
@@ -1227,7 +1227,7 @@ bool ScreenUnpacker::ParseNextBlock( void *out_block_datap, int &blk_px, int &bl
 			#endif
 
 //				_lzwunpacker.SeekEnd();
-//				PSYS_ASSERT( _lzwunpacker.IsCompleted() );
+//				PASSERT( _lzwunpacker.IsCompleted() );
 				/*
 				if ERR_FALSE( LZW_UnpackExpand( &_data._blkdata_file, &pak_block_memf ) )
 				{
