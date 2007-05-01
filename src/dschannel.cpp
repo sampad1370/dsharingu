@@ -309,7 +309,7 @@ void DSChannel::console_line_func( const char *txtp, int is_cmd )
 		{
 			int err = _cpk.SendPacket( TEXT_MSG_PKID, txtp, (strlen( txtp )+1), NULL );
 
-			PSYS_ASSERT( err == 0 );
+			PASSERT( err == 0 );
 		}
 	}
 }
@@ -379,7 +379,7 @@ void DSChannel::onConnect( bool is_connected_as_caller )
 
 	if ( is_connected_as_caller )
 	{
-		PSYS_ASSERT( _session_remotep != NULL );
+		PASSERT( _session_remotep != NULL );
 
 		HandShakeMsg	msg( PROTOCOL_VERSION,
 							((DSharinguApp *)_managerp->_superp)->_settings._username,
@@ -598,7 +598,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 
 					_console.cons_line_printf( CHNTAG"OK ! Successfully connected to '%s'", msg._caller_username );
 
-					PSYS_ASSERT( _session_remotep != NULL );
+					PASSERT( _session_remotep != NULL );
 					_session_remotep->SetUserData( this );
 					_session_remotep->Lock();
 
@@ -640,7 +640,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 				_console.cons_line_printf( CHNTAG"PROBLEM: Wrong username !", _session_remotep->_rm_username );
 			else
 			{
-				PSYS_ASSERT( _session_remotep != NULL );
+				PASSERT( _session_remotep != NULL );
 			}
 			DoDisconnect( "Connection Failed." );
 			break;
@@ -651,7 +651,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 				_session_remotep->_rm_username );
 			else
 			{
-				PSYS_ASSERT( _session_remotep != NULL );
+				PASSERT( _session_remotep != NULL );
 			}
 			DoDisconnect( "Connection Failed." );
 			break;
@@ -688,7 +688,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 			}
 			else
 			{
-				PSYS_ASSERT( _session_remotep != NULL );
+				PASSERT( _session_remotep != NULL );
 				DoDisconnect( "Connection Failed." );
 			}
 			break;
@@ -697,7 +697,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 	}
 	else
 	{
-		PSYS_ASSERT( _session_remotep != NULL );
+		PASSERT( _session_remotep != NULL );
 
 		// processes packets
 		switch ( pack_id )

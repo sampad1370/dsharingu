@@ -113,7 +113,7 @@ static bool SetApplicationToRegistryRun( const char *appnamep )
 			return true;
 		else
 		{
-			PSYS_ASSERT( 0 );
+			PASSERT( 0 );
 		}
 	}
 
@@ -137,7 +137,7 @@ static bool RemoveApplicationFromRegistryRun( const char *appnamep )
 				return true;
 			else
 			{
-				PSYS_ASSERT( 0 );
+				PASSERT( 0 );
 				return false;
 			}
 		}
@@ -148,7 +148,7 @@ static bool RemoveApplicationFromRegistryRun( const char *appnamep )
 		}
 	}
 
-	PSYS_ASSERT( 0 );
+	PASSERT( 0 );
 	return false;
 }
 

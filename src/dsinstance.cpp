@@ -480,7 +480,7 @@ void DSharinguApp::handleCallRemoteManager( RemoteDef *remotep )
 	{
 		_chmanagerp->RecycleOrNewChannel( remotep, false );
 	}// catch(...) {
-	//	PSYS_ASSERT( 0 );
+	//	PASSERT( 0 );
 	//}
 }
 
@@ -676,7 +676,7 @@ void DSharinguApp::handleAutoCall()
 						{
 							chanp->CallRemote( true );
 						} catch(...) {
-							PSYS_ASSERT( 0 );
+							PASSERT( 0 );
 						}
 					}
 					is_being_handled = true;
@@ -691,7 +691,7 @@ void DSharinguApp::handleAutoCall()
 					{
 						_chmanagerp->RecycleOrNewChannel( remotep, true );
 					} catch(...) {
-						PSYS_ASSERT( 0 );
+						PASSERT( 0 );
 					}
 				}
 			}
@@ -722,7 +722,7 @@ int DSharinguApp::Idle()
 			{
 				_chmanagerp->NewChannel( accepted_fd );
 			} catch(...) {
-				PSYS_ASSERT( 0 );
+				PASSERT( 0 );
 			}
 		}
 	}
@@ -764,7 +764,7 @@ void DSharinguApp::onChannelDelete( DSChannel *chanp )
 {
 	if ( _cur_chanp == chanp )
 	{
-		PSYS_ASSERT( 0 );
+		PASSERT( 0 );
 		_cur_chanp = NULL;
 	}
 

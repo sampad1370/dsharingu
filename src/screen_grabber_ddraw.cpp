@@ -136,7 +136,7 @@ char	buff[512];
 	if ( err )
 	{
 		sprintf_s( buff, _countof(buff), "DirectDraw Error: %s - %i - %s", error_to_string( err ), line, filep );
-		PSYS_DEBUG_PRINTF( "%s\n", buff );
+		PDEBUG_PRINTF( "%s\n", buff );
 		//MessageBox( NULL, buff, "RD DirectDraw Error", MB_OK | MB_ICONERROR );
 	}
 }
@@ -286,7 +286,7 @@ PError ScreenGrabberDDraw::verifyOrCreateContext()
 		if ISERROR( err = _ddrawp->GetGDISurface( &_primary_surfp ) )
 		{
 			DD_ERRORREPORT( err );
-			//PSYS_ASSERT( 0 );
+			//PASSERT( 0 );
 			return PERROR;
 		}
 		*/
@@ -298,7 +298,7 @@ PError ScreenGrabberDDraw::verifyOrCreateContext()
 		{
 			DD_ERRORREPORT( err );
 			ReleaseDC( hwnd, hdc );
-			//PSYS_ASSERT( 0 );
+			//PASSERT( 0 );
 			return PERROR;
 		}
 		ReleaseDC( hwnd, hdc );
@@ -315,7 +315,7 @@ PError ScreenGrabberDDraw::verifyOrCreateContext()
 	{
 		if ( rebuildOffscreenSurf( &prim_desc ) != POK )
 		{
-			PSYS_ASSERT( 0 );
+			PASSERT( 0 );
 			return PERROR;
 		}
 	}
@@ -334,7 +334,7 @@ PError ScreenGrabberDDraw::verifyOrCreateContext()
 	{
 		if ( rebuildOffscreenSurf( &prim_desc ) != POK )
 		{
-			PSYS_ASSERT( 0 );
+			PASSERT( 0 );
 			return PERROR;
 		}
 	}

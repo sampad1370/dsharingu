@@ -405,7 +405,7 @@ static void check_glerror( int line, const char *filep )
 	u_int	err = glGetError();
 	if ( err )
 	{
-		PSYS_DEBUG_PRINTF( "GL ERROR #%i at %i - %s\n", line, filep );
+		PDEBUG_PRINTF( "GL ERROR #%i at %i - %s\n", line, filep );
 	}
 }
 
@@ -422,7 +422,7 @@ static void alloc_textures_matrix( int tot_w, int tot_h,
 	int tex_per_x = (tot_w + tex_w-1) / tex_w;
 	int tex_per_y = (tot_h + tex_h-1) / tex_h;
 
-	int	n_required	= tex_per_x * tex_per_y;		PSYS_ASSERT( n_required <= n_max_ids );
+	int	n_required	= tex_per_x * tex_per_y;		PASSERT( n_required <= n_max_ids );
 	int	n_to_alloc	= n_required - n_alloc_ids;
 
 	glGenTextures( n_to_alloc, &out_idsp[ n_alloc_ids ] );
@@ -498,7 +498,7 @@ bool ScrShare::Reader::unpackIntoTextures()
 		{
 			cursel_tex_idx = tex_idx;
 			glBindTexture( GL_TEXTURE_2D, _texture_ids[ cursel_tex_idx ] );
-			PSYS_ASSERT( _texture_ids[ cursel_tex_idx ] != 0 );
+			PASSERT( _texture_ids[ cursel_tex_idx ] != 0 );
 		}
 
 		int	tex_local_x = ix - tex_x_idx * ScrShare::TEX_WD;
@@ -509,7 +509,7 @@ bool ScrShare::Reader::unpackIntoTextures()
 
 	//double	t2 = psys_timer_get_d();
 
-	//PSYS_DEBUG_PRINTF( "%i\n", (int)(t2 - t1) );
+	//PDEBUG_PRINTF( "%i\n", (int)(t2 - t1) );
 	//psys_debug_printf( "%i\n", (int)(t2 - t1) );
 
 	_unpacker.EndParse();
