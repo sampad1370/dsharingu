@@ -64,7 +64,7 @@ public:
 	{
 		return	_cur_chanp;
 	}
-	void		SetChannelName( DSChannel *chanp, const char *namep );
+	void		SetChannelName( DSChannel *chanp, const TCHAR *namep );
 	void		SetChannelTabIcon( DSChannel *chanp, GGET_Item::StdIcon std_icon );
 
 	void		Idle();
@@ -72,7 +72,7 @@ public:
 
 	void		RemoveChannel( DSChannel *chanp );
 
-	void		AddChannelToList( DSChannel *chanp, const char *namep );
+	void		AddChannelToList( DSChannel *chanp, const TCHAR *namep );
 
 	u_int		GetTabsWinHeight() const;
 
@@ -80,7 +80,7 @@ private:
 	static void	gadgetCallback_s( void *superp, int gget_id, GGET_Item *itemp, GGET_CB_Action action );
 	void		gadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB_Action action  );
 
-	void		addTab( int idx, const char *namep );
+	void		addTab( int idx, const TCHAR *namep );
 	void		toggleOne( GGET_Manager &gam, int gget_id );
 	
 	static int	eventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );

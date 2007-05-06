@@ -36,7 +36,7 @@
 #include "dschannel_manager.h"
 
 //==================================================================
-#define CHNTAG				"* "
+//#define CHNTAG				"* "
 
 //==================================================================
 enum {
@@ -65,7 +65,7 @@ DSChannelManager::DSChannelManager( Window *parent_winp, DSharinguApp *superp,
 	_n_channels(0),
 	_cur_chanp(NULL)
 {
-	_tabs_winp = new Window( "tabs", parent_winp, this,
+	_tabs_winp = new Window( _T("tabs"), parent_winp, this,
 							eventFilter_s,
 							WIN_ANCH_TYPE_PARENT_X1, 0,
 							WIN_ANCH_TYPE_PARENT_Y1, 0,
@@ -86,7 +86,7 @@ DSChannelManager::DSChannelManager( Window *parent_winp, DSharinguApp *superp,
 	if ( stextp )
 		stextp->SetFillType( GGET_StaticText::FILL_TYPE_HTOOLBAR );
 
-	addTab( 0, "Home" );
+	addTab( 0, _T("Home") );
 
 	// channel 0 is home.. no real channel !
 	_channelsp[ 0 ] = NULL;
@@ -126,7 +126,7 @@ void DSChannelManager::toggleOne( GGET_Manager &gam, int gget_id )
 }
 
 //==================================================================
-void DSChannelManager::addTab( int idx, const char *namep )
+void DSChannelManager::addTab( int idx, const TCHAR *namep )
 {
 	float	x = TAB_BASE_X;
 	float	y = TAB_BASE_Y;
@@ -206,7 +206,7 @@ DSChannel *DSChannelManager::RecycleOrNewChannel( RemoteDef *remotep, bool call_
 }
 
 //==================================================================
-void DSChannelManager::AddChannelToList( DSChannel *chanp, const char *namep )
+void DSChannelManager::AddChannelToList( DSChannel *chanp, const TCHAR *namep )
 {
 	_channelsp[ _n_channels ] = chanp;
 	addTab( _n_channels, namep );
@@ -266,7 +266,7 @@ int DSChannelManager::findChannelIndex( DSChannel *chanp )
 }
 
 //==================================================================
-void DSChannelManager::SetChannelName( DSChannel *chanp, const char *namep )
+void DSChannelManager::SetChannelName( DSChannel *chanp, const TCHAR *namep )
 {
 	GGET_Manager	&gam = _tabs_winp->GetGGETManager();
 	gam.SetGadgetText( TAB_CH0 + findChannelIndex( chanp ), namep );

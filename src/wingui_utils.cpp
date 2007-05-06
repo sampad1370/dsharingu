@@ -44,17 +44,18 @@ void DlgShowItem( HWND hwnd, int id, BOOL onoff )
 //==================================================================
 void SetDlgItemInt( HWND hwnd, int id, int val )
 {
-	char	buff[64];
-	sprintf_s( buff, _countof(buff), "%i", val );
+	TCHAR	buff[64];
+	_stprintf_s( buff, _T("%i"), val );
 	SetDlgItemText( hwnd, id, buff );
 }
 
 //==================================================================
 int GetDlgItemInt( HWND hwnd, int id )
 {
-	char	buff[64];
-	GetDlgItemText( hwnd, id, buff, sizeof(buff)-1 );
-	return atoi( buff );
+	TCHAR	buff[64];
+	WGUT_GETDLGITEMTEXTSAFE( hwnd, id, buff );
+
+	return (int)_tcstoul( buff, NULL, 10 );
 }
 
 //==================================================================
@@ -66,13 +67,13 @@ bool IsDlgButtonON( HWND hwnd, u_int item_id )
 //===============================================================
 bool GetDlgItemSHA1PW( HWND hDlg, int nIDDlgItem, sha1_t *sha1hashp )
 {
-	char	tmp[64];
-	GetDlgItemText( hDlg, nIDDlgItem, tmp, sizeof(tmp)-1 );
+	TCHAR	tmp[64];
+	WGUT_GETDLGITEMTEXTSAFE( hDlg, nIDDlgItem, tmp );
 
 	CSHA1	sha1;
 
 	sha1.Reset();
-	sha1.Update( (UINT_8 *)tmp, strlen(tmp) );
+	sha1.Update( (UINT_8 *)tmp, _tcslen(tmp) );
 	sha1.Final();
 	sha1.GetHash( sha1hashp->_data );
 
@@ -89,14 +90,14 @@ void SetDlgEditForReview( HWND hwnd, u_int item_id )
 
 //==================================================================
 //==================================================================
-static const char _keep_pass_string[] = "\01\02\03\04\05\06\07";
+static const TCHAR _keep_pass_string[] = _T("\01\02\03\04\05\06\07");
 
 //==================================================================
 bool IsDlgEditPasswordChanged( HWND hwnd, u_int item_id )
 {
-	char	rem_buff[128];
+	TCHAR	rem_buff[128];
 
-	GetDlgItemText( hwnd, item_id, rem_buff, sizeof(rem_buff) );
+	WGUT_GETDLGITEMTEXTSAFE( hwnd, item_id, rem_buff );
 
 	// if the password has any character between 0 and 7, then it's unchanged
 	// because the user couldn't possibly have filled in those values while we
@@ -117,22 +118,22 @@ void SetDlgItemUnchangedPassword( HWND hwnd, u_int item_id )
 }
 
 //===============================================================
-WGUTCheckPWMsg GetDlgEditPasswordState( HWND hwnd, u_int item_id, const char *prompt_titlep )
+WGUTCheckPWMsg GetDlgEditPasswordState( HWND hwnd, u_int item_id, const TCHAR *prompt_titlep )
 {
 	if NOT( IsDlgEditPasswordChanged( hwnd, item_id ) )
 		return CHECKPW_MSG_UNCHANGED;
 
-	char	rem_buff[128];
-	GetDlgItemText( hwnd, item_id, rem_buff, sizeof(rem_buff) );
+	TCHAR	rem_buff[128];
+	WGUT_GETDLGITEMTEXTSAFE( hwnd, item_id, rem_buff );
 
-	int len = strlen(rem_buff);
+	int len = _tcslen(rem_buff);
 
 
 	if ( len == 0 )
 	{
 		if ( prompt_titlep )
 		{
-			MessageBox( hwnd, "No password provided !\nUse provide a password (4 characters minimum).", prompt_titlep, MB_OK | MB_ICONSTOP );
+			MessageBox( hwnd, _T("No password provided !\nUse provide a password (4 characters minimum)."), prompt_titlep, MB_OK | MB_ICONSTOP );
 			SetDlgEditForReview( hwnd, item_id );
 		}
 		return CHECKPW_MSG_EMPTY;
@@ -143,7 +144,7 @@ WGUTCheckPWMsg GetDlgEditPasswordState( HWND hwnd, u_int item_id, const char *pr
 	{
 		if ( prompt_titlep )
 		{
-			MessageBox( hwnd, "Password too long !\nUse 32 characters maximum.", prompt_titlep, MB_OK | MB_ICONSTOP );
+			MessageBox( hwnd, _T("Password too long !\nUse 32 characters maximum."), prompt_titlep, MB_OK | MB_ICONSTOP );
 			SetDlgEditForReview( hwnd, item_id );
 		}
 		return CHECKPW_MSG_BAD;
@@ -153,7 +154,7 @@ WGUTCheckPWMsg GetDlgEditPasswordState( HWND hwnd, u_int item_id, const char *pr
 	{
 		if ( prompt_titlep )
 		{
-			MessageBox( hwnd, "Password too short !\nUse 4 characters minimum.", prompt_titlep, MB_OK | MB_ICONSTOP );
+			MessageBox( hwnd, _T("Password too short !\nUse 4 characters minimum."), prompt_titlep, MB_OK | MB_ICONSTOP );
 			SetDlgEditForReview( hwnd, item_id );
 		}
 		return CHECKPW_MSG_BAD;
@@ -163,7 +164,7 @@ WGUTCheckPWMsg GetDlgEditPasswordState( HWND hwnd, u_int item_id, const char *pr
 }
 
 //=====================================================
-HWND WGUT::OpenModelessDialog( DLGPROC dlg_proc, LPSTR dlg_namep, HWND parent_hwnd, void *mythisp )
+HWND WGUT::OpenModelessDialog( DLGPROC dlg_proc, LPTSTR dlg_namep, HWND parent_hwnd, void *mythisp )
 {
 	HWND	hwnd =
 		CreateDialogParam( (HINSTANCE)WinSys::GetInstance(),
@@ -184,4 +185,10 @@ void WGUT::SafeDestroyWindow( HWND &hwnd )
 		DestroyWindow( hwnd );
 		hwnd = NULL;
 	}
+}
+
+//=====================================================
+void WGUT::GetDlgItemTextSafe( HWND hDlg, int nIDDlgItem, LPTSTR lpString, int cchMax )
+{
+	GetDlgItemText( hDlg, nIDDlgItem, lpString, cchMax );
 }

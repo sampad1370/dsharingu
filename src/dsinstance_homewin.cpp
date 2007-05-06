@@ -53,7 +53,7 @@ enum {
 //==================================================================
 void DSharinguApp::homeWinCreate()
 {
-	_home_winp = new Window( "home win", &_main_win,
+	_home_winp = new Window( _T("home win"), &_main_win,
 		this, homeWinEventFilter_s,
 		WIN_ANCH_TYPE_FIXED, 0,
 		WIN_ANCH_TYPE_PARENT_Y1, _chmanagerp->GetTabsWinHeight(),
@@ -85,40 +85,40 @@ void DSharinguApp::homeWinCreate()
 
 	GGET_StaticText *stxtp;
 	stxtp =	gam.AddStaticText( HOME_TXT_STATIC, 0, y, _home_winp->GetWidth(), BUTT_HE,
-								"DSharingu - Application's Home" );
+								_T( "DSharingu - Application's Home" ) );
 	//stxtp->SetFillType( GGET_StaticText::FILL_TYPE_HTOOLBAR );
 	//stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	y += OFF_Y;
 
 	tstring	str;
 
-	str = tstring( "My Username: " ) + tstring( _settings._username );
+	str = tstring( _T( "My Username: " ) ) + tstring( _settings._username );
 	stxtp =	gam.AddStaticText( MYUSERNAME_TXT_STATIC, x, y, _home_winp->GetWidth(), 0, str.c_str() );
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	y += static_off_y;
 
 	if ( _settings._listen_for_connections )
-		str = tstring( "* Accepting connections on port " ) + Stringify( _settings._listen_port );
+		str = tstring( _T( "* Accepting connections on port " ) ) + Stringify( _settings._listen_port );
 	else
-		str = tstring( "* Not accepting any connections" );
+		str = tstring( _T( "* Not accepting any connections" ) );
 
 	stxtp =	gam.AddStaticText( ACCEPTING_CONS_TXT_STATIC, x, y, _home_winp->GetWidth(), 0, str.c_str() );
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	y += static_off_y;
 
 	if ( _settings._nobody_can_watch_my_computer )
-		str = tstring( "* Nobody can watch my computer" );
+		str = tstring( _T( "* Nobody can watch my computer" ) );
 	else
-		str = tstring( "* Selected users may watch my computer" );
+		str = tstring( _T( "* Selected users may watch my computer" ) );
 
 	stxtp =	gam.AddStaticText( SEL_USERS_CAN_WATCH_TXT_STATIC, x, y, _home_winp->GetWidth(), 0, str.c_str() );
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	y += static_off_y;
 
 	if ( _settings._nobody_can_use_my_computer || _settings._nobody_can_watch_my_computer )
-		str = tstring( "* Nobody can use my computer" );
+		str = tstring( _T( "* Nobody can use my computer" ) );
 	else
-		str = tstring( "* Selected users may use my computer" );
+		str = tstring( _T( "* Selected users may use my computer" ) );
 
 	stxtp =	gam.AddStaticText( SEL_USERS_CAN_USE_TXT_STATIC, x, y, _home_winp->GetWidth(), 0, str.c_str() );
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
@@ -126,29 +126,28 @@ void DSharinguApp::homeWinCreate()
 	y += static_off_y;
 
 
-	gam.AddButton( CONNECTIONS_BUTT,	x, y, BUTT_WD, BUTT_HE, "Call or Manage users..." );
+	gam.AddButton( CONNECTIONS_BUTT,	x, y, BUTT_WD, BUTT_HE, _T( "Call or Manage users..." ) );
 
 	stxtp =	gam.AddStaticText( -1, x + BUTT_WD + 4, y, 400, BUTT_HE,
-								"Call, add, remove or modify users." );
+								_T( "Call, add, remove or modify users." ) );
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	y += OFF_Y;
 
 
-	gam.AddButton( SETTINGS_BUTT,		x, y, BUTT_WD, BUTT_HE, "Settings..." );
-	stxtp = gam.AddStaticText( SETTINGS_TXT_STATIC, x + BUTT_WD + 4, y, 400, BUTT_HE, "" );
+	gam.AddButton( SETTINGS_BUTT,		x, y, BUTT_WD, BUTT_HE, _T( "Settings..." ) );
+	stxtp = gam.AddStaticText( SETTINGS_TXT_STATIC, x + BUTT_WD + 4, y, 400, BUTT_HE, _T( "" ) );
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	homeWinOnChangedSettings();
 	y += OFF_Y;
 
-	gam.AddButton( CHECKUPDATE_BUTT,	x, y, BUTT_WD, BUTT_HE, "Check for Updates..." );
-	stxtp = gam.AddStaticText( -1, x + BUTT_WD + 4, y, 400, BUTT_HE,
-		"Check on-line for updates." );
+	gam.AddButton( CHECKUPDATE_BUTT,	x, y, BUTT_WD, BUTT_HE, _T( "Check for Updates..." ) );
+	stxtp = gam.AddStaticText( -1, x + BUTT_WD + 4, y, 400, BUTT_HE, _T("Check on-line for updates.") );
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	y += OFF_Y;
 
 	//gam.AddButton( WEBSITE_BUTT, 0, 0, BUTT_WD, BUTT_HE, "DSharingu" );
 	stxtp = gam.AddStaticText( VERSION_INFO_STATIC, 0, 0, 10, 10,
-				"Version "APP_VERSION_STR" ("__DATE__" "__TIME__ ") by Davide Pasca" );
+				_T("Version ") APP_VERSION_STR _T(" (") _T(__DATE__) _T(" ") _T(__TIME__) _T(") by Davide Pasca") );
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 
 	_home_winp->PostResize();
@@ -162,12 +161,12 @@ void DSharinguApp::homeWinOnChangedSettings()
 
 	if ( _settings._username[0] == 0 || _settings._password.IsEmpty() )
 	{
-		stxtp->SetText( "Please, choose a Username and Password in the Settings dialog." );
+		stxtp->SetText( _T( "Please, choose a Username and Password in the Settings dialog." ) );
 		stxtp->SetTextColor( 0.8f, 0, 0, 1 );
 	}
 	else
 	{
-		stxtp->SetText( "Change the application settings." );
+		stxtp->SetText( _T( "Change the application settings." ) );
 		stxtp->SetTextColor( 0, 0, 0, 1 );
 	}
 }

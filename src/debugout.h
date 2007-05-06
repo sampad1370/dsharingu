@@ -24,16 +24,8 @@
 #ifndef DEBUGOUT_H
 #define DEBUGOUT_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void debugout_reset(void);
-void debugout_printf( const char *fmtp, ... );
-void debugout_render(void);
-
-#ifdef __cplusplus
-}
-#endif
+void debugout_reset();
+void debugout_printf( const TCHAR *fmtp, ... );
+void debugout_render();
 
 #endif

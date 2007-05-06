@@ -32,84 +32,86 @@
 #include "appbase3.h"
 
 //==================================================================
-static bool GetApplicationInstallDir( const char *appnamep, char *out_instdirp, int cnt_out_instdir )
+static bool getApplicationInstallDir( const TCHAR *appnamep, char *out_instdir_utf8p, DWORD out_instdir_utf8_maxlen )
 {
-	out_instdirp[0] = 0;
+	out_instdir_utf8p[0] = 0;
 
-	TCHAR	buff[4096];
+	TCHAR	subkey[4096];
 
-	sprintf_s( buff, _countof(buff), "Software\\%s", appnamep );
+	_stprintf_s( subkey, _T("Software\\%s"), appnamep );
 
 	HKEY hkey;
 
 	if ( RegOpenKeyEx( HKEY_CURRENT_USER,
-						buff,
+						subkey,
 						0,
 						KEY_QUERY_VALUE,
 						&hkey) == ERROR_SUCCESS )
 	{
 		DWORD	dwType;
-		DWORD	dwSize = sizeof(buff)-1;
+		DWORD	dwSize = out_instdir_utf8_maxlen - 1;
 
-		bool	yesno = (RegQueryValueEx(hkey, "", NULL, &dwType, (LPBYTE)buff, &dwSize ) == ERROR_SUCCESS);
+		bool	success =
+			(RegQueryValueEx( hkey, _T(""), NULL, &dwType,
+								(LPBYTE)out_instdir_utf8p,
+								&out_instdir_utf8_maxlen ) == ERROR_SUCCESS);
+		out_instdir_utf8p[out_instdir_utf8_maxlen-1] = 0; // careful with buffer overflow
 		RegCloseKey( hkey );
 
-		strcpy_s( out_instdirp, cnt_out_instdir, buff );
-
-		return yesno;
-	}
-
-	return false;
-}
-
-
-//==================================================================
-static bool IsApplicationInRegistryRun( const char *appnamep )
-{
-	HKEY hkey;
-
-	if ( RegOpenKeyEx( HKEY_CURRENT_USER,
-						"Software\\Microsoft\\Windows\\CurrentVersion\\Run",
-						0,
-						KEY_QUERY_VALUE,
-						&hkey) == ERROR_SUCCESS )
-	{
-		DWORD	dwType;
-		char	buff[4096];
-		DWORD	dwSize = sizeof(buff)-1;
-
-		bool	yesno;
-
-		buff[0] = 0;
-		yesno = (RegQueryValueEx( hkey, appnamep, NULL, &dwType, (LPBYTE)buff, &dwSize ) == ERROR_SUCCESS);
-		RegCloseKey( hkey );
-
-		return yesno;
+		return success;
 	}
 
 	return false;
 }
 
 //==================================================================
-static bool SetApplicationToRegistryRun( const char *appnamep )
+static bool isApplicationInRegistryRun( const TCHAR *appname_tchp )
+{
+	HKEY hkey;
+
+	if ( RegOpenKeyEx( HKEY_CURRENT_USER,
+						_T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
+						0,
+						KEY_QUERY_VALUE,
+						&hkey) == ERROR_SUCCESS )
+	{
+		DWORD	dwType;
+		char	keyvalue[4096];
+		DWORD	dwSize = sizeof(keyvalue);
+
+		bool	success;
+
+		keyvalue[0] = 0;
+		success = (RegQueryValueEx( hkey, appname_tchp, NULL, &dwType, (LPBYTE)keyvalue, &dwSize ) == ERROR_SUCCESS);
+		keyvalue[_countof(keyvalue)-1] = 0;	// careful with buffer overflow
+		RegCloseKey( hkey );
+
+		return success;
+	}
+
+	return false;
+}
+
+//==================================================================
+static bool setApplicationToRegistryRun( const char *appname_utf8p, const TCHAR *appname_tchp )
 {
 	char	fullpath[PSYS_MAX_PATH];
 
-	strcpy_s( fullpath, _countof(fullpath), "\"" );
+	strcpy_s( fullpath, "\"" );
 
-	GetApplicationInstallDir( appnamep, fullpath+1, _countof(fullpath)-1 );
-	strcat_s( fullpath, _countof(fullpath), "\\" );
-	strcat_s( fullpath, _countof(fullpath), appnamep );
-	strcat_s( fullpath, _countof(fullpath), ".exe\" /minimized" );
+	getApplicationInstallDir( appname_tchp, fullpath+1, _countof(fullpath)-1 );
+	strcat_s( fullpath, "\\" );
+	strcat_s( fullpath, appname_utf8p );
+	strcat_s( fullpath, ".exe\" /minimized" );
 
 	HKEY hkey;
 
-	if ( RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 
+	if ( RegOpenKeyEx( HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
 					   0,
 					   KEY_WRITE,
 					   &hkey ) == ERROR_SUCCESS)
 	{
-		if ( RegSetValueEx( hkey, appnamep, 0,REG_SZ, (LPBYTE)fullpath, strlen(fullpath) ) == ERROR_SUCCESS )
+		if ( RegSetValueEx( hkey, appname_tchp, 0, REG_SZ, (LPBYTE)fullpath, strlen(fullpath) ) == ERROR_SUCCESS )
 			return true;
 		else
 		{
@@ -121,11 +123,11 @@ static bool SetApplicationToRegistryRun( const char *appnamep )
 }
 
 //==================================================================
-static bool RemoveApplicationFromRegistryRun( const char *appnamep )
+static bool removeApplicationFromRegistryRun( const TCHAR *appnamep )
 {
 	HKEY hkey;
 
-	if ( RegOpenKeyEx(  HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 
+	if ( RegOpenKeyEx(  HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
 						0,
 						KEY_QUERY_VALUE | KEY_WRITE,
 						&hkey ) == ERROR_SUCCESS )
@@ -156,7 +158,7 @@ static bool RemoveApplicationFromRegistryRun( const char *appnamep )
 ///
 //==================================================================
 Settings::Settings() :
-	_schema("Settings")
+	_schema(_T("Settings"))
 {
 	_is_open = false;
 
@@ -165,17 +167,17 @@ Settings::Settings() :
 	_listen_port = DEF_PORT_NUMBER;
 	_nobody_can_watch_my_computer = false;
 	_nobody_can_use_my_computer = true;
-	_run_after_login = IsApplicationInRegistryRun( APP_NAME );
+	_run_after_login = isApplicationInRegistryRun( APP_NAME );
 	_start_minimized = false;
 
-	_schema.AddString(	"_username", _username, sizeof(_username) );
-	_schema.AddSHA1Hash( "_password", &_password );
-	_schema.AddBool(	"_listen_for_connections", &_listen_for_connections );
-	_schema.AddInt(		"_listen_port", &_listen_port, 1, 65535 );
-	_schema.AddBool(	"_nobody_can_watch_my_computer", &_nobody_can_watch_my_computer, "_forbid_show_my_desktop" );
-	_schema.AddBool(	"_nobody_can_use_my_computer", &_nobody_can_use_my_computer, "_forbid_share_my_desktop"  );
-	_schema.AddBool(	"_run_after_login", &_run_after_login );
-	_schema.AddBool(	"_start_minimized", &_start_minimized );
+	_schema.AddString(	_T("_username"), _username, _countof(_username) );
+	_schema.AddSHA1Hash( _T("_password"), &_password );
+	_schema.AddBool(	_T("_listen_for_connections"), &_listen_for_connections );
+	_schema.AddInt(		_T("_listen_port"), &_listen_port, 1, 65535 );
+	_schema.AddBool(	_T("_nobody_can_watch_my_computer"), &_nobody_can_watch_my_computer, _T("_forbid_show_my_desktop") );
+	_schema.AddBool(	_T("_nobody_can_use_my_computer"), &_nobody_can_use_my_computer, _T("_forbid_share_my_desktop")  );
+	_schema.AddBool(	_T("_run_after_login"), &_run_after_login );
+	_schema.AddBool(	_T("_start_minimized"), &_start_minimized );
 }
 
 //===============================================================
@@ -199,23 +201,23 @@ WGUTCheckPWMsg Settings::checkPasswords( HWND hwnd )
 //		return CHECKPW_MSG_UNCHANGED;
 
 
-	char	buff1[128];
-	char	buff2[128];
+	TCHAR	buff1[128];
+	TCHAR	buff2[128];
 
-	GetDlgItemText( hwnd, IDC_PASSWORD1_EDIT, buff1, sizeof(buff1)-1 );
-	GetDlgItemText( hwnd, IDC_PASSWORD2_EDIT, buff2, sizeof(buff2)-1 );
+	WGUT_GETDLGITEMTEXTSAFE( hwnd, IDC_PASSWORD1_EDIT, buff1 );
+	WGUT_GETDLGITEMTEXTSAFE( hwnd, IDC_PASSWORD2_EDIT, buff2 );
 
-	if ( strcmp(buff1, buff2) )
+	if ( _tcscmp( buff1, buff2 ) )
 	{
-		MessageBox( hwnd, "Passwords don't match !\nPlease make sure that you correctly type the password twice.",
-			"Settings Problem", MB_OK | MB_ICONSTOP );
+		MessageBox( hwnd, _T("Passwords don't match !\nPlease make sure that you correctly type the password twice."),
+			_T("Settings Problem"), MB_OK | MB_ICONSTOP );
 
 		SetDlgEditForReview( hwnd, IDC_PASSWORD1_EDIT );
 
 		return CHECKPW_MSG_BAD;
 	}
 
-	WGUTCheckPWMsg pw1_msg = GetDlgEditPasswordState( hwnd, IDC_PASSWORD1_EDIT, "Settings Problem" );
+	WGUTCheckPWMsg pw1_msg = GetDlgEditPasswordState( hwnd, IDC_PASSWORD1_EDIT, _T("Settings Problem") );
 	switch ( pw1_msg )
 	{
 	case CHECKPW_MSG_BAD:
@@ -225,7 +227,7 @@ WGUTCheckPWMsg Settings::checkPasswords( HWND hwnd )
 		return CHECKPW_MSG_EMPTY;
 	}
 
-	WGUTCheckPWMsg pw2_msg = GetDlgEditPasswordState( hwnd, IDC_PASSWORD2_EDIT, "Settings Problem" );
+	WGUTCheckPWMsg pw2_msg = GetDlgEditPasswordState( hwnd, IDC_PASSWORD2_EDIT, _T("Settings Problem") );
 	switch ( pw2_msg )
 	{
 	case CHECKPW_MSG_BAD:
@@ -256,8 +258,8 @@ bool Settings::checkPort( HWND hwnd )
 
 	if ( val < 1 || val > 65535  )
 	{
-		MessageBox( hwnd, "Invalid port number.\nThe valid range is between 1 to 65535.\nLeave it blank to use default.",
-			"Settings Problem", MB_OK | MB_ICONSTOP );
+		MessageBox( hwnd, _T("Invalid port number.\nThe valid range is between 1 to 65535.\nLeave it blank to use default."),
+			_T("Settings Problem"), MB_OK | MB_ICONSTOP );
 
 		SetDlgEditForReview( hwnd, IDC_ST_LOCAL_PORT );
 		return false;
@@ -283,8 +285,8 @@ BOOL CALLBACK Settings::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM l
 
 		if ( _password.IsEmpty() )
 		{
-			SetDlgItemText( hwnd, IDC_PASSWORD1_EDIT, "" );
-			SetDlgItemText( hwnd, IDC_PASSWORD2_EDIT, "" );
+			SetDlgItemText( hwnd, IDC_PASSWORD1_EDIT, _T("") );
+			SetDlgItemText( hwnd, IDC_PASSWORD2_EDIT, _T("") );
 		}
 		else
 		{
@@ -300,7 +302,7 @@ BOOL CALLBACK Settings::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM l
 		CheckDlgButton( hwnd, IDC_FORBID_SHARE_MY_DESKTOP_CHECK, _nobody_can_use_my_computer );
 		DlgEnableItem( hwnd, IDC_FORBID_SHARE_MY_DESKTOP_CHECK, !_nobody_can_watch_my_computer );
 
-		_run_after_login = IsApplicationInRegistryRun( APP_NAME );
+		_run_after_login = isApplicationInRegistryRun( APP_NAME );
 		CheckDlgButton( hwnd, IDC_RUN_AFTER_LOGIN, _run_after_login );
 		CheckDlgButton( hwnd, IDC_SETTINGS_START_MINIMIZED, _start_minimized );
 		break; 
@@ -327,11 +329,11 @@ BOOL CALLBACK Settings::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM l
 		case IDCANCEL:
 			if ( LOWORD(wparam) == IDOK )
 			{
-				GetDlgItemText( hwnd, IDC_ST_USERNAME, _username, sizeof(_username)-1 );
+				WGUT_GETDLGITEMTEXTSAFE( hwnd, IDC_ST_USERNAME, _username );
 				if ( _username[0] == 0 )
 				{
-					MessageBox( hwnd, "Username is empty !\nPlease make sure that you choose a username.",
-						"Settings Problem", MB_OK | MB_ICONSTOP );
+					MessageBox( hwnd, _T("Username is empty !\nPlease make sure that you choose a username."),
+						_T("Settings Problem"), MB_OK | MB_ICONSTOP );
 
 					SetDlgEditForReview( hwnd, IDC_ST_USERNAME );
 					return 1;	// not OK !!
@@ -356,9 +358,9 @@ BOOL CALLBACK Settings::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM l
 
 				_run_after_login = IsDlgButtonON( hwnd, IDC_RUN_AFTER_LOGIN );
 				if ( _run_after_login )
-					SetApplicationToRegistryRun( APP_NAME );
+					setApplicationToRegistryRun( APP_NAME_UTF8, APP_NAME );
 				else
-					RemoveApplicationFromRegistryRun( APP_NAME );
+					removeApplicationFromRegistryRun( APP_NAME );
 
 				_start_minimized = IsDlgButtonON( hwnd, IDC_SETTINGS_START_MINIMIZED );
 

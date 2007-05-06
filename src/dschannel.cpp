@@ -37,7 +37,7 @@
 #include "dstask.h"
 
 
-#define CHNTAG				"* "
+//#define CHNTAG				"* "
 
 static const int	BUTT_WD	= 110;
 static const int	BUTT_HE	= 22;
@@ -49,7 +49,7 @@ DSChannel::DSChannel( DSChannelManager *managerp, int accepted_fd ) :
 	_managerp(managerp),
 	_intersys( &_cpk )
 {
-	_managerp->AddChannelToList( this, "..." );
+	_managerp->AddChannelToList( this, _T("...") );
 
 	create();
 
@@ -132,8 +132,8 @@ void DSChannel::CallRemote( bool call_silent ) throw(...)
 		break;
 
 	case COM_ERR_INVALID_ADDRESS:
-		thisMessageBox( "The Internet Address seems to be invalid.\nPlease, review it.",
-						"Connection Problem", MB_OK | MB_ICONSTOP );
+		thisMessageBox( _T("The Internet Address seems to be invalid.\nPlease, review it."),
+						_T("Connection Problem"), MB_OK | MB_ICONSTOP );
 
 		if ( _session_remotep )
 			_session_remotep->Unlock();
@@ -141,8 +141,8 @@ void DSChannel::CallRemote( bool call_silent ) throw(...)
 		break;
 
 	default:
-		thisMessageBox( "Error occurred while trying to call.",
-				"Connection Problem", MB_OK | MB_ICONSTOP );
+		thisMessageBox( _T("Error occurred while trying to call."),
+				_T("Connection Problem"), MB_OK | MB_ICONSTOP );
 
 		if ( _session_remotep )
 			_session_remotep->Unlock();
@@ -179,7 +179,7 @@ void DSChannel::create()
 							(win_init_flags)(WIN_INIT_FLG_OPENGL | WIN_INTFLG_DONT_CLEAR) );
 */
 	
-	_view_winp = new Window( "view win", &((DSharinguApp *)_managerp->_superp)->_main_win,
+	_view_winp = new Window( _T("view win"), &((DSharinguApp *)_managerp->_superp)->_main_win,
 							this, viewEventFilter_s,
 							WIN_ANCH_TYPE_FIXED, 0,
 							WIN_ANCH_TYPE_PARENT_Y1, _managerp->GetTabsWinHeight(),
@@ -205,9 +205,9 @@ void DSChannel::create()
 	updateViewScale();
 
 	_task_managerp = new DSTaskManager( _view_winp, this, taskOnGadgetCB_s );
-	_task_managerp->AddTask( "Desk", VIEW_WIN_TASK_DESK_BUTTON, DSTask::VS_FITVIEW );
+	_task_managerp->AddTask( _T("Desk"), VIEW_WIN_TASK_DESK_BUTTON, DSTask::VS_FITVIEW );
 	//_task_managerp->AddTask( "Video", VIEW_WIN_TASK_VIDEO_BUTTON, DSTask::VS_FITVIEW );
-	_task_managerp->AddTask( "Shell", VIEW_WIN_TASK_SHELL_BUTTON, DSTask::VS_FITVIEW );
+	_task_managerp->AddTask( _T("Shell"), VIEW_WIN_TASK_SHELL_BUTTON, DSTask::VS_FITVIEW );
 
 	_view_winp->PostResize();
 }
@@ -290,24 +290,24 @@ void DSChannel::changeSessionRemote( RemoteDef *new_remotep )
 //==================================================================
 cons_cmd_def_t	DSChannel::_cmd_defs[] =
 {
-"/debug",		DSharinguApp::cmd_debug_s		,"/debug           : debug",
+_T("/debug"),	DSharinguApp::cmd_debug_s	,_T("/debug           : debug"),
 0
 };
 
 //==================================================================
-void DSChannel::console_line_func_s( void *userp, const char *txtp, int is_cmd )
+void DSChannel::console_line_func_s( void *userp, const TCHAR *txtp, int is_cmd )
 {
 	((DSChannel *)userp)->console_line_func( txtp, is_cmd );
 }
 
 //==================================================================
-void DSChannel::console_line_func( const char *txtp, int is_cmd )
+void DSChannel::console_line_func( const TCHAR *txtp, int is_cmd )
 {
 	if ( _is_connected )
 	{
 		if ( txtp[0] )
 		{
-			int err = _cpk.SendPacket( TEXT_MSG_PKID, txtp, (strlen( txtp )+1), NULL );
+			int err = _cpk.SendPacket( TEXT_MSG_PKID, txtp, (_tcslen( txtp )+1), NULL );
 
 			PASSERT( err == 0 );
 		}
@@ -357,11 +357,11 @@ void DSChannel::onConnect( bool is_connected_as_caller )
 
 	if ( is_connected_as_caller )
 	{
-		_console.cons_line_printf( CHNTAG"Calling..." );
+		_console.cons_line_printf( CHNTAG _T("Calling..." ) );
 	}
 	else
 	{
-		_console.cons_line_printf( CHNTAG"Incoming connection..." );
+		_console.cons_line_printf( CHNTAG _T("Incoming connection..." ) );
 	}
 
 	//gam.EnableGadget( DSharinguApp::BUTT_CONNECTIONS, false );
@@ -392,10 +392,10 @@ void DSChannel::onConnect( bool is_connected_as_caller )
 }
 
 //==================================================================
-void DSChannel::DoDisconnect( const char *messagep, bool is_error )
+void DSChannel::DoDisconnect( const TCHAR *messagep, bool is_error )
 {
 	if ( messagep )
-		_console.cons_line_printf( CHNTAG"%s", messagep );
+		_console.cons_line_printf( CHNTAG _T("%s"), messagep );
 
 	setState( STATE_DISCONNECT_START );
 }
@@ -481,27 +481,27 @@ int DSChannel::Idle()
 		break;
 
 	case COM_ERR_HARD_DISCONNECT:
-		DoDisconnect( "Lost Connection (hard)." );
+		DoDisconnect( _T("Lost Connection (hard).") );
 		break;
 
 	case COM_ERR_INVALID_ADDRESS:
-		DoDisconnect( "Call Failed. Invalid Address." );
+		DoDisconnect( _T("Call Failed. Invalid Address.") );
 		break;
 
 	case COM_ERR_GRACEFUL_DISCONNECT:
-		DoDisconnect( "Connection Closed." );
+		DoDisconnect( _T("Connection Closed.") );
 		break;
 
 	case COM_ERR_GENERIC:
-		DoDisconnect( "Lost Connection" );
+		DoDisconnect( _T("Lost Connection") );
 		break;
 
 	case COM_ERR_TIMEOUT_CONNECTING:
-		thisMessageBox( "Timed out while trying to connect.\n"
-			"Please, make sure that the Internet Address and the Port are correct.",
-			"Connection Problem", MB_OK | MB_ICONSTOP );
+		thisMessageBox( _T("Timed out while trying to connect.\n")
+			_T("Please, make sure that the Internet Address and the Port are correct."),
+			_T("Connection Problem"), MB_OK | MB_ICONSTOP );
 
-		DoDisconnect( "Timed out trying to connect." );
+		DoDisconnect( _T("Timed out trying to connect.") );
 		break;
 
 	case COM_ERR_NONE:
@@ -509,7 +509,7 @@ int DSChannel::Idle()
 
 	default:
 		//_is_connected = false;
-		//_console.cons_line_printf( CHNTAG"connection err #%i !!", err );
+		//_console.cons_line_printf( CHNTAG) _T("connection err #%i !!"), err );
 		break;
 	}
 
@@ -564,7 +564,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 					remotep = ((DSharinguApp *)_managerp->_superp)->_remote_mng.FindRemoteDef( msg._caller_username );
 					if ( remotep && remotep->IsLocked() )
 					{
-						_console.cons_line_printf( CHNTAG" '%s' is trying to connect again !", msg._caller_username );
+						_console.cons_line_printf( CHNTAG _T(" '%s' is trying to connect again !"), msg._caller_username );
 						return;
 					}
 
@@ -578,25 +578,25 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 					if ( older_chan_using_remotep != this )
 						_managerp->RemoveChannel( older_chan_using_remotep );
 
-					if ( _stricmp( msg._communicating_username, ((DSharinguApp *)_managerp->_superp)->_settings._username ) )
+					if ( _tcsicmp( msg._communicating_username, ((DSharinguApp *)_managerp->_superp)->_settings._username ) )
 					{
-						_console.cons_line_printf( CHNTAG"PROBLEM: Rejected connection from '%s'. The wrong username was provided.",
+						_console.cons_line_printf( CHNTAG _T("PROBLEM: Rejected connection from '%s'. The wrong username was provided."),
 													msg._caller_username );
 						_cpk.SendPacket( HS_BAD_USERNAME_PKID );
-						DoDisconnect( "Connection Failed." );
+						DoDisconnect( _T("Connection Failed.") );
 						return;
 					}
 
 					if NOT( sha1_t::AreEqual( msg._communicating_password, ((DSharinguApp *)_managerp->_superp)->_settings._password._data ) )
 					{
-						_console.cons_line_printf( CHNTAG"PROBLEM: Rejected connection for '%s'. The wrong password was provided.",
+						_console.cons_line_printf( CHNTAG _T("PROBLEM: Rejected connection for '%s'. The wrong password was provided."),
 													msg._caller_username );
 						_cpk.SendPacket( HS_BAD_PASSWORD_PKID );
-						DoDisconnect( "Connection Failed." );
+						DoDisconnect( _T("Connection Failed.") );
 						return;
 					}
 
-					_console.cons_line_printf( CHNTAG"OK ! Successfully connected to '%s'", msg._caller_username );
+					_console.cons_line_printf( CHNTAG _T("OK ! Successfully connected to '%s'"), msg._caller_username );
 
 					PASSERT( _session_remotep != NULL );
 					_session_remotep->SetUserData( this );
@@ -611,24 +611,24 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 					if ( msg._protocol_version > PROTOCOL_VERSION )
 					{
 						_cpk.SendPacket( HS_NEW_PROTOCOL_PKID );
-						DoDisconnect( "Connection Failed." );
+						DoDisconnect( _T("Connection Failed.") );
 						if ( thisMessageBoxRet(
-									"Cannot communicate because the other party has a newer version of the program !\n"
-									"Do you want to download the latest version ?",
-									"Incompatible Versions",
+									_T("Cannot communicate because the other party has a newer version of the program !\n")
+									_T("Do you want to download the latest version ?"),
+									_T("Incompatible Versions"),
 									MB_YESNO | MB_ICONERROR, IDNO ) == IDYES )
 						{
 							ShellExecute( ((DSharinguApp *)_managerp->_superp)->_main_win._hwnd,
-								"open", "http://dsharingu.kazzuya.com", NULL, NULL, SW_SHOWNORMAL );
+								_T("open"), _T("http://dsharingu.kazzuya.com"), NULL, NULL, SW_SHOWNORMAL );
 						}
 					}
 					else
 					{
 						_cpk.SendPacket( HS_OLD_PROTOCOL_PKID );
-						DoDisconnect( "Connection Failed." );
+						DoDisconnect( _T("Connection Failed.") );
 						thisMessageBox(
-									"Cannot communicate because the other party has an older version of the program !\n",
-									"Incompatible Versions",
+									_T("Cannot communicate because the other party has an older version of the program !\n"),
+									_T("Incompatible Versions"),
 									MB_OK | MB_ICONERROR );
 					}
 				}
@@ -637,51 +637,51 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 
 		case HS_BAD_USERNAME_PKID:
 			if ( _session_remotep )
-				_console.cons_line_printf( CHNTAG"PROBLEM: Wrong username !", _session_remotep->_rm_username );
+				_console.cons_line_printf( CHNTAG _T("PROBLEM: Wrong username !"), _session_remotep->_rm_username );
 			else
 			{
 				PASSERT( _session_remotep != NULL );
 			}
-			DoDisconnect( "Connection Failed." );
+			DoDisconnect( _T("Connection Failed.") );
 			break;
 
 		case HS_BAD_PASSWORD_PKID:
 			if ( _session_remotep )
-				_console.cons_line_printf( CHNTAG"PROBLEM: Wrong password !",
-				_session_remotep->_rm_username );
+				_console.cons_line_printf( CHNTAG _T("PROBLEM: Wrong password !"),
+											_session_remotep->_rm_username );
 			else
 			{
 				PASSERT( _session_remotep != NULL );
 			}
-			DoDisconnect( "Connection Failed." );
+			DoDisconnect( _T("Connection Failed.") );
 			break;
 
 
 		case HS_NEW_PROTOCOL_PKID:
-			DoDisconnect( "Connection Failed." );
+			DoDisconnect( _T("Connection Failed.") );
 			thisMessageBox(
-				"Cannot communicate because the other party has an older version of the program !\n",
-				"Incompatible Versions",
+				_T("Cannot communicate because the other party has an older version of the program !\n"),
+				_T("Incompatible Versions"),
 				MB_OK | MB_ICONERROR );
 			break;
 
 		case HS_OLD_PROTOCOL_PKID:
-			DoDisconnect( "Connection Failed." );
+			DoDisconnect( _T("Connection Failed.") );
 			if ( thisMessageBoxRet(
-				"Cannot communicate because the other party has a newer version of the program !\n"
-				"Do you want to download the latest version ?",
-				"Incompatible Versions",
+				_T("Cannot communicate because the other party has a newer version of the program !\n")
+				_T("Do you want to download the latest version ?"),
+				_T("Incompatible Versions"),
 				MB_YESNO | MB_ICONERROR, IDNO ) == IDYES )
 			{
 				ShellExecute( ((DSharinguApp *)_managerp->_superp)->_main_win._hwnd,
-					"open", "http://dsharingu.kazzuya.com", NULL, NULL, SW_SHOWNORMAL );
+					_T("open"), _T("http://dsharingu.kazzuya.com"), NULL, NULL, SW_SHOWNORMAL );
 			}
 			break;
 
 		case HS_OK:
 			if ( _session_remotep )
 			{
-				_console.cons_line_printf( CHNTAG"OK ! Succesfully connected to '%s'",
+				_console.cons_line_printf( CHNTAG _T("OK ! Succesfully connected to '%s'"),
 											_session_remotep->_rm_username );
 
 				_is_transmitting = true;
@@ -689,7 +689,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 			else
 			{
 				PASSERT( _session_remotep != NULL );
-				DoDisconnect( "Connection Failed." );
+				DoDisconnect( _T("Connection Failed.") );
 			}
 			break;
 		}
@@ -703,7 +703,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 		switch ( pack_id )
 		{
 		case TEXT_MSG_PKID:
-			_console.cons_line_printf( "%s> %s", _session_remotep->_rm_username, (const char *)datap );
+			_console.cons_line_printf( _T("%s> %s"), _session_remotep->_rm_username, (const TCHAR *)datap );
 			break;
 
 		case DESK_IMG_PKID:
@@ -1081,13 +1081,13 @@ void DSChannel::viewWinRebuildButtons( Window *winp )
 	GGET_Item	*itemp;
 
 //	gam.AddButton( VIEW_WIN_VIEW_REMOTE_BUTT, 0, 0, BUTT_WD, BUTT_HE, "View Remote" );
-	itemp = gam.AddStaticText( VIEW_WIN_VIEW_REM_NOT_ALLOWED_STXT, 0, 0, BUTT_WD*2, BUTT_HE, "Viewing Not Allowed" );
+	itemp = gam.AddStaticText( VIEW_WIN_VIEW_REM_NOT_ALLOWED_STXT, 0, 0, BUTT_WD*2, BUTT_HE, _T( "Viewing Not Allowed" ) );
 	itemp->SetTextColor( 0.9f, 0, 0, 1 );
 	itemp->_flags |= GGET_FLG_ALIGN_LEFT;
 	itemp->Show( false );
 
-	gam.AddButton( VIEW_WIN_USE_REMOTE_BUTT, 0, 0, BUTT_WD, BUTT_HE, "Use Remote" );
-	itemp = gam.AddStaticText( VIEW_WIN_USE_REM_NOT_ALLOWED_STXT, 0, 0, BUTT_WD*2, BUTT_HE, "Usage Not Allowed" );
+	gam.AddButton( VIEW_WIN_USE_REMOTE_BUTT, 0, 0, BUTT_WD, BUTT_HE, _T("Use Remote") );
+	itemp = gam.AddStaticText( VIEW_WIN_USE_REM_NOT_ALLOWED_STXT, 0, 0, BUTT_WD*2, BUTT_HE, _T( "Usage Not Allowed" ) );
 	itemp->SetTextColor( 0.9f, 0, 0, 1 );
 	itemp->_flags |= GGET_FLG_ALIGN_LEFT;
 	itemp->Show( false );
@@ -1147,7 +1147,7 @@ BOOL CALLBACK DSChannel::connectingDialogProc(HWND hwnd, UINT umsg, WPARAM wpara
 		{
 		case IDOK:
 		case IDCANCEL:
-			DoDisconnect( "Connection aborted." );
+			DoDisconnect( _T("Connection aborted.") );
 			PostMessage(hwnd, WM_CLOSE, 0, 0);
 			break;
 		}

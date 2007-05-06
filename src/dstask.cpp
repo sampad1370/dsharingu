@@ -113,7 +113,7 @@ void DSTaskManager::updateViewState( DSTask *taskp )
 }
 
 //==================================================================
-void DSTaskManager::AddTask( const char *task_namep, u_int task_butt_id, DSTask::ViewState init_view_state )
+void DSTaskManager::AddTask( const TCHAR *task_namep, u_int task_butt_id, DSTask::ViewState init_view_state )
 {
 	int	i = _tasks.len();
 

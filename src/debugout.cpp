@@ -34,17 +34,17 @@
 #define MAX_STRLEN	256
 
 //==================================================================
-static char	_strings[MAX_STRINGS][MAX_STRLEN];
-static int	_n_strings;
+static TCHAR	_strings[MAX_STRINGS][MAX_STRLEN];
+static int		_n_strings;
 
 //==================================================================
-void debugout_reset(void)
+void debugout_reset()
 {
 	_n_strings = 0;
 }
 
 //==================================================================
-void debugout_printf( const char *fmtp, ... )
+void debugout_printf( const TCHAR *fmtp, ... )
 {
 va_list	va;
 
@@ -55,14 +55,14 @@ va_list	va;
 	}
 
 	va_start( va, fmtp );
-		vsprintf_s( _strings[ _n_strings ], _countof(_strings[0]), fmtp, va );
+		_vstprintf_s( _strings[ _n_strings ], fmtp, va );
 	va_end( va );
 
 	++_n_strings;
 }
 
 //==================================================================
-void debugout_render(void)
+void debugout_render()
 {
 int	i;
 int	line_he;

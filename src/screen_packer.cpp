@@ -221,7 +221,7 @@ void ScreenPacker::EndPack()
 	u_int size_bits = _data._blkdata_bits_file.GetCurPos();
 
 #ifndef RELEASE_BUILD
-	psys_debug_printf( "total size = %i (heads: %i  bits: %i), %4.2f\n",
+	psys_debug_printf( _T("total size = %i (heads: %i  bits: %i), %4.2f\n"),
 						size_head + size_bits,
 						size_head,
 						size_bits,

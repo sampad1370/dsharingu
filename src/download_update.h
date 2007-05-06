@@ -33,23 +33,23 @@
 class DownloadUpdate
 {
 public:
-	const char			*_cur_versionp;
-	const char			*_hostnamep;
-	const char			*_message_box_titlep;
+	const TCHAR			*_cur_versionp;
+	const TCHAR			*_hostnamep;
+	const TCHAR			*_message_box_titlep;
 
 	bool				_alive;
 	int					_state;
 	HTTPFile			*_httpfilep;
 	HTTPFile			*_exe_httpfilep;
 	HWND				_dlg_hwnd;
-	char				_donwload_fname[128];
-	std::string			_exe_desk_path_str;
+	TCHAR				_donwload_fname[128];
+	tstring				_exe_desk_path_str;
 
 	DownloadUpdate( HWND parent_hwnd,
-					const char *cur_versionp,
-					const char *hostnamep,
-					const char *update_info_pathp,
-					const char *message_box_titlep );
+					const TCHAR *cur_versionp,
+					const TCHAR *hostnamep,
+					const TCHAR *update_info_pathp,
+					const TCHAR *message_box_titlep );
 	~DownloadUpdate();
 
 	bool Idle();
