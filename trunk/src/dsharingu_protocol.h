@@ -50,13 +50,13 @@ enum {
 struct HandShakeMsg
 {
 	u_int	_protocol_version;
-	char	_caller_username[32];
-	char	_communicating_username[32];
+	TCHAR	_caller_username[32];
+	TCHAR	_communicating_username[32];
 	u_char	_communicating_password[20];
 
 	HandShakeMsg(	u_int protocol_version,
-					const char caller_username[32],
-					const char communicating_username[32],
+					const TCHAR caller_username[32],
+					const TCHAR communicating_username[32],
 					const u_char communicating_password[20] ) :
 		_protocol_version(protocol_version)
 	{

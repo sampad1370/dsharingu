@@ -45,7 +45,7 @@ public:
 	};
 
 private:
-	char		_name[64];
+	TCHAR		_name[64];
 	u_int		_butt_id;
 
 	DSTaskManager *_managerp;
@@ -53,12 +53,12 @@ private:
 	GXY::Rect	_rect;
 
 public:
-	DSTask( DSTaskManager *managerp, const char *task_namep, u_int task_butt_id ) :
+	DSTask( DSTaskManager *managerp, const TCHAR *task_namep, u_int task_butt_id ) :
 		_managerp(managerp),
 		_view_state(VS_ICONIZED),
 		_rect(0,0,100,100)
 	{
-		psys_strcpy( _name, task_namep, sizeof(_name) );
+		_tcscpy_s( _name, task_namep );
 		_butt_id = task_butt_id;
 	}
 
@@ -104,7 +104,7 @@ public:
 	}
 
 	DSTask	*FindByButtID( u_int butt_id );
-	void	AddTask( const char *task_namep, u_int task_butt_id, DSTask::ViewState init_view_state );
+	void	AddTask( const TCHAR *task_namep, u_int task_butt_id, DSTask::ViewState init_view_state );
 	void	OnWinResize();
 	bool	OnGadget( int gget_id, GGET_Item *itemp, GGET_CB_Action action );
 	void	Paint();

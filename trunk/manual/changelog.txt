@@ -1,0 +1,18 @@
+============================================
+= Changelog for DSharingu
+= By Davide Pasca (dpasca at gmail.com)
+= http://dsharingu.kazzuya.com
+============================================
+
+---- 0.27a - 2007/05/07
+- Converted code to Unicode (internal change)
+- Switched automatic upload to cygwin (googlecode-upload.py
+  won't work properly under Windows shell)
+
+---- 0.26a
+- Optimized network code including software update system
+- Improved interface for remote users
+- Some estetic changes to the tabs interface
+
+---- 0.25a
+- Moved screen compression to Wavelets

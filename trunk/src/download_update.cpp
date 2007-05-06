@@ -33,10 +33,10 @@
 
 //==================================================================
 DownloadUpdate::DownloadUpdate( HWND parent_hwnd,
-							    const char *cur_versionp,
-								const char *hostnamep,
-								const char *update_info_pathp,
-								const char *message_box_titlep ) :
+							    const TCHAR *cur_versionp,
+								const TCHAR *hostnamep,
+								const TCHAR *update_info_pathp,
+								const TCHAR *message_box_titlep ) :
 	_cur_versionp(cur_versionp),
 	_hostnamep(hostnamep),
 	_message_box_titlep(message_box_titlep),
@@ -65,15 +65,15 @@ DownloadUpdate::~DownloadUpdate()
 }
 
 //==================================================================
-static double quantizeVersion( const char *vstrp )
+static double quantizeVersion( const TCHAR *vstrp )
 {
-	const char *vstrp_end = vstrp + strlen(vstrp);
+	const TCHAR *vstrp_end = vstrp + _tcslen(vstrp);
 
-	char	release_type = 'f';
+	TCHAR	release_type = 'f';
 	double	val = 0;
 	double	coeff = 1;
 
-	for (const char *vstrp2 = vstrp_end-1; vstrp2 >= vstrp; --vstrp2)
+	for (const TCHAR *vstrp2 = vstrp_end-1; vstrp2 >= vstrp; --vstrp2)
 	{
 		if ( *vstrp2 == 'a' )
 			release_type = 'a';
@@ -126,13 +126,13 @@ bool DownloadUpdate::Idle()
 			_state = 1;
 			if ( indatap )
 			{
-				char	version[64];
-				char	hostname[128];
+				TCHAR	version[64];
+				TCHAR	hostname[128];
 
-				sscanf_s( (const char *)indatap, "%s %s %s",
-						  version, sizeof(version),
-						  hostname, sizeof(hostname),
-						  _donwload_fname, sizeof(_donwload_fname) );
+				_stscanf_s( (const TCHAR *)indatap, _T("%s %s %s"),
+							  version,
+							  hostname,
+							  _donwload_fname );
 
 				double other_version = quantizeVersion( version );
 				double this_version = quantizeVersion( _cur_versionp );
@@ -140,15 +140,15 @@ bool DownloadUpdate::Idle()
 				if ( other_version <= this_version )
 				{
 					MessageBox( _dlg_hwnd,
-						"You are using the most recent version of this software.\n"
-						"Please check at another time.",
+						_T("You are using the most recent version of this software.\n")
+						_T("Please check at another time."),
 						_message_box_titlep, MB_OK | MB_ICONINFORMATION );
 
 					WGUT::SafeDestroyWindow( _dlg_hwnd );
 					return false;
 				}
 
-				//char	buff[1024];
+				//TCHAR	buff[1024];
 				//psys_strcpy( buff, _base_exe_pathp, sizeof(buff) );
 				//strcat_s( buff, sizeof(buff), _donwload_fname );
 
@@ -170,11 +170,11 @@ bool DownloadUpdate::Idle()
 
 			if PTRAP_FALSE( SUCCEEDED(SHGetFolderPath(NULL, CSIDL_DESKTOPDIRECTORY, NULL, 0, szPath)) )
 			{
-				_exe_desk_path_str = std::string( szPath );
+				_exe_desk_path_str = tstring( szPath );
 
-				std::string	download_fname_only( _donwload_fname );
+				tstring	download_fname_only( _donwload_fname );
 
-				int	pos_fname = download_fname_only.find_last_of( '/' );
+				int	pos_fname = download_fname_only.find_last_of( _TXCHAR('/') );
 				if ( pos_fname >= 0 )
 					download_fname_only = download_fname_only.substr( pos_fname + 1 );
 
@@ -182,27 +182,27 @@ bool DownloadUpdate::Idle()
 
 				//int	c = a;
 
-				if ( _exe_desk_path_str.find_last_of( '\\' ) == _exe_desk_path_str.length()-1 )
+				if ( _exe_desk_path_str.find_last_of( _TXCHAR('\\') ) == _exe_desk_path_str.length()-1 )
 				{
 					_exe_desk_path_str += download_fname_only;
 				}
 				else
 				{
-					_exe_desk_path_str += '\\';
+					_exe_desk_path_str += _TXCHAR('\\');
 					_exe_desk_path_str += download_fname_only;
 				}
 
 				FILE *fp;
-				errno_t	err = fopen_s( &fp, _exe_desk_path_str.c_str(), "wb" );
+				errno_t	err = _tfopen_s( &fp, _exe_desk_path_str.c_str(), _T("wb") );
 				if PTRAP_FALSE( err == 0 )
 				{
 					bool done = (fwrite( indatap, indata_size, 1, fp ) > 0);
 					fclose( fp );
 					if PTRAP_FALSE( done )
 					{
-						ShellExecute( _dlg_hwnd, "open",
+						ShellExecute( _dlg_hwnd, _T("open"),
 							_exe_desk_path_str.c_str(),
-							"/S", NULL, SW_SHOWNORMAL );
+							_T("/S"), NULL, SW_SHOWNORMAL );
 						WGUT::SafeDestroyWindow( _dlg_hwnd );
 						return false;
 					}

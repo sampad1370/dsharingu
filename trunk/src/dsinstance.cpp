@@ -37,7 +37,7 @@
 #include "appbase3.h"
 #include "dschannel_manager.h"
 
-#define WINDOW_TITLE		APP_NAME" " APP_VERSION_STR
+#define WINDOW_TITLE		(APP_NAME _T(" ") APP_VERSION_STR)
 
 //===============================================================
 BOOL CALLBACK DSharinguApp::aboutDialogProc_s(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)
@@ -56,19 +56,19 @@ BOOL CALLBACK DSharinguApp::aboutDialogProc(HWND hwnd, UINT umsg, WPARAM wparam,
     switch( umsg )
     {
     case WM_INITDIALOG:
-		SetDlgItemText( hwnd, IDC_ABOUT_APPNAME, APP_NAME" "APP_VERSION_STR );
+		SetDlgItemText( hwnd, IDC_ABOUT_APPNAME, APP_NAME _T(" ") APP_VERSION_STR );
 		break; 
 
     case WM_COMMAND:
 	    switch(LOWORD(wparam))
 		{
 		case IDC_HOMEPAGE:
-			ShellExecute( hwnd, "open", "http://dsharingu.kazzuya.com",
+			ShellExecute( hwnd, _T("open"), _T("http://dsharingu.kazzuya.com"),
 						  NULL, NULL, SW_SHOWNORMAL );
 			break;
 
 		case IDC_MANUAL:
-			ShellExecute( hwnd, "open", "manual\\index.html",
+			ShellExecute( hwnd, _T("open"), _T("manual\\index.html"),
 						  NULL, NULL, SW_SHOWNORMAL );
 			break;
 
@@ -98,7 +98,7 @@ BOOL CALLBACK DSharinguApp::aboutDialogProc(HWND hwnd, UINT umsg, WPARAM wparam,
 //==================================================================
 //==
 //==================================================================
-DSharinguApp::DSharinguApp( const char *config_fnamep ) :
+DSharinguApp::DSharinguApp( const TCHAR *config_fnamep ) :
 	_cur_chanp(NULL),
 	_inpack_buffp(NULL),
 	_about_is_open(false),
@@ -108,7 +108,7 @@ DSharinguApp::DSharinguApp( const char *config_fnamep ) :
 	_home_winp(NULL),
 	_last_autocall_check_time(0.0)
 {
-	psys_strcpy( _config_fname, config_fnamep, sizeof(_config_fname) );
+	_tcscpy_s( _config_fname, config_fnamep );
 	_config_pathname[0] = 0;
 }
 
@@ -151,7 +151,7 @@ void DSharinguApp::updateViewMenu( DSChannel *chanp )
 void DSharinguApp::saveConfig()
 {
 	FILE *fp;
-	errno_t	err = fopen_s( &fp, _config_pathname, "wt" );
+	errno_t	err = _tfopen_s( &fp, _config_pathname, _T("wt") );
 
 	if NOT( err )
 	{
@@ -162,15 +162,13 @@ void DSharinguApp::saveConfig()
 }
 
 //==================================================================
-static void cut_spaces( char *strp )
+static void cut_spaces( TCHAR *strp )
 {
-char	*s, *d;
-
-	s = strp;
-	d = strp;
+	TCHAR	*s = strp;
+	TCHAR	*d = strp;
 	while ( *s )
 	{
-		if ( *s != ' ' )
+		if ( *s != _TXCHAR(' ') )
 			*d++ = *s;
 
 		++s;
@@ -179,24 +177,24 @@ char	*s, *d;
 }
 
 //==================================================================
-void DSharinguApp::cmd_debug( char *params[], int n_params )
+void DSharinguApp::cmd_debug( TCHAR *params[], int n_params )
 {
 	_dbg_win.Show( !_dbg_win.IsShowing() );
 }
 
 //==================================================================
-void DSharinguApp::cmd_debug_s( void *userp, char *params[], int n_params )
+void DSharinguApp::cmd_debug_s( void *userp, TCHAR *params[], int n_params )
 {
 	((DSharinguApp *)userp)->cmd_debug( params, n_params );
 }
 
 //==================================================================
-static bool doesDirExist( const char *dirnamep )
+static bool doesDirExist( const TCHAR *dirnamep )
 {
-	char	buff[ PSYS_MAX_PATH ];
-	_getcwd( buff, PSYS_MAX_PATH-1 );
-	bool exists = (_chdir( dirnamep) == 0);
-	_chdir( buff );
+	TCHAR	buff[ PSYS_MAX_PATH ];
+	_tgetcwd( buff, PSYS_MAX_PATH-1 );
+	bool exists = (_tchdir( dirnamep) == 0);
+	_tchdir( buff );
 
 	return exists;
 }
@@ -208,27 +206,26 @@ void DSharinguApp::Create( bool start_minimized )
 
 	if ( SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA|CSIDL_FLAG_CREATE, NULL, 0, szPath) ) )
 	{
-		strcat_s( szPath, sizeof(szPath), "\\DSharingu\\" );
-		
+		_tcscat_s( szPath, _T("\\DSharingu\\") );
+
 		if NOT( doesDirExist(szPath) )
-			_mkdir( szPath );
+			_tmkdir( szPath );
 	}
-	psys_strcpy( _config_pathname, szPath, sizeof(_config_pathname) );
-	strcat_s( _config_pathname, sizeof(_config_pathname), _config_fname );
-	
+	_tcscpy_s( _config_pathname, szPath );
+	_tcscat_s( _config_pathname, _config_fname );
 
 	// first try in the application data directory
 	FILE	*fp;
 	errno_t	err;
-	if ( err = fopen_s( &fp, _config_pathname, "rt" ) )	// if it fails, then try in the current directory
-		err = fopen_s( &fp, _config_fname, "rt" );
+	if ( err = _tfopen_s( &fp, _config_pathname, _T("rt") ) )	// if it fails, then try in the current directory
+		err = _tfopen_s( &fp, _config_fname, _T("rt") );
 
 	if NOT( err )
 	{
 		DataSchema::LoaderItem	loader_items[2] =
 		{
-			"Settings", Settings::SchemaLoaderProc_s, &_settings,
-			"RemoteDef", RemoteMng::RemoteDefLoaderProc_s, &_remote_mng,
+			_T("Settings"), Settings::SchemaLoaderProc_s, &_settings,
+			_T("RemoteDef"), RemoteMng::RemoteDefLoaderProc_s, &_remote_mng,
 		};
 		DataSchema::LoadSchemas_s( fp, loader_items, 2 );
 
@@ -253,7 +250,7 @@ void DSharinguApp::Create( bool start_minimized )
 					//(win_init_flags)(0*WIN_INIT_FLG_OPENGL | 0*WIN_INIT_FLG_CLIENTEDGE),
 					_main_menu );
 
-	win_init_quick( &_dbg_win, APP_NAME" Debug Window", NULL,
+	win_init_quick( &_dbg_win, APP_NAME _T(" Debug Window"), NULL,
 					this, dbgEventFilter_s,
 					WIN_ANCH_TYPE_FIXED, 0, WIN_ANCH_TYPE_FIXED, 0,
 					WIN_ANCH_TYPE_THIS_X1, 400, WIN_ANCH_TYPE_THIS_Y1, 256,
@@ -269,13 +266,12 @@ void DSharinguApp::Create( bool start_minimized )
 
 	_chmanagerp = new DSChannelManager( &_main_win, this, channelSwitch_s, onChannelDelete_s );
 
-
 	if ( _settings._username[0] == 0 || _settings._password.IsEmpty() )
 	{
 		if ( MessageBox( _main_win._hwnd,
-			"To connect and to receive calls, you need to choose a Username and Password in the Settings dialog.\n"
-			"Do you want to do it now ?",
-			"DSharingu - Settings Required", MB_YESNO | MB_ICONQUESTION ) == IDYES )
+			_T("To connect and to receive calls, you need to choose a Username and Password in the Settings dialog.\n")
+			_T("Do you want to do it now ?"),
+			_T("DSharingu - Settings Required"), MB_YESNO | MB_ICONQUESTION ) == IDYES )
 		{
 			_settings.OpenDialog( &_main_win, handleChangedSettings_s, this );		
 		}
@@ -297,7 +293,7 @@ static void reshape( int w, int h )
 }
 
 //=====================================================
-HWND DSharinguApp::openModelessDialog( void *mythisp, DLGPROC dlg_proc, LPSTR dlg_namep )
+HWND DSharinguApp::openModelessDialog( void *mythisp, DLGPROC dlg_proc, LPTSTR dlg_namep )
 {
 	HWND	hwnd =
 		CreateDialogParam( (HINSTANCE)WinSys::GetInstance(),
@@ -351,7 +347,7 @@ int DSharinguApp::mainEventFilter( win_event_type etype, win_event_t *eventp )
 
 		case ID_FILE_HANGUP:
 			if ( _cur_chanp )
-				_cur_chanp->DoDisconnect( "Successfully disconnected." );
+				_cur_chanp->DoDisconnect( _T("Successfully disconnected.") );
 			break;
 
 		case ID_FILE_SETTINGS:
@@ -395,9 +391,9 @@ int DSharinguApp::mainEventFilter( win_event_type etype, win_event_t *eventp )
 			{
 				_download_updatep = new DownloadUpdate( _main_win._hwnd,
 											APP_VERSION_STR,
-											"dsharingu.kazzuya.com",
-											"/dsharingu_data/update_info2.txt",
-											"DSharingu - Download Update" );
+											_T("dsharingu.kazzuya.com"),
+											_T("/dsharingu_data/update_info2.txt"),
+											_T("DSharingu - Download Update") );
 			}
 			break;
 
@@ -466,9 +462,9 @@ void DSharinguApp::handleCallRemoteManager( RemoteDef *remotep )
 	if ( _settings._username[0] == 0 || _settings._password.IsEmpty() )
 	{
 		if ( MessageBox( _main_win._hwnd,
-				"Please choose a Username and Password in the Settings dialog before trying to connect.\n"
-				"Do you want to do it now ?",
-				"Calling Problem", MB_YESNO | MB_ICONQUESTION ) == IDYES )
+				_T("Please choose a Username and Password in the Settings dialog before trying to connect.\n")
+				_T("Do you want to do it now ?"),
+				_T("Calling Problem"), MB_YESNO | MB_ICONQUESTION ) == IDYES )
 		{
 			_settings.OpenDialog( &_main_win, handleChangedSettings_s, this );		
 		}
@@ -619,16 +615,16 @@ void DSharinguApp::handleChangedSettings()
 		}
 	}
 
-	std::string	title( WINDOW_TITLE );
+	tstring	title( WINDOW_TITLE );
 
-	title += " - ";
+	title += _T(" - ");
 	
 	if ( _settings._username[0] )
 	{
 		title += _settings._username;
 	}
 	else
-		title += "no username !";
+		title += _T("no username !");
 
 	_main_win.SetTitle( title.c_str() );
 }

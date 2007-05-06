@@ -37,9 +37,12 @@
 #include "download_update.h"
 #include "dschannel.h"
 
-#define CHNTAG				"* "
-#define APP_NAME			"DSharingu"
-#define APP_VERSION_STR		"0.26a"
+#define CHNTAG_UTF8				"* "
+#define CHNTAG					_T(CHNTAG_UTF8)
+#define APP_NAME_UTF8			"DSharingu"
+#define APP_NAME				_T(APP_NAME_UTF8)
+#define APP_VERSION_STR_UTF8	"0.27a"
+#define APP_VERSION_STR			_T(APP_VERSION_STR_UTF8)
 
 /*
 //==================================================================
@@ -99,8 +102,8 @@ public:
 	DSChannelManager	*_chmanagerp;
 
 	static const int	INPACK_BUFF_SIZE = 1024*1024;
-	char				_config_fname[256];
-	char				_config_pathname[PSYS_MAX_PATH];
+	TCHAR				_config_fname[256];
+	TCHAR				_config_pathname[PSYS_MAX_PATH];
 
 	ComListener			_com_listener;
 	ScrShare::Writer	_scrwriter;
@@ -120,7 +123,7 @@ public:
 
 //	IntSysMessageParser	_intsysmsgparser;
 public:
-	DSharinguApp( const char *config_fnamep );
+	DSharinguApp( const TCHAR *config_fnamep );
 	~DSharinguApp();
 
 	void			Create( bool start_minimized );
@@ -139,7 +142,7 @@ private:
 
 	void		updateViewMenu( DSChannel *chanp );
 
-	HWND		openModelessDialog( void *mythisp, DLGPROC dlg_proc, LPSTR dlg_namep );
+	HWND		openModelessDialog( void *mythisp, DLGPROC dlg_proc, LPTSTR dlg_namep );
 
 	int			mainEventFilter( win_event_type etype, win_event_t *eventp );
 	static int	mainEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );
@@ -148,8 +151,8 @@ private:
 	static int	dbgEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );
 	void		dbgDoPaint();
 
-	void		cmd_debug( char *params[], int n_params );
-	static void cmd_debug_s( void *userp, char *params[], int n_params );
+	void		cmd_debug( TCHAR *params[], int n_params );
+	static void cmd_debug_s( void *userp, TCHAR *params[], int n_params );
 
 	static void	handleChangedSettings_s( void *mythis );
 	void		handleChangedSettings();

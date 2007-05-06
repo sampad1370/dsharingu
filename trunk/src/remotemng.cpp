@@ -29,13 +29,13 @@
 #include "appbase3.h"
 
 //==================================================================
-static const char _emptyname_string[] = "<Choose a Name>";
+static const TCHAR _emptyname_string[] = _T("<Choose a Name>");
 
 //==================================================================
 ///
 //==================================================================
 RemoteDef::RemoteDef() :
-	_schema("RemoteDef"),
+	_schema(_T("RemoteDef")),
 	_is_locked(false),
 	_userdatap(NULL)
 {
@@ -47,14 +47,14 @@ RemoteDef::RemoteDef() :
 	_see_remote_screen = false;
 	_call_automatically = false;
 
-	_schema.AddString(	"_rm_username", _rm_username, sizeof(_rm_username) );
-	_schema.AddSHA1Hash("_rm_password", &_rm_password );
-	_schema.AddString(	"_rm_ip_address", _rm_ip_address, sizeof(_rm_ip_address) );
-	_schema.AddInt(		"_port", &_call_port, 1, 65535 );
-	_schema.AddBool(	"_can_watch_my_desk", &_can_watch_my_desk );
-	_schema.AddBool(	"_can_use_my_desk", &_can_use_my_desk );
-	_schema.AddBool(	"_see_remote_screen", &_see_remote_screen );
-	_schema.AddBool(	"_call_automatically", &_call_automatically );
+	_schema.AddString(	_T("_rm_username"), _rm_username, _countof(_rm_username) );
+	_schema.AddSHA1Hash(_T("_rm_password"), &_rm_password );
+	_schema.AddString(	_T("_rm_ip_address"), _rm_ip_address, _countof(_rm_ip_address) );
+	_schema.AddInt(		_T("_port"), &_call_port, 1, 65535 );
+	_schema.AddBool(	_T("_can_watch_my_desk"), &_can_watch_my_desk );
+	_schema.AddBool(	_T("_can_use_my_desk"), &_can_use_my_desk );
+	_schema.AddBool(	_T("_see_remote_screen"), &_see_remote_screen );
+	_schema.AddBool(	_T("_call_automatically"), &_call_automatically );
 }
 
 //==================================================================
@@ -69,10 +69,10 @@ RemoteMng::RemoteMng() :
 //===============================================================
 void RemoteMng::makeNameValid( RemoteDef *remotep ) const
 {
-	psys_str_remove_beginend_spaces( remotep->_rm_username );
+	psys_tstr_remove_beginend_spaces( remotep->_rm_username );
 	if ( remotep->_rm_username[0] == 0 )
 	{
-		psys_strcpy( remotep->_rm_username, "Unnamed", sizeof(remotep->_rm_username) );
+		_tcscpy_s( remotep->_rm_username, _countof(remotep->_rm_username), _T("Unnamed") );
 	}
 }
 
@@ -88,7 +88,7 @@ void RemoteMng::setRemoteToForm( RemoteDef *remotep, HWND hwnd )
 	{
 		SetDlgItemText( hwnd, IDC_RM_REMOTE_NAME, remotep->_rm_username );
 		if ( remotep->_rm_password.IsEmpty() )
-			SetDlgItemText( hwnd, IDC_RM_REMOTE_PASSWORD, "" );
+			SetDlgItemText( hwnd, IDC_RM_REMOTE_PASSWORD, _T("") );
 		else
 			SetDlgItemUnchangedPassword( hwnd, IDC_RM_REMOTE_PASSWORD );
 		SetDlgItemText( hwnd, IDC_RM_REMOTE_ADDRESS, remotep->_rm_ip_address );
@@ -107,8 +107,8 @@ void RemoteMng::setNewEntryRemoteDef( HWND hwnd )
 	_cur_remotep = NULL;
 
 	SetDlgItemText( hwnd, IDC_RM_REMOTE_NAME, _emptyname_string );
-	SetDlgItemText( hwnd, IDC_RM_REMOTE_PASSWORD, "" );
-	SetDlgItemText( hwnd, IDC_RM_REMOTE_ADDRESS, "" );
+	SetDlgItemText( hwnd, IDC_RM_REMOTE_PASSWORD, _T("") );
+	SetDlgItemText( hwnd, IDC_RM_REMOTE_ADDRESS, _T("") );
 	SetDlgItemInt( hwnd, IDC_RM_REMOTE_PORT, DEF_PORT_NUMBER );
 	CheckDlgButton( hwnd, IDC_RM_CAN_WATCH_MY_DESK, true );
 	CheckDlgButton( hwnd, IDC_RM_CAN_USE_MY_DESK, false );
@@ -117,7 +117,7 @@ void RemoteMng::setNewEntryRemoteDef( HWND hwnd )
 }
 
 //===============================================================
-static void AddDlgListTextAndSelect( HWND hwnd, int id, const char *strp, DWORD val, bool is_sel )
+static void AddDlgListTextAndSelect( HWND hwnd, int id, const TCHAR *strp, DWORD val, bool is_sel )
 {
 	int i = SendDlgItemMessage( hwnd, id, LB_ADDSTRING, 0, (DWORD)strp );
 	SendDlgItemMessage( hwnd, id, LB_SETITEMDATA, i, (DWORD)val );
@@ -125,7 +125,7 @@ static void AddDlgListTextAndSelect( HWND hwnd, int id, const char *strp, DWORD 
 		SendDlgItemMessage( hwnd, id, LB_SETCURSEL, i, 0 );
 }
 //===============================================================
-static void DeleteDlgListText( HWND hwnd, int id, const char *strp, DWORD val, bool is_sel )
+static void DeleteDlgListText( HWND hwnd, int id, const TCHAR *strp, DWORD val, bool is_sel )
 {
 	int i = SendDlgItemMessage( hwnd, id, LB_ADDSTRING, 0, (DWORD)strp );
 	SendDlgItemMessage( hwnd, id, LB_SETITEMDATA, i, (DWORD)val );
@@ -134,12 +134,12 @@ static void DeleteDlgListText( HWND hwnd, int id, const char *strp, DWORD val, b
 //===============================================================
 void RemoteMng::loadRemoteNameFromForm( RemoteDef *remotep, HWND hwnd )
 {
-	char	old_name[128];
+	TCHAR	old_name[128];
 
-	psys_strcpy( old_name, remotep->_rm_username, sizeof(old_name) );
-	GetDlgItemText( hwnd, IDC_RM_REMOTE_NAME, remotep->_rm_username, sizeof(remotep->_rm_username)-1 );
+	_tcscpy_s( old_name, remotep->_rm_username );
+	WGUT_GETDLGITEMTEXTSAFE( hwnd, IDC_RM_REMOTE_NAME, remotep->_rm_username );
 	makeNameValid( remotep );
-	bool is_name_changed = (strcmp( remotep->_rm_username, old_name ) != 0);
+	bool is_name_changed = (_tcscmp( remotep->_rm_username, old_name ) != 0);
 
 	if ( is_name_changed )
 	{
@@ -207,12 +207,12 @@ void RemoteMng::onListCommand( HWND hwnd )
 //===============================================================
 void RemoteMng::onNameFocus( HWND hwnd )
 {
-	char	buff[512];
+	TCHAR	buff[512];
 
-	GetDlgItemText( hwnd, IDC_RM_REMOTE_NAME, buff, sizeof(buff)-1 );
-	psys_str_remove_beginend_spaces( buff );
+	WGUT_GETDLGITEMTEXTSAFE( hwnd, IDC_RM_REMOTE_NAME, buff );
+	psys_tstr_remove_beginend_spaces( buff );
 
-	if ( _stricmp( _emptyname_string, buff ) == 0 )
+	if ( _tcsicmp( _emptyname_string, buff ) == 0 )
 	{
 		SendDlgItemMessage( hwnd, IDC_RM_REMOTE_NAME, EM_SETSEL, 0, -1 );
 	}
@@ -244,9 +244,9 @@ BOOL CALLBACK RemoteMng::DialogProc_s(HWND hwnd, UINT umsg, WPARAM wparam, LPARA
 //===============================================================
 void RemoteMng::onEmptyList( HWND hwnd )
 {
-	SetDlgItemText( hwnd, IDC_RM_REMOTE_NAME, "" );
-	SetDlgItemText( hwnd, IDC_RM_REMOTE_PASSWORD, "" );
-	SetDlgItemText( hwnd, IDC_RM_REMOTE_ADDRESS, "" );
+	SetDlgItemText( hwnd, IDC_RM_REMOTE_NAME, _T("") );
+	SetDlgItemText( hwnd, IDC_RM_REMOTE_PASSWORD, _T("") );
+	SetDlgItemText( hwnd, IDC_RM_REMOTE_ADDRESS, _T("") );
 	SetDlgItemInt( hwnd, IDC_RM_REMOTE_PORT, DEF_PORT_NUMBER );
 	
 	CheckDlgButton( hwnd, IDC_RM_CAN_WATCH_MY_DESK, false );
@@ -339,8 +339,8 @@ BOOL CALLBACK RemoteMng::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM 
 			{
 				if ( _cur_remotep )
 				{
-					GetDlgItemText( hwnd, IDC_RM_REMOTE_ADDRESS, _cur_remotep->_rm_ip_address, sizeof(_cur_remotep->_rm_ip_address)-1 );
-					psys_str_remove_beginend_spaces( _cur_remotep->_rm_ip_address );
+					WGUT_GETDLGITEMTEXTSAFE( hwnd, IDC_RM_REMOTE_ADDRESS, _cur_remotep->_rm_ip_address );
+					psys_tstr_remove_beginend_spaces( _cur_remotep->_rm_ip_address );
 					updateRemote( hwnd );
 				}
 			}
@@ -415,8 +415,8 @@ BOOL CALLBACK RemoteMng::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM 
 		case IDC_RM_CONNECT:
 			if ( _cur_remotep->_rm_ip_address[0] == 0 )
 			{
-				MessageBox( hwnd, "Internet Address is empty.\nPlease provide an Internet Address for the remote to call.",
-					"Remote Manager Problem", MB_OK | MB_ICONSTOP );
+				MessageBox( hwnd, _T("Internet Address is empty.\nPlease provide an Internet Address for the remote to call."),
+					_T("Remote Manager Problem"), MB_OK | MB_ICONSTOP );
 
 				SetDlgEditForReview( hwnd, IDC_RM_REMOTE_ADDRESS );
 				return false;
@@ -425,8 +425,8 @@ BOOL CALLBACK RemoteMng::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM 
 			if ( _cur_remotep->_call_port != 0 &&
 				(_cur_remotep->_call_port < 1 || _cur_remotep->_call_port > 65535) )
 			{
-				MessageBox( _hwnd, "Invalid port number.\nThe valid range is between 1 to 65535.\nLeave it blank to use default.",
-					"Remote Manager Problem", MB_OK | MB_ICONSTOP );
+				MessageBox( _hwnd, _T("Invalid port number.\nThe valid range is between 1 to 65535.\nLeave it blank to use default."),
+					_T("Remote Manager Problem"), MB_OK | MB_ICONSTOP );
 
 				SetDlgEditForReview( _hwnd, IDC_RM_REMOTE_PORT );
 				return false;
@@ -434,8 +434,8 @@ BOOL CALLBACK RemoteMng::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM 
 			else
 			if ( _cur_remotep->_rm_password.IsEmpty() )
 			{
-				MessageBox( _hwnd, "No password provided !\nUse provide a password (4 characters minimum).",
-					"Remote Manager Problem", MB_OK | MB_ICONSTOP );
+				MessageBox( _hwnd, _T("No password provided !\nUse provide a password (4 characters minimum)."),
+					_T("Remote Manager Problem"), MB_OK | MB_ICONSTOP );
 
 				SetDlgEditForReview( _hwnd, IDC_RM_REMOTE_PASSWORD );
 			}
@@ -585,7 +585,7 @@ DataSchema *RemoteMng::RemoteDefLoaderProc( FILE *fp )
 }
 
 //==================================================================
-RemoteDef *RemoteMng::FindOrAddRemoteDefAndSelect( const char *namep )
+RemoteDef *RemoteMng::FindOrAddRemoteDefAndSelect( const TCHAR *namep )
 {
 	RemoteDef	*remotep = FindRemoteDef( namep );
 	if ( remotep )
@@ -595,7 +595,7 @@ RemoteDef *RemoteMng::FindOrAddRemoteDefAndSelect( const char *namep )
 	}
 
 	remotep = new RemoteDef();
-	psys_strcpy( remotep->_rm_username, namep, sizeof(remotep->_rm_username) );
+	_tcscpy_s( remotep->_rm_username, namep );
 	_remotes_list.push_back( remotep );
 	setRemoteToForm( remotep, NULL );
 
@@ -603,11 +603,11 @@ RemoteDef *RemoteMng::FindOrAddRemoteDefAndSelect( const char *namep )
 }
 
 //==================================================================
-RemoteDef *RemoteMng::FindRemoteDef( const char *namep )
+RemoteDef *RemoteMng::FindRemoteDef( const TCHAR *namep )
 {
 	for (int i=0; i < _remotes_list.len(); ++i)
 	{
-		if ( !_stricmp( _remotes_list[i]->_rm_username, namep ) )
+		if ( !_tcsicmp( _remotes_list[i]->_rm_username, namep ) )
 		{
 			return _remotes_list[i];
 		}

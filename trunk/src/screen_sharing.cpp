@@ -400,17 +400,17 @@ bool ScrShare::Reader::ParseFrame( const void *datap, u_int data_size )
 
 
 //==================================================================
-static void check_glerror( int line, const char *filep )
+static void check_glerror( int line, const TCHAR *filep )
 {
 	u_int	err = glGetError();
 	if ( err )
 	{
-		PDEBUG_PRINTF( "GL ERROR #%i at %i - %s\n", line, filep );
+		PDEBUG_PRINTF( _T("GL ERROR #%i at %i - %s\n"), line, filep );
 	}
 }
 
 //==================================================================
-#define CHECK_GLERROR	check_glerror( __LINE__, __FILE__ );
+#define CHECK_GLERROR	check_glerror( __LINE__, _T(__FILE__) );
 
 //==================================================================
 static void alloc_textures_matrix( int tot_w, int tot_h,

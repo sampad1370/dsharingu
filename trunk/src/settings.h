@@ -35,7 +35,7 @@ class Settings
 {
 	bool		_is_open;
 public:
-	char		_username[32];
+	TCHAR		_username[32];
 	sha1_t		_password;
 	bool		_listen_for_connections;
 	int			_listen_port;

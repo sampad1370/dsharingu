@@ -44,16 +44,21 @@ enum WGUTCheckPWMsg
 	CHECKPW_MSG_EMPTY,
 	CHECKPW_MSG_UNCHANGED,
 };
-WGUTCheckPWMsg GetDlgEditPasswordState( HWND hwnd, u_int item_id, const char *prompt_titlep=NULL );
+WGUTCheckPWMsg GetDlgEditPasswordState( HWND hwnd, u_int item_id, const TCHAR *prompt_titlep=NULL );
 
 //==================================================================
 namespace WGUT
 {
 
-HWND OpenModelessDialog( DLGPROC dlg_proc, LPSTR dlg_namep, HWND parent_hwnd, void *mythisp );
+HWND OpenModelessDialog( DLGPROC dlg_proc, LPTSTR dlg_namep, HWND parent_hwnd, void *mythisp );
 void SafeDestroyWindow( HWND &hwnd );
 
+void GetDlgItemTextSafe( HWND hDlg, int nIDDlgItem, LPTSTR lpString, int cchMax );
+
 };
+
+#define WGUT_GETDLGITEMTEXTSAFE( _HDLG_, _NIDDLGITEM_, _TCHAR_ARRAY_ ) \
+	WGUT::GetDlgItemTextSafe( _HDLG_, _NIDDLGITEM_, _TCHAR_ARRAY_, _countof(_TCHAR_ARRAY_) )
 
 
 #endif

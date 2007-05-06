@@ -37,9 +37,9 @@ class RemoteDef
 	void		*_userdatap;
 
 public:
-	char		_rm_username[32];
+	TCHAR		_rm_username[32];
 	sha1_t		_rm_password;
-	char		_rm_ip_address[128];
+	TCHAR		_rm_ip_address[128];
 	int			_call_port;
 	bool		_can_watch_my_desk;
 	bool		_can_use_my_desk;
@@ -105,8 +105,8 @@ public:
 		return ((RemoteMng *)userdatap)->RemoteDefLoaderProc( fp );
 	}
 	DataSchema	*RemoteDefLoaderProc( FILE *fp );
-	RemoteDef	*FindRemoteDef( const char *namep );
-	RemoteDef	*FindOrAddRemoteDefAndSelect( const char *namep );
+	RemoteDef	*FindRemoteDef( const TCHAR *namep );
+	RemoteDef	*FindOrAddRemoteDefAndSelect( const TCHAR *namep );
 
 	RemoteDef	*GetCurRemote()
 	{

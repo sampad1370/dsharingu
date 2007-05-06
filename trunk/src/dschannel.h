@@ -133,7 +133,7 @@ public:
 		setState( STATE_RECYCLE );
 	}
 
-	void		DoDisconnect( const char *messagep, bool is_error=0 );
+	void		DoDisconnect( const TCHAR *messagep, bool is_error=0 );
 	void		Show( bool onoff );
 
 	State		GetState() const
@@ -173,8 +173,8 @@ public:
 
 	void		updateViewScale();
 
-	void		console_line_func( const char *txtp, int is_cmd );
-	static void console_line_func_s( void *userp, const char *txtp, int is_cmd );
+	void		console_line_func( const TCHAR *txtp, int is_cmd );
+	static void console_line_func_s( void *userp, const TCHAR *txtp, int is_cmd );
 
 	static void	gadgetCallback_s( void *userdatap, int gget_id, GGET_Item *itemp, GGET_CB_Action action );
 	void		gadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB_Action action );

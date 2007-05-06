@@ -59,7 +59,7 @@ bool ScreenGrabberGDI::GrabFrame()
 
 	LPVOID				pBuf = NULL;
 	BITMAPINFO			bmpInfo;
-	BITMAPFILEHEADER	bmpFileHeader; 
+	//BITMAPFILEHEADER	bmpFileHeader; 
 
 	memset( &bmpInfo, 0, sizeof(BITMAPINFO) );
 	bmpInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
