@@ -27,7 +27,7 @@
 #include "psys.h"
 #include "pwindow.h"
 #include "console.h"
-#include "compak.h"
+#include "pnetlib_compak.h"
 #include "screen_sharing.h"
 #include "data_schema.h"
 #include "interactsys.h"

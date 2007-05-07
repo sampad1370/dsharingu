@@ -615,7 +615,7 @@ void DSharinguApp::handleChangedSettings()
 		}
 	}
 
-	tstring	title( WINDOW_TITLE );
+	PSYS::tstring	title( WINDOW_TITLE );
 
 	title += _T(" - ");
 	
@@ -703,7 +703,7 @@ int DSharinguApp::Idle()
 	}
 	else
 	{
-		double	now_time = psys_timer_get_d();
+		double	now_time = PSYS::TimerGetD();
 		if ( now_time - _last_autocall_check_time >= 1000.0 )
 		{
 			_last_autocall_check_time = now_time;

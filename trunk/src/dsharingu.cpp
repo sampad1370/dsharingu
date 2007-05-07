@@ -28,7 +28,7 @@
 #include <gl/glew.h>
 
 #include "psys.h"
-#include "compak.h"
+#include "pnetlib_compak.h"
 #include "pnetlib_socksupport.h"
 #include "appbase3.h"
 #include "dsharingu_protocol.h"
@@ -55,7 +55,7 @@ bool main_start( void *hinstance )
 {
 	try {
 
-		psys_init();
+		PSYS::Initialize();
 		HICON	hicon = LoadIcon( (HINSTANCE)hinstance, MAKEINTRESOURCE(IDI_ICO_APPL) );
 		WinSys::Init( (HINSTANCE)hinstance, hicon, _T("DSHARINGU") );
 

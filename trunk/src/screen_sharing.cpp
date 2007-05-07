@@ -306,7 +306,7 @@ double	grab_time;
 
 	if ( _is_grabbing )
 	{
-		grab_time = psys_timer_get_d();
+		grab_time = PSYS::TimerGetD();
 
 		// grabbing 2 times per second
 		if ( grab_time - _last_grab_time > 1000.0/2 )
@@ -486,7 +486,7 @@ bool ScrShare::Reader::unpackIntoTextures()
 	u_char	temp_block[ ScrShare::BLOCK_WD * 3 * ScrShare::BLOCK_HE ];
 	int		ix, iy;
 
-	//double	t1 = psys_timer_get_d();
+	//double	t1 = PSYS::TimerGetD();
 
 	while ( _unpacker.ParseNextBlock( temp_block, ix, iy ) )
 	{
@@ -507,10 +507,10 @@ bool ScrShare::Reader::unpackIntoTextures()
 							GL_RGB, GL_UNSIGNED_BYTE, temp_block );
 	}
 
-	//double	t2 = psys_timer_get_d();
+	//double	t2 = PSYS::TimerGetD();
 
 	//PDEBUG_PRINTF( "%i\n", (int)(t2 - t1) );
-	//psys_debug_printf( "%i\n", (int)(t2 - t1) );
+	//DebugPrintF( "%i\n", (int)(t2 - t1) );
 
 	_unpacker.EndParse();
 

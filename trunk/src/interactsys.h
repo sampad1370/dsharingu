@@ -25,7 +25,7 @@
 
 #include "psys.h"
 #include "pwindow.h"
-#include "compak.h"
+#include "pnetlib_compak.h"
 #include "dsharingu_protocol.h"
 
 //==================================================================

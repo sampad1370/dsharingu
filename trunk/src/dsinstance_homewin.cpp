@@ -90,35 +90,35 @@ void DSharinguApp::homeWinCreate()
 	//stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	y += OFF_Y;
 
-	tstring	str;
+	PSYS::tstring	str;
 
-	str = tstring( _T( "My Username: " ) ) + tstring( _settings._username );
+	str = PSYS::tstring( _T( "My Username: " ) ) + PSYS::tstring( _settings._username );
 	stxtp =	gam.AddStaticText( MYUSERNAME_TXT_STATIC, x, y, _home_winp->GetWidth(), 0, str.c_str() );
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	y += static_off_y;
 
 	if ( _settings._listen_for_connections )
-		str = tstring( _T( "* Accepting connections on port " ) ) + Stringify( _settings._listen_port );
+		str = PSYS::tstring( _T( "* Accepting connections on port " ) ) + PSYS::Stringify( _settings._listen_port );
 	else
-		str = tstring( _T( "* Not accepting any connections" ) );
+		str = PSYS::tstring( _T( "* Not accepting any connections" ) );
 
 	stxtp =	gam.AddStaticText( ACCEPTING_CONS_TXT_STATIC, x, y, _home_winp->GetWidth(), 0, str.c_str() );
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	y += static_off_y;
 
 	if ( _settings._nobody_can_watch_my_computer )
-		str = tstring( _T( "* Nobody can watch my computer" ) );
+		str = PSYS::tstring( _T( "* Nobody can watch my computer" ) );
 	else
-		str = tstring( _T( "* Selected users may watch my computer" ) );
+		str = PSYS::tstring( _T( "* Selected users may watch my computer" ) );
 
 	stxtp =	gam.AddStaticText( SEL_USERS_CAN_WATCH_TXT_STATIC, x, y, _home_winp->GetWidth(), 0, str.c_str() );
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	y += static_off_y;
 
 	if ( _settings._nobody_can_use_my_computer || _settings._nobody_can_watch_my_computer )
-		str = tstring( _T( "* Nobody can use my computer" ) );
+		str = PSYS::tstring( _T( "* Nobody can use my computer" ) );
 	else
-		str = tstring( _T( "* Selected users may use my computer" ) );
+		str = PSYS::tstring( _T( "* Selected users may use my computer" ) );
 
 	stxtp =	gam.AddStaticText( SEL_USERS_CAN_USE_TXT_STATIC, x, y, _home_winp->GetWidth(), 0, str.c_str() );
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;

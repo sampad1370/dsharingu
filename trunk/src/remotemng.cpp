@@ -69,7 +69,7 @@ RemoteMng::RemoteMng() :
 //===============================================================
 void RemoteMng::makeNameValid( RemoteDef *remotep ) const
 {
-	psys_tstr_remove_beginend_spaces( remotep->_rm_username );
+	PSYS::TStrRemoveBeginendSpaces( remotep->_rm_username );
 	if ( remotep->_rm_username[0] == 0 )
 	{
 		_tcscpy_s( remotep->_rm_username, _countof(remotep->_rm_username), _T("Unnamed") );
@@ -210,7 +210,7 @@ void RemoteMng::onNameFocus( HWND hwnd )
 	TCHAR	buff[512];
 
 	WGUT_GETDLGITEMTEXTSAFE( hwnd, IDC_RM_REMOTE_NAME, buff );
-	psys_tstr_remove_beginend_spaces( buff );
+	PSYS::TStrRemoveBeginendSpaces( buff );
 
 	if ( _tcsicmp( _emptyname_string, buff ) == 0 )
 	{
@@ -340,7 +340,7 @@ BOOL CALLBACK RemoteMng::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM 
 				if ( _cur_remotep )
 				{
 					WGUT_GETDLGITEMTEXTSAFE( hwnd, IDC_RM_REMOTE_ADDRESS, _cur_remotep->_rm_ip_address );
-					psys_tstr_remove_beginend_spaces( _cur_remotep->_rm_ip_address );
+					PSYS::TStrRemoveBeginendSpaces( _cur_remotep->_rm_ip_address );
 					updateRemote( hwnd );
 				}
 			}

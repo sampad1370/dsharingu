@@ -206,7 +206,7 @@ void ScreenPacker::BeginPack()
 	_data._blkdata_bits_file.SeekFromStart(0);
 	_lzwpacker.Reset( &_data._blkdata_bits_file );
 
-	_prof_start_time = psys_timer_get_d();
+	_prof_start_time = PSYS::TimerGetD();
 }
 
 //==================================================================
@@ -221,11 +221,11 @@ void ScreenPacker::EndPack()
 	u_int size_bits = _data._blkdata_bits_file.GetCurPos();
 
 #ifndef RELEASE_BUILD
-	psys_debug_printf( _T("total size = %i (heads: %i  bits: %i), %4.2f\n"),
+	PSYS::DebugPrintF( _T("total size = %i (heads: %i  bits: %i), %4.2f\n"),
 						size_head + size_bits,
 						size_head,
 						size_bits,
-						(float)(psys_timer_get_d() - _prof_start_time) );
+						(float)(PSYS::TimerGetD() - _prof_start_time) );
 #endif
 }
 

@@ -43,7 +43,7 @@ public:
 	HTTPFile			*_exe_httpfilep;
 	HWND				_dlg_hwnd;
 	TCHAR				_donwload_fname[128];
-	tstring				_exe_desk_path_str;
+	PSYS::tstring		_exe_desk_path_str;
 
 	DownloadUpdate( HWND parent_hwnd,
 					const TCHAR *cur_versionp,
