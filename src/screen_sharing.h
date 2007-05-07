@@ -24,7 +24,7 @@
 #ifndef SCREEN_SHARING_H
 #define SCREEN_SHARING_H
 
-#include "compak.h"
+#include "pnetlib_compak.h"
 #include "screen_grabber_ddraw.h"
 #include "screen_packer.h"
 

@@ -101,8 +101,8 @@ public:
 
 	static cons_cmd_def_t	_cmd_defs[3];
 
-	safe_ptr<Window>			_tool_winp;
-	safe_ptr<Window>			_view_winp;
+	PSYS::safe_ptr<Window>	_tool_winp;
+	PSYS::safe_ptr<Window>	_view_winp;
 
 	u_int					_frame_since_transmission;
 
@@ -115,7 +115,7 @@ public:
 	HWND					_connecting_dlg_hwnd;
 	int						_connecting_dlg_timer;
 
-	safe_ptr<DSTaskManager>		_task_managerp;
+	PSYS::safe_ptr<DSTaskManager>	_task_managerp;
 
 public:
 	DSChannel( DSChannelManager *managerp, int accepted_fd );

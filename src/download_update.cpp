@@ -148,10 +148,6 @@ bool DownloadUpdate::Idle()
 					return false;
 				}
 
-				//TCHAR	buff[1024];
-				//psys_strcpy( buff, _base_exe_pathp, sizeof(buff) );
-				//strcat_s( buff, sizeof(buff), _donwload_fname );
-
 				_exe_httpfilep = new HTTPFile( hostname, _donwload_fname, 80 );
 			}
 		}
@@ -170,9 +166,9 @@ bool DownloadUpdate::Idle()
 
 			if PTRAP_FALSE( SUCCEEDED(SHGetFolderPath(NULL, CSIDL_DESKTOPDIRECTORY, NULL, 0, szPath)) )
 			{
-				_exe_desk_path_str = tstring( szPath );
+				_exe_desk_path_str = PSYS::tstring( szPath );
 
-				tstring	download_fname_only( _donwload_fname );
+				PSYS::tstring	download_fname_only( _donwload_fname );
 
 				int	pos_fname = download_fname_only.find_last_of( _TXCHAR('/') );
 				if ( pos_fname >= 0 )
