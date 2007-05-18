@@ -88,12 +88,25 @@ public:
 	bool					_is_transmitting;
 	bool					_is_using_remote;
 
-	Console				_console;
+	Console					_console;
 
-	bool					_remote_wants_view;
-	bool					_remote_wants_share;
-	bool					_remote_allows_view;
-	bool					_remote_allows_share;
+	struct RemoteState
+	{
+		bool		_wants_view;
+		bool		_wants_share;
+		bool		_allows_view;
+		bool		_allows_share;
+		bool		_is_watching;
+
+		void Reset()
+		{
+			_wants_view = false;
+			_wants_share = false;
+			_allows_view = false;
+			_allows_share = false;
+			_is_watching = false;
+		}
+	} _RemoteState;
 
 	bool					_view_fitwindow;
 	float					_view_scale_x;
@@ -135,6 +148,7 @@ public:
 
 	void		DoDisconnect( const TCHAR *messagep, bool is_error=0 );
 	void		Show( bool onoff );
+	void		CheckForVisibility();
 
 	State		GetState() const
 	{
@@ -150,6 +164,8 @@ public:
 	void		onConnect( bool is_connected_as_caller );
 
 	void		changeSessionRemote( RemoteDef *new_remotep );
+
+	bool		isDeskViewable();
 
 	void		handleAutoScroll();
 	void		handleConnectedFlow();

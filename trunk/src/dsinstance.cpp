@@ -329,7 +329,14 @@ int DSharinguApp::mainEventFilter( win_event_type etype, win_event_t *eventp )
 		break;
 
 	case WIN_ETYPE_WINRESIZE:
-//		reshape( eventp->win_w, eventp->win_h );
+		if ( _chmanagerp )
+		{
+			for (int i=1; i < _chmanagerp->_n_channels; ++i)
+				_chmanagerp->_channelsp[i]->CheckForVisibility();
+		}
+		break;
+
+	case WIN_ETYPE_SHOW:
 		break;
 
 	case WIN_ETYPE_PAINT:
@@ -444,10 +451,10 @@ void DSharinguApp::handleChangedRemoteManager( RemoteDef *changed_remotep )
 		sendUsageAbility( chanp );
 
 		UsageWishMsg	msg( changed_remotep->_see_remote_screen,
-							 chanp->_is_using_remote );
+							 chanp->_is_using_remote,
+							 chanp->isDeskViewable() );
 
-		if ERR_ERROR( chanp->_cpk.SendPacket( USAGE_WISH_PKID, &msg, sizeof(msg), NULL ) )
-			return;
+		NetSendMessage<UsageWishMsg>( chanp->_cpk, msg );
 	}
 }
 
@@ -646,8 +653,8 @@ void DSharinguApp::sendUsageAbility( DSChannel *chanp )
 	{
 		UsageAbilityMsg	msg( channelCanWatch( chanp ),
 							 channelCanUse( chanp ) );
-		if ERR_ERROR( chanp->_cpk.SendPacket( USAGE_ABILITY_PKID, &msg, sizeof(msg), NULL ) )
-			return;
+
+		NetSendMessage<UsageAbilityMsg>( chanp->_cpk, msg );
 	}
 }
 

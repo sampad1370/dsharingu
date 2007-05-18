@@ -84,7 +84,10 @@ DSChannel::~DSChannel()
 {
 	// remove the channel from the remotedef that is currently using it
 	if ( _session_remotep )
+	{
 		_session_remotep->SetUserData( NULL );
+		_session_remotep->Unlock();
+	}
 
 	//_managerp->RemoveChannel( this );
 }
@@ -371,10 +374,7 @@ void DSChannel::onConnect( bool is_connected_as_caller )
 
 	_is_connected = true;
 	_is_transmitting = false;
-	_remote_wants_view = false;
-	_remote_wants_share = false;
-	_remote_allows_view = false;
-	_remote_allows_share = false;
+	_RemoteState.Reset();
 	_frame_since_transmission = 0;
 
 	if ( is_connected_as_caller )
@@ -386,8 +386,7 @@ void DSChannel::onConnect( bool is_connected_as_caller )
 							_session_remotep->_rm_username,
 							_session_remotep->_rm_password._data );
 
-		if ERR_ERROR( _cpk.SendPacket( HANDSHAKE_PKID, &msg, sizeof(msg), NULL ) )
-			return;
+		NetSendMessage<HandShakeMsg>( _cpk, msg );
 	}
 }
 
@@ -553,7 +552,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 		// processes packets
 		switch ( pack_id )
 		{
-		case HANDSHAKE_PKID:
+		case HandShakeMsg_ID:
 			{
 			const HandShakeMsg	&msg = *(HandShakeMsg *)datap;
 
@@ -712,14 +711,15 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 			_view_winp->Invalidate();
 			break;
 
-		case USAGE_WISH_PKID:
-			_remote_wants_view  = ((UsageWishMsg *)datap)->_see_remote_screen;
-			_remote_wants_share = ((UsageWishMsg *)datap)->_use_remote_screen;
+		case UsageWishMsg_ID:
+			_RemoteState._wants_view  = ((UsageWishMsg *)datap)->_see_remote_screen;
+			_RemoteState._wants_share = ((UsageWishMsg *)datap)->_use_remote_screen;
+			_RemoteState._is_watching = ((UsageWishMsg *)datap)->_is_watching;
 			break;
 
-		case USAGE_ABILITY_PKID:
-			_remote_allows_view  = ((UsageAbilityMsg *)datap)->_see_remote_screen;
-			_remote_allows_share = ((UsageAbilityMsg *)datap)->_use_remote_screen;
+		case UsageAbilityMsg_ID:
+			_RemoteState._allows_view  = ((UsageAbilityMsg *)datap)->_see_remote_screen;
+			_RemoteState._allows_share = ((UsageAbilityMsg *)datap)->_use_remote_screen;
 			refreshInteractionInterface();
 			break;
 		}
@@ -743,10 +743,10 @@ void DSChannel::refreshInteractionInterface()
 	}
 	else
 	{
-		gam.FindGadget( VIEW_WIN_VIEW_REM_NOT_ALLOWED_STXT )->Show( !_remote_allows_view );
-		gam.FindGadget( VIEW_WIN_USE_REM_NOT_ALLOWED_STXT )->Show( !_remote_allows_share );
-		//gam.EnableGadget( VIEW_WIN_VIEW_REMOTE_BUTT, _remote_allows_view );
-		gam.EnableGadget( VIEW_WIN_USE_REMOTE_BUTT, _remote_allows_view && _remote_allows_share );
+		gam.FindGadget( VIEW_WIN_VIEW_REM_NOT_ALLOWED_STXT )->Show( !_RemoteState._allows_view );
+		gam.FindGadget( VIEW_WIN_USE_REM_NOT_ALLOWED_STXT )->Show( !_RemoteState._allows_share );
+		//gam.EnableGadget( VIEW_WIN_VIEW_REMOTE_BUTT, _RemoteState._allows_view );
+		gam.EnableGadget( VIEW_WIN_USE_REMOTE_BUTT, _RemoteState._allows_view && _RemoteState._allows_share );
 
 		gam.FindGadget( VIEW_WIN_USE_REMOTE_BUTT )->SetIcon(
 			_is_using_remote ? GGET_Item::STD_ICO_MARK_ON : GGET_Item::STD_ICO_MARK_OFF );
@@ -764,6 +764,17 @@ void DSChannel::refreshInteractionInterface()
 }
 
 //==================================================================
+bool DSChannel::isDeskViewable()
+{
+	DSharinguApp	&app = *(DSharinguApp *)_managerp->_superp;
+
+	return	app._main_win.IsShowing() &&
+			!app._main_win.IsIconic() &&
+			_task_managerp->IsShowing() &&
+			_task_managerp->FindByButtID( VIEW_WIN_TASK_DESK_BUTTON )->IsVisible();
+}
+
+//==================================================================
 void DSChannel::handleConnectedFlow()
 {
 	if NOT( _is_transmitting )
@@ -775,40 +786,44 @@ void DSChannel::handleConnectedFlow()
 
 	if ( _frame_since_transmission == 1 )
 	{
-		UsageWishMsg	msg(_session_remotep->_see_remote_screen,
-							_is_using_remote );
-		_cpk.SendPacket( USAGE_WISH_PKID, &msg, sizeof(msg), NULL );
+		UsageWishMsg	msg( _session_remotep->_see_remote_screen,
+							 _is_using_remote,
+							 isDeskViewable() );
+
+		NetSendMessage<UsageWishMsg>( _cpk, msg );
 
 		UsageAbilityMsg	msg2( !app._settings._nobody_can_watch_my_computer,
 							 !app._settings._nobody_can_use_my_computer );
-		_cpk.SendPacket( USAGE_ABILITY_PKID, &msg2, sizeof(msg2), NULL );
+
+		NetSendMessage<UsageAbilityMsg>( _cpk, msg2 );
 	}
 
-	bool	do_show =	_remote_wants_view &&
-						!app._settings._nobody_can_watch_my_computer &&
-						_session_remotep->_can_watch_my_desk;
-
-	if ( app._scrwriter.IsGrabbing() != do_show )
+	if ( app._settings._nobody_can_watch_my_computer )
 	{
-		if ( do_show )
-		{
-			app._scrwriter.StartGrabbing( (HWND)app._main_win._hwnd );
-		}
-		else
-		{
+		if ( app._scrwriter.IsGrabbing()  )
 			app._scrwriter.StopGrabbing();
-		}
 	}
-
-	if ( app._scrwriter.IsGrabbing() )
+	else
 	{
-		int cnt = _cpk.SearchOUTQueue( DESK_IMG_PKID );
-		if ( cnt <= 2 )
-		{
-			bool has_grabbed = app._scrwriter.UpdateWriter();
+		bool	do_show =	_RemoteState._wants_view &&
+							_session_remotep->_can_watch_my_desk;
 
-			if ( has_grabbed )
-				app._scrwriter.SendFrame( DESK_IMG_PKID, &_cpk );
+		if ( do_show && _RemoteState._is_watching )
+		{
+			if ( !app._scrwriter.IsGrabbing() )
+				app._scrwriter.StartGrabbing( (HWND)app._main_win._hwnd );
+
+			if ( app._scrwriter.IsGrabbing() )
+			{
+				int cnt = _cpk.SearchOUTQueue( DESK_IMG_PKID );
+				if ( cnt <= 2 )
+				{
+					bool has_grabbed = app._scrwriter.UpdateWriter();
+
+					if ( has_grabbed )
+						app._scrwriter.SendFrame( DESK_IMG_PKID, &_cpk );
+				}
+			}
 		}
 	}
 
@@ -865,7 +880,10 @@ void DSChannel::gadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB_Action ac
 {
 	if ( _task_managerp )
 		if ( _task_managerp->OnGadget( gget_id, itemp, action ) )
+		{
+			
 			return;
+		}
 
 	GGET_Manager	&gam = _tool_winp->GetGGETManager();
 
@@ -882,8 +900,7 @@ void DSChannel::gadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB_Action ac
 				UsageWishMsg	msg( _session_remotep->_see_remote_screen,
 									 _is_using_remote );
 
-				if ERR_ERROR( _cpk.SendPacket( USAGE_WISH_PKID, &msg, sizeof(msg), NULL ) )
-					return;
+				NetSendMessage<UsageWishMsg>( _cpk, msg );
 			}
 		}
 		break;
@@ -919,10 +936,10 @@ void DSChannel::taskOnGadgetCB( DSTask *taskp, DSTask::ViewState view_state )
 			if ( _is_transmitting )
 			{
 				UsageWishMsg	msg( _session_remotep->_see_remote_screen,
-									 _is_using_remote );
+									 _is_using_remote,
+									 isDeskViewable() );
 
-				if ERR_ERROR( _cpk.SendPacket( USAGE_WISH_PKID, &msg, sizeof(msg), NULL ) )
-					return;
+				NetSendMessage<UsageWishMsg>( _cpk, msg );
 			}
 		}
 
@@ -931,8 +948,8 @@ void DSChannel::taskOnGadgetCB( DSTask *taskp, DSTask::ViewState view_state )
 			//gam.FindGadget( VIEW_WIN_VIEW_REMOTE_BUTT )->Show( do_show );
 			//_task_managerp->FindByButtID( VIEW_WIN_TASK_DESK_BUTTON )->SetViewState( do_show ? DSTask::VS_FITVIEW : DSTask::VS_ICONIZED );
 			gam.FindGadget( VIEW_WIN_USE_REMOTE_BUTT )->Show( do_show );
-			gam.FindGadget( VIEW_WIN_VIEW_REM_NOT_ALLOWED_STXT )->Show( do_show && !_remote_allows_view );
-			gam.FindGadget( VIEW_WIN_USE_REM_NOT_ALLOWED_STXT )->Show( do_show && !_remote_allows_share );
+			gam.FindGadget( VIEW_WIN_VIEW_REM_NOT_ALLOWED_STXT )->Show( do_show && !_RemoteState._allows_view );
+			gam.FindGadget( VIEW_WIN_USE_REM_NOT_ALLOWED_STXT )->Show( do_show && !_RemoteState._allows_share );
 		}
 		break;
 
@@ -1179,4 +1196,20 @@ void DSChannel::Show( bool onoff )
 {
 	_view_winp->Show( onoff );
 	_console.Show( onoff );
+}
+
+//===============================================================
+void DSChannel::CheckForVisibility()
+{
+	if ( _session_remotep )
+	{
+		if ( _is_transmitting )
+		{
+			UsageWishMsg	msg( _session_remotep->_see_remote_screen,
+								 _is_using_remote,
+								 isDeskViewable() );
+
+			NetSendMessage<UsageWishMsg>( _cpk, msg );
+		}
+	}
 }

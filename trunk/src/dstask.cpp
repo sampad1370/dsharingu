@@ -173,6 +173,20 @@ DSTask	*DSTaskManager::FindByButtID( u_int butt_id )
 }
 
 //==================================================================
+const DSTask	*DSTaskManager::FindByButtID( u_int butt_id ) const
+{
+	for (int i=0; i < _tasks.len(); ++i)
+	{
+		if ( _tasks[i]->_butt_id == butt_id )
+		{
+			return _tasks[i];
+		}
+	}
+
+	return NULL;
+}
+
+//==================================================================
 void DSTaskManager::Show( bool onoff )
 {
 	GGET_Manager	&gam = _winp->GetGGETManager();

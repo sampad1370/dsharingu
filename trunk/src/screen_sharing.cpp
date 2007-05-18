@@ -335,7 +335,6 @@ bool ScrShare::Writer::SendFrame( u_int msg_id, Compak *cpkp )
 
 	try {
 		dest_packp = (u_char *)cpkp->AllocPacket( msg_id, tot_size );
-		if ERR_NULL( dest_packp )	return false;
 
 		Memfile	memfile( dest_packp, tot_size );
 
@@ -345,7 +344,7 @@ bool ScrShare::Writer::SendFrame( u_int msg_id, Compak *cpkp )
 		memfile.WriteMemfile( &_packer._data.GetDataHead() );
 		memfile.WriteMemfile( &_packer._data.GetDataBits() );
 	} catch (...) {
-		throw;
+		throw "Sad !";
 	}
 	
 	if ERR_ERROR( cpkp->SendPacket( dest_packp ) )	return false;

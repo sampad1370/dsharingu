@@ -62,6 +62,11 @@ public:
 		_butt_id = task_butt_id;
 	}
 
+	bool IsVisible() const
+	{
+		return _view_state != VS_ICONIZED;
+	}
+
 	ViewState GetViewState() const
 	{
 		return _view_state;
@@ -103,12 +108,17 @@ public:
 	{
 	}
 
-	DSTask	*FindByButtID( u_int butt_id );
+	DSTask			*FindByButtID( u_int butt_id );
+	const DSTask	*FindByButtID( u_int butt_id ) const;
 	void	AddTask( const TCHAR *task_namep, u_int task_butt_id, DSTask::ViewState init_view_state );
 	void	OnWinResize();
 	bool	OnGadget( int gget_id, GGET_Item *itemp, GGET_CB_Action action );
 	void	Paint();
 	void	Show( bool onoff );
+	bool	IsShowing() const
+	{
+		return _is_showing;
+	}
 
 private:
 	void	updateViewState( DSTask *taskp );
