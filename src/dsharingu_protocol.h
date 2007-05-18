@@ -24,24 +24,34 @@
 #ifndef DSHARINGU_PROTOCOL_H
 #define DSHARINGU_PROTOCOL_H
 
+#include "pnetlib_compak.h"
+
 //==================================================================
 #define DEF_PORT_NUMBER		51112
 #define DEF_PORT_NUMBER_STR	"51112"
-#define PROTOCOL_VERSION	6
+#define PROTOCOL_VERSION	7
 
+//==================================================================
+template <class MSG>
+int NetSendMessage( Compak &cpk, const MSG &msg, u_int *send_ticketp=NULL )
+{
+	return cpk.SendPacket( MSG._msg_id, (void *)&msg, sizeof(msg), send_ticketp );
+}
+
+//==================================================================
 enum {
 	TEXT_MSG_PKID = 1,
 	DESK_IMG_PKID,
 
-	HANDSHAKE_PKID,
+	HandShakeMsg_ID,
 	HS_BAD_USERNAME_PKID,
 	HS_BAD_PASSWORD_PKID,
 	HS_OLD_PROTOCOL_PKID,
 	HS_NEW_PROTOCOL_PKID,
 	HS_OK,
 
-	USAGE_WISH_PKID,
-	USAGE_ABILITY_PKID,
+	UsageWishMsg_ID,
+	UsageAbilityMsg_ID,
 
 	REMOCON_ARRAY_PKID,
 };
@@ -49,6 +59,8 @@ enum {
 //==================================================================
 struct HandShakeMsg
 {
+	const static u_int	_msg_id = HandShakeMsg_ID;
+
 	u_int	_protocol_version;
 	TCHAR	_caller_username[32];
 	TCHAR	_communicating_username[32];
@@ -69,13 +81,18 @@ struct HandShakeMsg
 //==================================================================
 struct UsageWishMsg
 {
+	const static u_int	_msg_id = UsageWishMsg_ID;
+
 	bool	_see_remote_screen;
 	bool	_use_remote_screen;
+	bool	_is_watching;
 
 	UsageWishMsg(	bool see_remote_screen,
-					bool use_remote_screen ) :
+					bool use_remote_screen,
+					bool is_watching ) :
 		_see_remote_screen(see_remote_screen),
-		_use_remote_screen(use_remote_screen)
+		_use_remote_screen(use_remote_screen),
+		_is_watching(is_watching)
 	{
 	}
 };
@@ -83,6 +100,8 @@ struct UsageWishMsg
 //==================================================================
 struct UsageAbilityMsg
 {
+	const static u_int	_msg_id = UsageAbilityMsg_ID;
+
 	bool	_see_remote_screen;
 	bool	_use_remote_screen;
 
@@ -99,6 +118,8 @@ struct UsageAbilityMsg
 //==================================================================
 struct RemoConMsg
 {
+	//const static u_int	_msg_id = RemoConMsg_ID;
+
 	static const int	TYPE_MOUSEMOVE	 = 1;
 	static const int	TYPE_MOUSEBUTTON = 2;
 	static const int	TYPE_VKEY		 = 3;
