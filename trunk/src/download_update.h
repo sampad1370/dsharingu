@@ -33,8 +33,8 @@
 class DownloadUpdate
 {
 public:
-	const TCHAR			*_cur_versionp;
-	const TCHAR			*_hostnamep;
+	const char			*_cur_versionp;
+	const char			*_hostnamep;
 	const TCHAR			*_message_box_titlep;
 
 	bool				_alive;
@@ -42,13 +42,13 @@ public:
 	HTTPFile			*_httpfilep;
 	HTTPFile			*_exe_httpfilep;
 	HWND				_dlg_hwnd;
-	TCHAR				_donwload_fname[128];
+	char				_download_fname[128];
 	PSYS::tstring		_exe_desk_path_str;
 
 	DownloadUpdate( HWND parent_hwnd,
-					const TCHAR *cur_versionp,
-					const TCHAR *hostnamep,
-					const TCHAR *update_info_pathp,
+					const char *cur_versionp,
+					const char *hostnamep,
+					const char *update_info_pathp,
 					const TCHAR *message_box_titlep );
 	~DownloadUpdate();
 

@@ -9,8 +9,10 @@
 #define IDD_REMOTEMNG                   119
 #define IDD_CONNECTING                  120
 #define IDR_MAINMENU                    121
+#define IDD_SETTINGS_IT                 123
 #define IDD_ABOUT                       124
 #define IDD_DOWNLOADING_UPDATE          125
+#define IDD_SETTINGS_JA                 126
 #define IDC_CUSTOM_PORT_EDIT            1004
 #define IDC_CUSTOM_PORT_CALL_EDIT       1004
 #define IDC_SHOW_MY_DESKTOP_CHECK       1005
@@ -78,7 +80,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        123
+#define _APS_NEXT_RESOURCE_VALUE        127
 #define _APS_NEXT_COMMAND_VALUE         40019
 #define _APS_NEXT_CONTROL_VALUE         1040
 #define _APS_NEXT_SYMED_VALUE           101

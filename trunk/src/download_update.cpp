@@ -33,9 +33,9 @@
 
 //==================================================================
 DownloadUpdate::DownloadUpdate( HWND parent_hwnd,
-							    const TCHAR *cur_versionp,
-								const TCHAR *hostnamep,
-								const TCHAR *update_info_pathp,
+							    const char *cur_versionp,
+								const char *hostnamep,
+								const char *update_info_pathp,
 								const TCHAR *message_box_titlep ) :
 	_cur_versionp(cur_versionp),
 	_hostnamep(hostnamep),
@@ -65,15 +65,15 @@ DownloadUpdate::~DownloadUpdate()
 }
 
 //==================================================================
-static double quantizeVersion( const TCHAR *vstrp )
+static double quantizeVersion( const char *vstrp )
 {
-	const TCHAR *vstrp_end = vstrp + _tcslen(vstrp);
+	const char *vstrp_end = vstrp + strlen(vstrp);
 
-	TCHAR	release_type = 'f';
+	char	release_type = 'f';
 	double	val = 0;
 	double	coeff = 1;
 
-	for (const TCHAR *vstrp2 = vstrp_end-1; vstrp2 >= vstrp; --vstrp2)
+	for (const char *vstrp2 = vstrp_end-1; vstrp2 >= vstrp; --vstrp2)
 	{
 		if ( *vstrp2 == 'a' )
 			release_type = 'a';
@@ -116,23 +116,21 @@ bool DownloadUpdate::Idle()
 		return false;
 	}
 
-	u_char	*indatap;
-	u_int	indata_size;
-
 	if ( _state == 0 )
 	{
-		if ( _httpfilep->GetINData( &indatap, &indata_size ) )
+		char instr[ 2048 ];
+		if ( _httpfilep->GetINDataStr( instr, _countof(instr) ) )
 		{
 			_state = 1;
-			if ( indatap )
+			if ( strlen(instr) )
 			{
-				TCHAR	version[64];
-				TCHAR	hostname[128];
+				char	version[128];
+				char	hostname[128];
 
-				_stscanf_s( (const TCHAR *)indatap, _T("%s %s %s"),
-							  version,
-							  hostname,
-							  _donwload_fname );
+				sscanf_s( instr, "%s %s %s",
+						  version, _countof(version),
+						  hostname, _countof(hostname),
+						  _download_fname, _countof(_download_fname) );
 
 				double other_version = quantizeVersion( version );
 				double this_version = quantizeVersion( _cur_versionp );
@@ -148,14 +146,15 @@ bool DownloadUpdate::Idle()
 					return false;
 				}
 
-				_exe_httpfilep = new HTTPFile( hostname, _donwload_fname, 80 );
+				_exe_httpfilep = new HTTPFile( hostname, _download_fname, 80 );
 			}
 		}
 	}
 	else
 	if ( _state == 1 )
 	{
-		if ( _exe_httpfilep->GetINData( &indatap, &indata_size ) )
+		PUtils::Memfile	indata_mf;
+		if ( _exe_httpfilep->GetINData( indata_mf ) )
 		{
 			_state = 2;
 			DlgEnableItem( _dlg_hwnd, IDC_DU_INSTALL, TRUE );
@@ -168,7 +167,9 @@ bool DownloadUpdate::Idle()
 			{
 				_exe_desk_path_str = PSYS::tstring( szPath );
 
-				PSYS::tstring	download_fname_only( _donwload_fname );
+				TCHAR *download_fname_tchp = PSYS::ANSIToTCHAR( _download_fname );
+				PSYS::tstring	download_fname_only( download_fname_tchp );
+				delete [] download_fname_tchp;
 
 				int	pos_fname = download_fname_only.find_last_of( _TXCHAR('/') );
 				if ( pos_fname >= 0 )
@@ -192,7 +193,7 @@ bool DownloadUpdate::Idle()
 				errno_t	err = _tfopen_s( &fp, _exe_desk_path_str.c_str(), _T("wb") );
 				if PTRAP_FALSE( err == 0 )
 				{
-					bool done = (fwrite( indatap, indata_size, 1, fp ) > 0);
+					bool done = (fwrite( indata_mf.GetData(), indata_mf.GetDataSize(), 1, fp ) > 0);
 					fclose( fp );
 					if PTRAP_FALSE( done )
 					{
