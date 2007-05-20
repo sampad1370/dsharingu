@@ -141,7 +141,7 @@ void DSharinguApp::homeWinCreate()
 	y += OFF_Y;
 
 	gam.AddButton( CHECKUPDATE_BUTT,	x, y, BUTT_WD, BUTT_HE, _T( "Check for Updates..." ) );
-	stxtp = gam.AddStaticText( -1, x + BUTT_WD + 4, y, 400, BUTT_HE, _T("Check on-line for updates.") );
+	stxtp = gam.AddStaticText( -1, x + BUTT_WD + 4, y, 400, BUTT_HE, _T("Check on-line for updates ‚æ‚æ.") );
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	y += OFF_Y;
 

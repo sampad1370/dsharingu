@@ -310,7 +310,7 @@ void DSChannel::console_line_func( const TCHAR *txtp, int is_cmd )
 	{
 		if ( txtp[0] )
 		{
-			int err = _cpk.SendPacket( TEXT_MSG_PKID, txtp, (_tcslen( txtp )+1), NULL );
+			int err = _cpk.SendPacket( TEXT_MSG_PKID, txtp, sizeof(TCHAR)*(_tcslen( txtp )+1), NULL );
 
 			PASSERT( err == 0 );
 		}

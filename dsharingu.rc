@@ -107,6 +107,33 @@ BEGIN
     LTEXT           "Ready to Install",IDC_DU_READYINSTALL,67,11,52,8,NOT WS_VISIBLE
 END
 
+IDD_SETTINGS_JA DIALOGEX 0, 0, 208, 253
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "設定"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_ST_USERNAME,78,22,99,14,ES_AUTOHSCROLL,0,HIDC_ST_USERNAME
+    EDITTEXT        IDC_PASSWORD1_EDIT,78,43,99,14,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        IDC_PASSWORD2_EDIT,78,60,99,14,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "入力接続を受け取る",IDC_LISTEN_CONNECTIONS_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,39,82,83,10
+    EDITTEXT        IDC_ST_LOCAL_PORT,85,97,33,14,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "誰かが自分の画面を見えない！",IDC_FORBID_SHOW_MY_DESKTOP_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,39,126,117,10
+    CONTROL         "誰かが自分のパソコンを利用できない！",IDC_FORBID_SHARE_MY_DESKTOP_CHECK,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,39,142,140,10
+    DEFPUSHBUTTON   "OK",IDOK,94,232,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,151,232,50,14
+    GROUPBOX        "個人設定：",IDC_STATIC,7,7,194,154
+    LTEXT           "自分のパスワード：",IDC_STATIC,18,46,59,8
+    LTEXT           "再入：",IDC_STATIC,55,62,22,10
+    LTEXT           "自分のユーザ名：",IDC_STATIC,21,25,56,8
+    LTEXT           "ポート：",IDC_STATIC,60,100,24,8
+    LTEXT           "に　(普通：51112)",IDC_STATIC,122,100,58,8
+    GROUPBOX        "アプリケーション設定：",IDC_STATIC,7,168,194,55
+    CONTROL         "Windowsロギン時はアプリを実行する",IDC_RUN_AFTER_LOGIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,22,185,129,10
+    CONTROL         "実行すり時はウインドーを小さくする",IDC_SETTINGS_START_MINIMIZED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,22,202,125,10
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -130,6 +157,14 @@ BEGIN
         RIGHTMARGIN, 179
         TOPMARGIN, 7
         BOTTOMMARGIN, 64
+    END
+
+    IDD_SETTINGS_JA, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 201
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 246
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -172,6 +207,74 @@ BEGIN
 END
 
 #endif    // Japanese resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Italian (Neutral) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ITA)
+#ifdef _WIN32
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_SETTINGS_IT DIALOGEX 0, 0, 208, 253
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Impostazioni"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_ST_USERNAME,78,22,99,14,ES_AUTOHSCROLL,0,HIDC_ST_USERNAME
+    EDITTEXT        IDC_PASSWORD1_EDIT,78,43,99,14,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        IDC_PASSWORD2_EDIT,78,60,99,14,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "Accetta Connessioni",IDC_LISTEN_CONNECTIONS_CHECK,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,39,82,81,10
+    EDITTEXT        IDC_ST_LOCAL_PORT,85,97,33,14,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "Nessuno puo' Vedere il mio computer !",IDC_FORBID_SHOW_MY_DESKTOP_CHECK,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,39,126,137,10
+    CONTROL         "Nessuno puo' Usare il mio computer !",IDC_FORBID_SHARE_MY_DESKTOP_CHECK,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,39,142,133,10
+    DEFPUSHBUTTON   "OK",IDOK,94,232,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,151,232,50,14
+    GROUPBOX        "Mie Impostazioni:",IDC_STATIC,7,7,194,154
+    LTEXT           "Mia Password:",IDC_STATIC,29,46,47,8
+    LTEXT           "Ri-scrivi:",IDC_STATIC,48,62,29,10
+    LTEXT           "Mio Username:",IDC_STATIC,28,25,48,8
+    LTEXT           "Sulla Porta:",IDC_STATIC,45,100,38,8
+    LTEXT           "(default e' 51112)",IDC_STATIC,122,100,58,8
+    GROUPBOX        "Impostazioni Applicazione:",IDC_STATIC,7,168,194,55
+    CONTROL         "Lancia Automaticamente Dopo Login Windows",IDC_RUN_AFTER_LOGIN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,22,185,162,10
+    CONTROL         "Finestra Minimizzata al Lancio",IDC_SETTINGS_START_MINIMIZED,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,22,202,109,10
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_SETTINGS_IT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 201
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 246
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // Italian (Neutral) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

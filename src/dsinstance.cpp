@@ -397,9 +397,9 @@ int DSharinguApp::mainEventFilter( win_event_type etype, win_event_t *eventp )
 			if NOT( _download_updatep )
 			{
 				_download_updatep = new DownloadUpdate( _main_win._hwnd,
-											APP_VERSION_STR,
-											_T("dsharingu.kazzuya.com"),
-											_T("/dsharingu_data/update_info2.txt"),
+											APP_VERSION_STR_UTF8,
+											"dsharingu.kazzuya.com",
+											"/dsharingu_data/update_info2.txt",
 											_T("DSharingu - Download Update") );
 			}
 			break;

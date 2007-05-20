@@ -64,20 +64,14 @@ va_list	va;
 //==================================================================
 void debugout_render()
 {
-int	i;
-int	line_he;
+	FONT_DrawBegin();
 
-	glEnable( GL_TEXTURE_2D );
-	glBindTexture( GL_TEXTURE_2D, FONT_GetTexname() );
-	glEnable( GL_BLEND );
-	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-
-	line_he = FONT_TextHeight();
+	int line_he = FONT_TextHeight();
 
 	glColor4f( 0, 0, 0, 1 );
 	glPushMatrix();
 		glTranslatef( 4+1, line_he+1, 0 );
-		for (i=0; i < _n_strings; ++i)
+		for (int i=0; i < _n_strings; ++i)
 		{
 			FONT_puts( _strings[i] );
 			glTranslatef( 0, line_he, 0 );
@@ -87,12 +81,14 @@ int	line_he;
 	glColor4f( 0, 1, 0, 1 );
 	glPushMatrix();
 		glTranslatef( 4, line_he, 0 );
-		for (i=0; i < _n_strings; ++i)
+		for (int i=0; i < _n_strings; ++i)
 		{
 			FONT_puts( _strings[i] );
 			glTranslatef( 0, line_he, 0 );
 		}
 	glPopMatrix();
+
+	FONT_DrawEnd();
 
 	_n_strings = 0;
 }
