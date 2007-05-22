@@ -45,11 +45,71 @@ enum {
 	SETTINGS_BUTT,
 	SETTINGS_TXT_STATIC,
 
+	CALL_ADD_REM_OR_MODIFY_USERS_TXT_STATIC,
+
 	CHECKUPDATE_BUTT,
 
 	WEBSITE_BUTT,
 	VERSION_INFO_STATIC,
+
+	LANG_EN_BUTT,
+	LANG_IT_BUTT,
+	LANG_JA_BUTT,
 };
+
+//==================================================================
+#define CHANGE_APP_SETTINGS				_T( "Change the application settings." )
+#define CALL_ADD_REM_OR_MODIFY_USERS	_T( "Call, add, remove or modify users." )
+
+//==================================================================
+void DSharinguApp::homeWinCreateLangButts( GGET_Manager &gam, int y )
+{
+	GGET_Button	*buttp;
+	{
+	buttp = gam.AddButton( LANG_EN_BUTT, 256, y, 52, 28, _T("Eng") );
+	buttp->SetIcon( _ico_en_imgp );
+	
+	buttp = gam.AddButton( LANG_IT_BUTT, 256, y, 52, 28, _T("Ita") );
+	buttp->SetIcon( _ico_en_imgp );
+	
+	buttp = gam.AddButton( LANG_JA_BUTT, 256, y, 52, 28, _T("日本語") );
+	buttp->SetIcon( _ico_en_imgp );
+	}
+}
+
+//==================================================================
+void DSharinguApp::homeWinOnResizeLangButts( GGET_Manager &gam, Window *winp )
+{
+	float	x, y;
+
+	y = winp->GetHeight();
+	x = winp->GetWidth();
+
+	GGET_Button	*buttp;
+
+	buttp = (GGET_Button *)gam.FindGadget( LANG_JA_BUTT );
+	x -= buttp->GetWidth() + 4;
+	y -= buttp->GetHeight() + 4;
+	buttp->SetPos( x, y );
+
+	buttp = (GGET_Button *)gam.FindGadget( LANG_IT_BUTT );
+	x -= buttp->GetWidth() + 4;
+	buttp->SetPos( x, y );
+
+	buttp = (GGET_Button *)gam.FindGadget( LANG_EN_BUTT );
+	x -= buttp->GetWidth() + 4;
+	buttp->SetPos( x, y );
+}
+
+//==================================================================
+void DSharinguApp::localHomeWinRebuild()
+{
+	GGET_Manager	&gam = _home_winp->GetGGETManager();
+
+	((GGET_StaticText *)gam.FindGadget( SETTINGS_TXT_STATIC ))->SetText( localStr( CHANGE_APP_SETTINGS ) );
+	((GGET_StaticText *)gam.FindGadget( CALL_ADD_REM_OR_MODIFY_USERS_TXT_STATIC ))->SetText( localStr( CALL_ADD_REM_OR_MODIFY_USERS ) );
+}
+
 //==================================================================
 void DSharinguApp::homeWinCreate()
 {
@@ -88,6 +148,9 @@ void DSharinguApp::homeWinCreate()
 								_T( "DSharingu - Application's Home" ) );
 	//stxtp->SetFillType( GGET_StaticText::FILL_TYPE_HTOOLBAR );
 	//stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
+
+	homeWinCreateLangButts( gam, y );
+
 	y += OFF_Y;
 
 	PSYS::tstring	str;
@@ -128,8 +191,8 @@ void DSharinguApp::homeWinCreate()
 
 	gam.AddButton( CONNECTIONS_BUTT,	x, y, BUTT_WD, BUTT_HE, _T( "Call or Manage users..." ) );
 
-	stxtp =	gam.AddStaticText( -1, x + BUTT_WD + 4, y, 400, BUTT_HE,
-								_T( "Call, add, remove or modify users." ) );
+	stxtp =	gam.AddStaticText( CALL_ADD_REM_OR_MODIFY_USERS_TXT_STATIC, x + BUTT_WD + 4, y, 400, BUTT_HE,
+								CALL_ADD_REM_OR_MODIFY_USERS );
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	y += OFF_Y;
 
@@ -141,7 +204,7 @@ void DSharinguApp::homeWinCreate()
 	y += OFF_Y;
 
 	gam.AddButton( CHECKUPDATE_BUTT,	x, y, BUTT_WD, BUTT_HE, _T( "Check for Updates..." ) );
-	stxtp = gam.AddStaticText( -1, x + BUTT_WD + 4, y, 400, BUTT_HE, _T("Check on-line for updates よよ.") );
+	stxtp = gam.AddStaticText( -1, x + BUTT_WD + 4, y, 400, BUTT_HE, _T("Check on-line for updates.") );
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	y += OFF_Y;
 
@@ -166,9 +229,36 @@ void DSharinguApp::homeWinOnChangedSettings()
 	}
 	else
 	{
-		stxtp->SetText( _T( "Change the application settings." ) );
+		stxtp->SetText( localStr( CHANGE_APP_SETTINGS ) );
 		stxtp->SetTextColor( 0, 0, 0, 1 );
 	}
+}
+
+//==================================================================
+const TCHAR *DSharinguApp::localStr( const TCHAR *strp ) const
+{
+static TCHAR	*strs[][3] =
+{
+	CHANGE_APP_SETTINGS,		 _T("Cambia impostazioni applicazione."), _T("アプリケーション設定を変更する。"),
+	CALL_ADD_REM_OR_MODIFY_USERS,_T("Chiama, aggiungi, rimuivi, modifica, utenti."),_T("ユーザを呼び出し、参加、消す、変更。"),
+	NULL, NULL, NULL
+};
+
+	const TCHAR	*found_strp = NULL;
+
+	for (int i=0; i < 100; ++i)
+	{
+		if NOT( strs[i][0] )
+			break;
+
+		if ( _tcscmp( strs[i][0], strp ) == 0 )
+			found_strp = strs[i][_cur_lang];
+	}
+
+	if NOT( found_strp )
+		found_strp = strp;
+
+	return found_strp;
 }
 
 //==================================================================
@@ -194,6 +284,10 @@ void DSharinguApp::homeWinGadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB
 	case CHECKUPDATE_BUTT:
 		PostMessage( _main_win._hwnd, WM_COMMAND, ID_HELP_CHECKFORUPDATES, 0 );
 		break;
+
+	case LANG_EN_BUTT:	_cur_lang = LANG_EN; localHomeWinRebuild();	break;
+	case LANG_IT_BUTT:	_cur_lang = LANG_IT; localHomeWinRebuild();	break;
+	case LANG_JA_BUTT:	_cur_lang = LANG_JA; localHomeWinRebuild();	break;
 	}
 }
 
@@ -223,6 +317,8 @@ int DSharinguApp::homeWinEventFilter( win_event_type etype, win_event_t *eventp 
 
 			gam.FindGadget( VERSION_INFO_STATIC )->SetRect( 4+BUTT_WD*0, _home_winp->GetHeight()-BUTT_HE,
 															_home_winp->GetWidth() - (4+BUTT_WD), BUTT_HE );
+
+			homeWinOnResizeLangButts( gam, eventp->winp );
 		}
 		break;
 

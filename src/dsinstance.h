@@ -94,6 +94,13 @@ public:
 //		BUTT_QUIT,
 	};
 
+	enum
+	{
+		LANG_EN,
+		LANG_IT,
+		LANG_JA,
+	};
+
 //private:
 public:
 
@@ -120,6 +127,11 @@ public:
 	HMENU				_main_menu;
 
 	double				_last_autocall_check_time;
+
+	PUtils::ImageBase_SP		_ico_en_imgp;
+	PUtils::ImageBase_SP		_ico_it_imgp;
+	PUtils::ImageBase_SP		_ico_ja_imgp;
+	int							_cur_lang;
 
 //	IntSysMessageParser	_intsysmsgparser;
 public:
@@ -170,16 +182,22 @@ private:
 	void		saveConfig();
 
 	void		homeWinCreate();
+	void		homeWinCreateLangButts( GGET_Manager &gam, int y );
 	static int	homeWinEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );
 	int			homeWinEventFilter( win_event_type etype, win_event_t *eventp );
 	static void	homeWinGadgetCallback_s( void *userdatap, int gget_id, GGET_Item *itemp, GGET_CB_Action action );
 	void		homeWinGadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB_Action action );
 	void		homeWinOnChangedSettings();
+	void		homeWinOnResizeLangButts( GGET_Manager &gam, Window *winp );
 	
 	void		handleAutoCall();
 	void		sendUsageAbility( DSChannel *chanp );
 	bool		channelCanWatch( const DSChannel *chanp );
 	bool		channelCanUse( const DSChannel *chanp );
+
+	const TCHAR	*localStr( const TCHAR *strp ) const;
+
+	void		localHomeWinRebuild();
 };
 
 #endif

@@ -39,6 +39,8 @@
 
 #define WINDOW_TITLE		(APP_NAME _T(" ") APP_VERSION_STR)
 
+using namespace PUtils;
+
 //===============================================================
 BOOL CALLBACK DSharinguApp::aboutDialogProc_s(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)
 {
@@ -106,7 +108,8 @@ DSharinguApp::DSharinguApp( const TCHAR *config_fnamep ) :
 	_main_menu(NULL),
 	_chmanagerp(NULL),
 	_home_winp(NULL),
-	_last_autocall_check_time(0.0)
+	_last_autocall_check_time(0.0),
+	_cur_lang(LANG_EN)
 {
 	_tcscpy_s( _config_fname, config_fnamep );
 	_config_pathname[0] = 0;
@@ -200,8 +203,43 @@ static bool doesDirExist( const TCHAR *dirnamep )
 }
 
 //==================================================================
+static ImageBase *LoadImageBaseResource( HINSTANCE hi, LPCTSTR resp )
+{
+	ImageBase	*imgp;
+
+	HRSRC hrsrc = FindResource( hi, resp, RT_BITMAP );
+	DWORD size = SizeofResource( hi, hrsrc );
+
+	HGLOBAL hglob = LoadResource( hi, hrsrc );
+	void *resdatap = LockResource( hglob );
+
+	imgp = new ImageBase();
+	try
+	{
+		ImageBase::LoadParams	params;
+		params._do_convert_truecolor = true;
+
+		imgp->LoadBMP( Memfile(resdatap,size), &params );
+	}
+	catch (...)
+	{
+		UnlockResource( hglob );
+	}
+
+	UnlockResource( hglob );
+
+	return imgp;
+}
+
+//==================================================================
 void DSharinguApp::Create( bool start_minimized )
 {
+	HBITMAP dude = LoadBitmap( WinSys::GetInstance(), MAKEINTRESOURCE(IDB_ICO_EN) );
+
+	_ico_en_imgp = LoadImageBaseResource( WinSys::GetInstance(), MAKEINTRESOURCE(IDB_ICO_EN) );
+	_ico_ja_imgp = LoadImageBaseResource( WinSys::GetInstance(), MAKEINTRESOURCE(IDB_ICO_JA) );
+	_ico_it_imgp = LoadImageBaseResource( WinSys::GetInstance(), MAKEINTRESOURCE(IDB_ICO_IT) );
+
 	TCHAR szPath[ PSYS_MAX_PATH ];
 
 	if ( SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA|CSIDL_FLAG_CREATE, NULL, 0, szPath) ) )
