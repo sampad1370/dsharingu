@@ -13,6 +13,10 @@
 #define IDD_ABOUT                       124
 #define IDD_DOWNLOADING_UPDATE          125
 #define IDD_SETTINGS_JA                 126
+#define IDB_ICO_EN                      127
+#define IDB_BITMAP3                     128
+#define IDB_ICO_IT                      128
+#define IDB_ICO_JA                      129
 #define IDC_CUSTOM_PORT_EDIT            1004
 #define IDC_CUSTOM_PORT_CALL_EDIT       1004
 #define IDC_SHOW_MY_DESKTOP_CHECK       1005
@@ -80,7 +84,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        127
+#define _APS_NEXT_RESOURCE_VALUE        130
 #define _APS_NEXT_COMMAND_VALUE         40019
 #define _APS_NEXT_CONTROL_VALUE         1040
 #define _APS_NEXT_SYMED_VALUE           101
