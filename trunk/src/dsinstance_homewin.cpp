@@ -60,20 +60,93 @@ enum {
 //==================================================================
 #define CHANGE_APP_SETTINGS				_T( "Change the application settings." )
 #define CALL_ADD_REM_OR_MODIFY_USERS	_T( "Call, add, remove or modify users." )
+#define CALL_OR_MANAGE_USERS			_T( "Call or Manage users..." )
+#define MY_USERNAME						_T( "My Username: " )
+#define ACCEPTING_CONS_ON_PORT			_T( "* Accepting connections on port " )
+#define NOBODY_CAN_WATCH_MY_COMP		_T( "* Nobody can watch my computer" )
+#define PERMITTED_USR_MAY_WATCH_MY_COMP	_T( "* Permitted users may watch my computer" )
+
+//==================================================================
+const TCHAR *DSharinguApp::localStr( const TCHAR *strp ) const
+{
+static TCHAR	*strs[][3] =
+{
+	CHANGE_APP_SETTINGS				,_T("Cambia impostazioni applicazione."), _T("アプリケーション設定を変更する。"),
+	CALL_ADD_REM_OR_MODIFY_USERS	,_T("Chiama, aggiungi, rimuivi, modifica, utenti."),_T("ユーザを呼び出し、参加、消す、変更。"),
+	CALL_OR_MANAGE_USERS			,_T("Chiama o Gestisci utenti..."),_T("ユーザを呼び出し、変更..."),
+	MY_USERNAME						,_T("Mio Nome-utente: " ), _T("自分のユーザネーム: "),
+	ACCEPTING_CONS_ON_PORT			,_T("* Connessioni aprte sulla porta "),_T("接続がとられる。ポート："),
+	NOBODY_CAN_WATCH_MY_COMP		,_T("* Nessuno puo' vedere il mio computer" ),_T("* 誰かが自分の画面を見えられない" ),
+	PERMITTED_USR_MAY_WATCH_MY_COMP	,_T("* Utenti permessi possono vedere il mio comp."),_T("* 許容されたユーザが画面を見えられる"),
+
+	NULL, NULL, NULL
+};
+
+	const TCHAR	*found_strp = NULL;
+
+	for (int i=0; i < 100; ++i)
+	{
+		if NOT( strs[i][0] )
+			break;
+
+		if ( _tcscmp( strs[i][0], strp ) == 0 )
+			found_strp = strs[i][_cur_lang];
+	}
+
+	if NOT( found_strp )
+		found_strp = strp;
+
+	return found_strp;
+}
+
+//==================================================================
+void DSharinguApp::homeWinOnChangedSettings()
+{
+	GGET_Manager	&gam = _home_winp->GetGGETManager();
+	GGET_StaticText	*stxtp = (GGET_StaticText *)gam.FindGadget( SETTINGS_TXT_STATIC );
+
+	if ( _settings._username[0] == 0 || _settings._password.IsEmpty() )
+	{
+		stxtp->SetText( _T( "Please, choose a Username and Password in the Settings dialog." ) );
+		stxtp->SetTextColor( 0.8f, 0, 0, 1 );
+	}
+	else
+	{
+		stxtp->SetText( localStr( CHANGE_APP_SETTINGS ) );
+		stxtp->SetTextColor( 0, 0, 0, 1 );
+	}
+
+	PSYS::tstring	str;
+
+	str = PSYS::tstring( localStr( MY_USERNAME ) ) + PSYS::tstring( _settings._username );
+	gam.FindGadget( MYUSERNAME_TXT_STATIC )->SetText( str.c_str() );
+
+	gam.FindGadget( SETTINGS_TXT_STATIC )->SetText( localStr( CHANGE_APP_SETTINGS ) );
+	gam.FindGadget( CALL_ADD_REM_OR_MODIFY_USERS_TXT_STATIC )->SetText( localStr( CALL_ADD_REM_OR_MODIFY_USERS ) );
+	gam.FindGadget( CONNECTIONS_BUTT )->SetText( localStr( CALL_OR_MANAGE_USERS ) );
+
+	if ( _settings._listen_for_connections )
+		str = PSYS::tstring( localStr(ACCEPTING_CONS_ON_PORT) ) + PSYS::Stringify( _settings._listen_port );
+	else
+		str = PSYS::tstring( _T( "* Not accepting any connections" ) );
+
+	gam.FindGadget( ACCEPTING_CONS_TXT_STATIC )->SetText( str.c_str() );
+
+	if ( _settings._nobody_can_watch_my_computer )
+		str = PSYS::tstring( localStr( NOBODY_CAN_WATCH_MY_COMP ) );
+	else
+		str = PSYS::tstring( localStr( PERMITTED_USR_MAY_WATCH_MY_COMP ) );
+
+	gam.FindGadget( SEL_USERS_CAN_WATCH_TXT_STATIC )->SetText( str.c_str() );}
 
 //==================================================================
 void DSharinguApp::homeWinCreateLangButts( GGET_Manager &gam, int y )
 {
 	GGET_Button	*buttp;
 	{
-	buttp = gam.AddButton( LANG_EN_BUTT, 256, y, 52, 28, _T("Eng") );
-	buttp->SetIcon( _ico_en_imgp );
-	
-	buttp = gam.AddButton( LANG_IT_BUTT, 256, y, 52, 28, _T("Ita") );
-	buttp->SetIcon( _ico_en_imgp );
-	
-	buttp = gam.AddButton( LANG_JA_BUTT, 256, y, 52, 28, _T("日本語") );
-	buttp->SetIcon( _ico_en_imgp );
+	buttp = gam.AddButton( LANG_EN_BUTT, 256, y, 52, 28, _T("Eng") );	buttp->SetIcon( _ico_en_imgp );
+	buttp = gam.AddButton( LANG_IT_BUTT, 256, y, 52, 28, _T("Ita") );	buttp->SetIcon( _ico_en_imgp );
+	buttp = gam.AddButton( LANG_JA_BUTT, 256, y, 52, 28, _T("日本語") );	buttp->SetIcon( _ico_en_imgp );
 	}
 }
 
@@ -99,15 +172,6 @@ void DSharinguApp::homeWinOnResizeLangButts( GGET_Manager &gam, Window *winp )
 	buttp = (GGET_Button *)gam.FindGadget( LANG_EN_BUTT );
 	x -= buttp->GetWidth() + 4;
 	buttp->SetPos( x, y );
-}
-
-//==================================================================
-void DSharinguApp::localHomeWinRebuild()
-{
-	GGET_Manager	&gam = _home_winp->GetGGETManager();
-
-	((GGET_StaticText *)gam.FindGadget( SETTINGS_TXT_STATIC ))->SetText( localStr( CHANGE_APP_SETTINGS ) );
-	((GGET_StaticText *)gam.FindGadget( CALL_ADD_REM_OR_MODIFY_USERS_TXT_STATIC ))->SetText( localStr( CALL_ADD_REM_OR_MODIFY_USERS ) );
 }
 
 //==================================================================
@@ -155,26 +219,15 @@ void DSharinguApp::homeWinCreate()
 
 	PSYS::tstring	str;
 
-	str = PSYS::tstring( _T( "My Username: " ) ) + PSYS::tstring( _settings._username );
-	stxtp =	gam.AddStaticText( MYUSERNAME_TXT_STATIC, x, y, _home_winp->GetWidth(), 0, str.c_str() );
+	stxtp =	gam.AddStaticText( MYUSERNAME_TXT_STATIC, x, y, _home_winp->GetWidth(), 0, NULL );
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	y += static_off_y;
 
-	if ( _settings._listen_for_connections )
-		str = PSYS::tstring( _T( "* Accepting connections on port " ) ) + PSYS::Stringify( _settings._listen_port );
-	else
-		str = PSYS::tstring( _T( "* Not accepting any connections" ) );
-
-	stxtp =	gam.AddStaticText( ACCEPTING_CONS_TXT_STATIC, x, y, _home_winp->GetWidth(), 0, str.c_str() );
+	stxtp =	gam.AddStaticText( ACCEPTING_CONS_TXT_STATIC, x, y, _home_winp->GetWidth(), 0, NULL );
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	y += static_off_y;
 
-	if ( _settings._nobody_can_watch_my_computer )
-		str = PSYS::tstring( _T( "* Nobody can watch my computer" ) );
-	else
-		str = PSYS::tstring( _T( "* Selected users may watch my computer" ) );
-
-	stxtp =	gam.AddStaticText( SEL_USERS_CAN_WATCH_TXT_STATIC, x, y, _home_winp->GetWidth(), 0, str.c_str() );
+	stxtp =	gam.AddStaticText( SEL_USERS_CAN_WATCH_TXT_STATIC, x, y, _home_winp->GetWidth(), 0, NULL );
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	y += static_off_y;
 
@@ -189,7 +242,7 @@ void DSharinguApp::homeWinCreate()
 	y += static_off_y;
 
 
-	gam.AddButton( CONNECTIONS_BUTT,	x, y, BUTT_WD, BUTT_HE, _T( "Call or Manage users..." ) );
+	gam.AddButton( CONNECTIONS_BUTT,	x, y, BUTT_WD, BUTT_HE, localStr( CALL_OR_MANAGE_USERS ) );
 
 	stxtp =	gam.AddStaticText( CALL_ADD_REM_OR_MODIFY_USERS_TXT_STATIC, x + BUTT_WD + 4, y, 400, BUTT_HE,
 								CALL_ADD_REM_OR_MODIFY_USERS );
@@ -217,51 +270,6 @@ void DSharinguApp::homeWinCreate()
 }
 
 //==================================================================
-void DSharinguApp::homeWinOnChangedSettings()
-{
-	GGET_Manager	&gam = _home_winp->GetGGETManager();
-	GGET_StaticText	*stxtp = (GGET_StaticText *)gam.FindGadget( SETTINGS_TXT_STATIC );
-
-	if ( _settings._username[0] == 0 || _settings._password.IsEmpty() )
-	{
-		stxtp->SetText( _T( "Please, choose a Username and Password in the Settings dialog." ) );
-		stxtp->SetTextColor( 0.8f, 0, 0, 1 );
-	}
-	else
-	{
-		stxtp->SetText( localStr( CHANGE_APP_SETTINGS ) );
-		stxtp->SetTextColor( 0, 0, 0, 1 );
-	}
-}
-
-//==================================================================
-const TCHAR *DSharinguApp::localStr( const TCHAR *strp ) const
-{
-static TCHAR	*strs[][3] =
-{
-	CHANGE_APP_SETTINGS,		 _T("Cambia impostazioni applicazione."), _T("アプリケーション設定を変更する。"),
-	CALL_ADD_REM_OR_MODIFY_USERS,_T("Chiama, aggiungi, rimuivi, modifica, utenti."),_T("ユーザを呼び出し、参加、消す、変更。"),
-	NULL, NULL, NULL
-};
-
-	const TCHAR	*found_strp = NULL;
-
-	for (int i=0; i < 100; ++i)
-	{
-		if NOT( strs[i][0] )
-			break;
-
-		if ( _tcscmp( strs[i][0], strp ) == 0 )
-			found_strp = strs[i][_cur_lang];
-	}
-
-	if NOT( found_strp )
-		found_strp = strp;
-
-	return found_strp;
-}
-
-//==================================================================
 void DSharinguApp::homeWinGadgetCallback_s( void *userdatap, int gget_id, GGET_Item *itemp, GGET_CB_Action action )
 {
 	((DSharinguApp *)userdatap)->homeWinGadgetCallback( gget_id, itemp, action );
@@ -285,9 +293,9 @@ void DSharinguApp::homeWinGadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB
 		PostMessage( _main_win._hwnd, WM_COMMAND, ID_HELP_CHECKFORUPDATES, 0 );
 		break;
 
-	case LANG_EN_BUTT:	_cur_lang = LANG_EN; localHomeWinRebuild();	break;
-	case LANG_IT_BUTT:	_cur_lang = LANG_IT; localHomeWinRebuild();	break;
-	case LANG_JA_BUTT:	_cur_lang = LANG_JA; localHomeWinRebuild();	break;
+	case LANG_EN_BUTT:	_cur_lang = LANG_EN; homeWinOnChangedSettings();	break;
+	case LANG_IT_BUTT:	_cur_lang = LANG_IT; homeWinOnChangedSettings();	break;
+	case LANG_JA_BUTT:	_cur_lang = LANG_JA; homeWinOnChangedSettings();	break;
 	}
 }
 
