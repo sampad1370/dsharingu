@@ -139,7 +139,7 @@ void InteractiveSystem::Idle()
 		memf.WriteInt( _remocon_queue.len() );
 		memf.WriteData( &_remocon_queue[0], sizeof(_remocon_queue[0]) * _remocon_queue.len() );
 
-		_cpkp->SendPacket( REMOCON_ARRAY_PKID, (void *)memf._datap, memf.GetCurPos(), NULL );
+		_cpkp->SendPacket( REMOCON_ARRAY_PKID, (void *)memf.GetData(), memf.GetCurPos(), NULL );
 
 		_remocon_queue.clear();
 
