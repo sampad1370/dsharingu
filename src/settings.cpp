@@ -391,7 +391,9 @@ BOOL CALLBACK Settings::DialogProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM l
 }
 
 //==================================================================
-void Settings::OpenDialog( Window *parent_winp, void (*onChangedSettingsCB)( void *userdatap ), void *cb_userdatap )
+void Settings::OpenDialog( Window *parent_winp, LPCTSTR	dlg_resnamep,
+						   void (*onChangedSettingsCB)( void *userdatap ),
+						   void *cb_userdatap )
 {
 	if NOT( _is_open )
 	{
@@ -401,7 +403,7 @@ void Settings::OpenDialog( Window *parent_winp, void (*onChangedSettingsCB)( voi
 
 		HWND hwnd =
 			CreateDialogParam( (HINSTANCE)WinSys::GetInstance(),
-				MAKEINTRESOURCE(IDD_SETTINGS), parent_winp->_hwnd,
+				dlg_resnamep, parent_winp->_hwnd,
 				DialogProc_s, (LPARAM)this );
 		appbase_add_modeless_dialog( hwnd );
 		ShowWindow( hwnd, SW_SHOWNORMAL );

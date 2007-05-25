@@ -42,10 +42,10 @@ enum {
 
 	CONNECTIONS_BUTT,
 
-	SETTINGS_BUTT,
+	APP_SETTINGS_BUTT,
 	SETTINGS_TXT_STATIC,
 
-	CALL_ADD_REM_OR_MODIFY_USERS_TXT_STATIC,
+//	CALL_ADD_REM_OR_MODIFY_USERS_TXT_STATIC,
 
 	CHECKUPDATE_BUTT,
 
@@ -58,26 +58,38 @@ enum {
 };
 
 //==================================================================
-#define CHANGE_APP_SETTINGS				_T( "Change the application settings." )
-#define CALL_ADD_REM_OR_MODIFY_USERS	_T( "Call, add, remove or modify users." )
-#define CALL_OR_MANAGE_USERS			_T( "Call or Manage users..." )
+//#define CHANGE_APP_SETTINGS				_T( "Change the application settings" )
+#define CONNECTIONS_BUTT_TXT			_T("Call or manage users...")
+#define APP_SETTINGS_BUTT_TXT			_T("Application Settings..")
+#define CHECKUPDATE_BUTT_TXT			_T("Check for Updates...")
+
+//#define CALL_ADD_REM_OR_MODIFY_USERS	_T( "Call, add, remove or modify users" )
 #define MY_USERNAME						_T( "My Username: " )
-#define ACCEPTING_CONS_ON_PORT			_T( "* Accepting connections on port " )
+#define ACCEPTING_CALLS_ON_PORT			_T( "* Accepting calls on port " )
 #define NOBODY_CAN_WATCH_MY_COMP		_T( "* Nobody can watch my computer" )
+#define NOBODY_CAN_USE_MY_COMP			_T( "* Nobody can use my computer" )
 #define PERMITTED_USR_MAY_WATCH_MY_COMP	_T( "* Permitted users may watch my computer" )
+#define PERMITTED_USR_MAY_USE_MY_COMP	_T( "* Permitted users may use my computer" )
+#define NOT_ACCEPTING_ANY_CALLS			_T( "* Not accepting any calls" )
 
 //==================================================================
 const TCHAR *DSharinguApp::localStr( const TCHAR *strp ) const
 {
 static TCHAR	*strs[][3] =
 {
-	CHANGE_APP_SETTINGS				,_T("Cambia impostazioni applicazione."), _T("アプリケーション設定を変更する。"),
-	CALL_ADD_REM_OR_MODIFY_USERS	,_T("Chiama, aggiungi, rimuivi, modifica, utenti."),_T("ユーザを呼び出し、参加、消す、変更。"),
-	CALL_OR_MANAGE_USERS			,_T("Chiama o Gestisci utenti..."),_T("ユーザを呼び出し、変更..."),
-	MY_USERNAME						,_T("Mio Nome-utente: " ), _T("自分のユーザネーム: "),
-	ACCEPTING_CONS_ON_PORT			,_T("* Connessioni aprte sulla porta "),_T("接続がとられる。ポート："),
-	NOBODY_CAN_WATCH_MY_COMP		,_T("* Nessuno puo' vedere il mio computer" ),_T("* 誰かが自分の画面を見えられない" ),
-	PERMITTED_USR_MAY_WATCH_MY_COMP	,_T("* Utenti permessi possono vedere il mio comp."),_T("* 許容されたユーザが画面を見えられる"),
+	CONNECTIONS_BUTT_TXT			,_T("Chiama o gestisci utenti..."),	_T("ユーザーを呼び出し、変更…"),
+	APP_SETTINGS_BUTT_TXT			,_T("Settaggi Applicazione..."),	_T("アプリケーション設定…"),
+	CHECKUPDATE_BUTT_TXT			,_T("Cerca Aggiornamenti..."),		_T("更新プログラムの確認…"),
+
+	///CHANGE_APP_SETTINGS				,_T("Cambia impostazioni applicazione"), _T("アプリケーション設定"),
+	//CALL_ADD_REM_OR_MODIFY_USERS	,_T("Chiama, aggiungi, rimuivi, modifica, utenti"),_T("ユーザー呼び出す、ユーザー設定"),
+	MY_USERNAME						,_T("Mio Nome-utente: " ), _T("自分のユーザー名: "),
+	ACCEPTING_CALLS_ON_PORT			,_T("* Connessioni aprte sulla porta "),_T("接続がとられる。ポート："),
+	NOBODY_CAN_WATCH_MY_COMP		,_T("* Nessuno puo' vedere il mio computer" ),_T("* 誰かが自分の画面を見ることできない" ),
+	NOBODY_CAN_USE_MY_COMP			,_T("* Nessuno puo' usare il mio computer" ),_T("* 誰かが自分のパソコンを使うことできない" ),
+	PERMITTED_USR_MAY_WATCH_MY_COMP	,_T("* Utenti permessi possono vedere il mio schermo"),_T("* 許容されたユーザーが画面を見ることはできる"),
+	PERMITTED_USR_MAY_USE_MY_COMP	,_T("* Utenti permessi possono usare il mio comp."),_T("* 許容されたユーザーが自分のパソコンを使うことはできる"),
+	NOT_ACCEPTING_ANY_CALLS			,_T("* Rifiuta qualsiasi chiamata"),_T("* 入力接続を拒否する"),
 
 	NULL, NULL, NULL
 };
@@ -100,6 +112,12 @@ static TCHAR	*strs[][3] =
 }
 
 //==================================================================
+const PSYS::tstring DSharinguApp::localTStr( const TCHAR *strp ) const
+{
+	return PSYS::tstring( localStr( strp ) );
+}
+
+//==================================================================
 void DSharinguApp::homeWinOnChangedSettings()
 {
 	GGET_Manager	&gam = _home_winp->GetGGETManager();
@@ -112,32 +130,41 @@ void DSharinguApp::homeWinOnChangedSettings()
 	}
 	else
 	{
-		stxtp->SetText( localStr( CHANGE_APP_SETTINGS ) );
+		stxtp->SetText( _T("") );//localStr( CHANGE_APP_SETTINGS ) );
 		stxtp->SetTextColor( 0, 0, 0, 1 );
 	}
 
 	PSYS::tstring	str;
 
-	str = PSYS::tstring( localStr( MY_USERNAME ) ) + PSYS::tstring( _settings._username );
+	str = localTStr( MY_USERNAME ) + PSYS::tstring( _settings._username );
 	gam.FindGadget( MYUSERNAME_TXT_STATIC )->SetText( str.c_str() );
 
-	gam.FindGadget( SETTINGS_TXT_STATIC )->SetText( localStr( CHANGE_APP_SETTINGS ) );
-	gam.FindGadget( CALL_ADD_REM_OR_MODIFY_USERS_TXT_STATIC )->SetText( localStr( CALL_ADD_REM_OR_MODIFY_USERS ) );
-	gam.FindGadget( CONNECTIONS_BUTT )->SetText( localStr( CALL_OR_MANAGE_USERS ) );
+	//gam.FindGadget( SETTINGS_TXT_STATIC )->SetText( localStr( CHANGE_APP_SETTINGS ) );
+	//gam.FindGadget( CALL_ADD_REM_OR_MODIFY_USERS_TXT_STATIC )->SetText( localStr( CALL_ADD_REM_OR_MODIFY_USERS ) );
 
 	if ( _settings._listen_for_connections )
-		str = PSYS::tstring( localStr(ACCEPTING_CONS_ON_PORT) ) + PSYS::Stringify( _settings._listen_port );
+		str = localTStr( ACCEPTING_CALLS_ON_PORT ) + PSYS::Stringify( _settings._listen_port );
 	else
-		str = PSYS::tstring( _T( "* Not accepting any connections" ) );
+		str = localTStr( NOT_ACCEPTING_ANY_CALLS );
 
 	gam.FindGadget( ACCEPTING_CONS_TXT_STATIC )->SetText( str.c_str() );
 
 	if ( _settings._nobody_can_watch_my_computer )
-		str = PSYS::tstring( localStr( NOBODY_CAN_WATCH_MY_COMP ) );
+		str = localTStr( NOBODY_CAN_WATCH_MY_COMP );
 	else
-		str = PSYS::tstring( localStr( PERMITTED_USR_MAY_WATCH_MY_COMP ) );
+		str = localTStr( PERMITTED_USR_MAY_WATCH_MY_COMP );
+	gam.FindGadget( SEL_USERS_CAN_WATCH_TXT_STATIC )->SetText( str.c_str() );
 
-	gam.FindGadget( SEL_USERS_CAN_WATCH_TXT_STATIC )->SetText( str.c_str() );}
+	if ( _settings._nobody_can_use_my_computer || _settings._nobody_can_watch_my_computer )
+		str = localTStr( NOBODY_CAN_USE_MY_COMP );
+	else
+		str = localTStr( PERMITTED_USR_MAY_USE_MY_COMP );
+	gam.FindGadget( SEL_USERS_CAN_USE_TXT_STATIC )->SetText( str.c_str() );
+
+	gam.FindGadget( CONNECTIONS_BUTT )->SetText( localStr( CONNECTIONS_BUTT_TXT ) );
+	gam.FindGadget( APP_SETTINGS_BUTT )->SetText( localStr( APP_SETTINGS_BUTT_TXT ) );
+	gam.FindGadget( CHECKUPDATE_BUTT )->SetText( localStr( CHECKUPDATE_BUTT_TXT ) );
+}
 
 //==================================================================
 void DSharinguApp::homeWinCreateLangButts( GGET_Manager &gam, int y )
@@ -231,32 +258,25 @@ void DSharinguApp::homeWinCreate()
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	y += static_off_y;
 
-	if ( _settings._nobody_can_use_my_computer || _settings._nobody_can_watch_my_computer )
-		str = PSYS::tstring( _T( "* Nobody can use my computer" ) );
-	else
-		str = PSYS::tstring( _T( "* Selected users may use my computer" ) );
-
-	stxtp =	gam.AddStaticText( SEL_USERS_CAN_USE_TXT_STATIC, x, y, _home_winp->GetWidth(), 0, str.c_str() );
+	stxtp =	gam.AddStaticText( SEL_USERS_CAN_USE_TXT_STATIC, x, y, _home_winp->GetWidth(), 0, NULL );
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	y += static_off_y;
 	y += static_off_y;
 
 
-	gam.AddButton( CONNECTIONS_BUTT,	x, y, BUTT_WD, BUTT_HE, localStr( CALL_OR_MANAGE_USERS ) );
+	gam.AddButton( CONNECTIONS_BUTT,	x, y, BUTT_WD, BUTT_HE, localStr( CONNECTIONS_BUTT_TXT ) );
 
-	stxtp =	gam.AddStaticText( CALL_ADD_REM_OR_MODIFY_USERS_TXT_STATIC, x + BUTT_WD + 4, y, 400, BUTT_HE,
-								CALL_ADD_REM_OR_MODIFY_USERS );
-	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
+//	stxtp =	gam.AddStaticText( CALL_ADD_REM_OR_MODIFY_USERS_TXT_STATIC, x + BUTT_WD + 4, y, 400, BUTT_HE,
+//								CALL_ADD_REM_OR_MODIFY_USERS );
+//	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	y += OFF_Y;
 
-
-	gam.AddButton( SETTINGS_BUTT,		x, y, BUTT_WD, BUTT_HE, _T( "Settings..." ) );
+	gam.AddButton( APP_SETTINGS_BUTT,		x, y, BUTT_WD, BUTT_HE, NULL);
 	stxtp = gam.AddStaticText( SETTINGS_TXT_STATIC, x + BUTT_WD + 4, y, 400, BUTT_HE, _T( "" ) );
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
-	homeWinOnChangedSettings();
 	y += OFF_Y;
 
-	gam.AddButton( CHECKUPDATE_BUTT,	x, y, BUTT_WD, BUTT_HE, _T( "Check for Updates..." ) );
+	gam.AddButton( CHECKUPDATE_BUTT,	x, y, BUTT_WD, BUTT_HE, NULL );
 	stxtp = gam.AddStaticText( -1, x + BUTT_WD + 4, y, 400, BUTT_HE, _T("Check on-line for updates.") );
 	stxtp->_flags |= GGET_FLG_ALIGN_LEFT;
 	y += OFF_Y;
@@ -285,7 +305,7 @@ void DSharinguApp::homeWinGadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB
 		PostMessage( _main_win._hwnd, WM_COMMAND, ID_FILE_CONNECTIONS, 0 );
 		break;
 
-	case SETTINGS_BUTT:
+	case APP_SETTINGS_BUTT:
 		PostMessage( _main_win._hwnd, WM_COMMAND, ID_FILE_SETTINGS, 0 );
 		break;
 
