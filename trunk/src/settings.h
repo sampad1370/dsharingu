@@ -48,7 +48,9 @@ public:
 
 	Settings();
 	~Settings();
-	void	OpenDialog( Window *parent_winp, void (*onChangedSettingsCB)( void *userdatap ), void *cb_userdatap );
+	void	OpenDialog( Window *parent_winp, LPCTSTR	dlg_resnamep,
+					   void (*onChangedSettingsCB)( void *userdatap ),
+					   void *cb_userdatap );
 	void	SaveConfig( FILE *fp );
 
 	static DataSchema *SchemaLoaderProc_s( FILE *fp, void *userdatap )

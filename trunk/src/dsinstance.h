@@ -196,6 +196,8 @@ private:
 	bool		channelCanUse( const DSChannel *chanp );
 
 	const TCHAR	*localStr( const TCHAR *strp ) const;
+	const PSYS::tstring localTStr( const TCHAR *strp ) const;
+	void		openSettings();
 };
 
 #endif

@@ -9,14 +9,12 @@ Legend:
  B - Bug fix
  P - Performance improvement
 
----- 0.27a - 2007/05/19
-- F: Converted code to Unicode (internal change)
-- B: Switched automatic upload to cygwin (googlecode-upload.py
-     won't work properly under Windows shell)
+---- 0.27a - 2007/05/27
+- F: Added Italian and Japanese languages to the installer
+- F: Added partial Italian and Japanese translations to the application
+- F: Converted code to Unicode (internal change for multi-language support)
 - B: Fixed bug about not being able to re-connect to the same remote
 - P: Now, pauses screen grabbing and uploading when remote destination is iconized
-- F: Added Italian, Japanese, French, German, Polish and Russian languages to
-     the installer, which is now about 20KB bigger ! About 180KB total 8(
 
 ---- 0.26a
 - P: Optimized network code including software update system

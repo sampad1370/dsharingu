@@ -311,7 +311,7 @@ void DSharinguApp::Create( bool start_minimized )
 			_T("Do you want to do it now ?"),
 			_T("DSharingu - Settings Required"), MB_YESNO | MB_ICONQUESTION ) == IDYES )
 		{
-			_settings.OpenDialog( &_main_win, handleChangedSettings_s, this );		
+			openSettings();
 		}
 	}
 
@@ -396,7 +396,7 @@ int DSharinguApp::mainEventFilter( win_event_type etype, win_event_t *eventp )
 			break;
 
 		case ID_FILE_SETTINGS:
-			_settings.OpenDialog( &_main_win, handleChangedSettings_s, this );
+			openSettings();
 			break;
 
 		case ID_FILE_EXIT:
@@ -497,6 +497,25 @@ void DSharinguApp::handleChangedRemoteManager( RemoteDef *changed_remotep )
 }
 
 //==================================================================
+void DSharinguApp::openSettings()
+{
+	LPCTSTR	resnamep;
+
+	switch ( _cur_lang )
+	{
+	case LANG_IT: resnamep = MAKEINTRESOURCE(IDD_SETTINGS_IT); break;
+	case LANG_JA: resnamep = MAKEINTRESOURCE(IDD_SETTINGS_JA); break;
+	case LANG_EN:
+	default:
+		resnamep = MAKEINTRESOURCE(IDD_SETTINGS);
+		break;
+	}
+
+	_settings.OpenDialog( &_main_win, resnamep, handleChangedSettings_s, this );
+}
+
+
+//==================================================================
 void DSharinguApp::handleCallRemoteManager_s( void *mythis, RemoteDef *remotep )
 {
 	((DSharinguApp *)mythis)->handleCallRemoteManager( remotep );
@@ -511,7 +530,7 @@ void DSharinguApp::handleCallRemoteManager( RemoteDef *remotep )
 				_T("Do you want to do it now ?"),
 				_T("Calling Problem"), MB_YESNO | MB_ICONQUESTION ) == IDYES )
 		{
-			_settings.OpenDialog( &_main_win, handleChangedSettings_s, this );		
+			openSettings();
 		}
 		return;
 	}
