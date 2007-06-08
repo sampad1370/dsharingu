@@ -51,97 +51,9 @@ static DSharinguApp		*_extrachannel2;
 #endif
 
 //==================================================================
-bool main_start( void *hinstance )
-{
-	try {
-
-		PSYS::Initialize();
-		HICON	hicon = LoadIcon( (HINSTANCE)hinstance, MAKEINTRESOURCE(IDI_ICO_APPL) );
-		WinSys::Init( (HINSTANCE)hinstance, hicon, _T("DSHARINGU") );
-
-		// set float 2 int conversion to chop off !
-		_control87( _RC_CHOP, _MCW_RC );
-		ss_init_winsock();
-
-		const TCHAR	*cmd_linep = GetCommandLine();
-		bool	start_minimized = (_tcsstr( cmd_linep, _T("/minimized") ) != NULL);
-
-		_basechannel = new DSharinguApp( _T("dsharingu.cfg") );
-		_basechannel->Create( start_minimized );
-	#ifdef USE_EXTRA_CHANNEL
-		_extrachannel = new DSharinguApp( _T("dsharingu2.cfg") );
-		_extrachannel->Create( start_minimized );
-	#endif
-
-	#ifdef USE_EXTRA_CHANNEL2
-		_extrachannel2 = new DSharinguApp( "dsharingu3.cfg" );
-		_extrachannel2->Create( start_minimized );
-	#endif
-	}
-	catch (...)// exception *e )
-	{
-		/*
-		psys_msg_printf( "", 0, 
-			"Exception: %s\n",
-			e->what() );
-		*/
-		return false;
-	}
-	
-	return true;
-}
-
-//==================================================================
-static void handleChannel( DSharinguApp *appp )
-{
-	appp->Idle();
-	/*
-	switch ( chanp->Idle() )
-	{
-	case DSChannel::STATE_QUIT:
-		_do_quit_flag = 1;
-		break;
-	}
-	*/
-}
-
-//==================================================================
-void main_anim(void)
-{
-	handleChannel( _basechannel );
-
-#ifdef USE_EXTRA_CHANNEL
-	handleChannel( _extrachannel );
-#endif
-
-#ifdef USE_EXTRA_CHANNEL2
-	handleChannel( _extrachannel2 );
-#endif
-
-	Sleep( 20 );
-}
-
-//==================================================================
 int main_requestquit(void)
 {
 	return _do_quit_flag;
-}
-
-//==================================================================
-void main_quit(void)
-{
-	if ( _basechannel )
-		delete _basechannel;
-
-#ifdef USE_EXTRA_CHANNEL
-	if ( _extrachannel )
-		delete _extrachannel;
-#endif
-
-#ifdef USE_EXTRA_CHANNEL2
-	if ( _extrachannel2 )
-		delete _extrachannel2;
-#endif
 }
 
 //==================================================================
@@ -150,9 +62,60 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
                      LPTSTR    lpCmdLine,
                      int       nCmdShow)
 {
-	main_start( hInstance );
-	appbase_mainloop();
-	main_quit();
+	PSYS::Initialize();
+	HICON	hicon = LoadIcon( hInstance, MAKEINTRESOURCE(IDI_ICO_APPL) );
+	WinSys::Init( hInstance, hicon, _T("DSHARINGU") );
+
+	// set float 2 int conversion to chop off !
+	_control87( _RC_CHOP, _MCW_RC );
+	ss_init_winsock();
+
+	const TCHAR	*cmd_linep = GetCommandLine();
+	bool	start_minimized = (_tcsstr( cmd_linep, _T("/minimized") ) != NULL);
+
+	_basechannel = new DSharinguApp( _T("dsharingu.cfg") );
+	_basechannel->Create( start_minimized );
+
+#ifdef USE_EXTRA_CHANNEL
+	_extrachannel = new DSharinguApp( _T("dsharingu2.cfg") );
+	_extrachannel->Create( start_minimized );
+#endif
+
+#ifdef USE_EXTRA_CHANNEL2
+	_extrachannel2 = new DSharinguApp( "dsharingu3.cfg" );
+	_extrachannel2->Create( start_minimized );
+#endif
+
+	while (1)
+	{
+		if ( _basechannel->Idle() || _basechannel->NeedQuit() )
+			break;
+
+		#ifdef USE_EXTRA_CHANNEL
+		if ( _extrachannel->Idle() || _extrachannel->NeedQuit() )
+			break;
+		#endif
+
+		#ifdef USE_EXTRA_CHANNEL2
+		if ( _extrachannel2->Idle() || _extrachannel2->NeedQuit() )
+			break;
+		#endif
+
+		Sleep( 20 );
+	}
+
+	if ( _basechannel )
+		delete _basechannel;
+
+	#ifdef USE_EXTRA_CHANNEL
+	if ( _extrachannel )
+		delete _extrachannel;
+	#endif
+
+	#ifdef USE_EXTRA_CHANNEL2
+	if ( _extrachannel2 )
+		delete _extrachannel2;
+	#endif
 
 	return 0;
 }
