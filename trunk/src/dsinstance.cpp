@@ -760,6 +760,8 @@ void DSharinguApp::handleAutoCall()
 //==================================================================
 int DSharinguApp::Idle()
 {
+	Application::Idle();
+
 	if ( _download_updatep )
 	{
 		if NOT( _download_updatep->Idle() )

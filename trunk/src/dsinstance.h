@@ -76,7 +76,7 @@ public:
 */
 
 //==================================================================
-class DSharinguApp
+class DSharinguApp : public Application
 {
 	friend class	DSChannel;
 	friend class	DSChannelManager;
