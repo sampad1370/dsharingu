@@ -320,17 +320,17 @@ void DSharinguApp::homeWinGadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB
 }
 
 //==================================================================
-int DSharinguApp::homeWinEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp )
+int DSharinguApp::homeWinEventFilter_s( void *userobjp, WindowEvent::Type etype, WindowEvent *eventp )
 {
 	DSharinguApp	*mythis = (DSharinguApp *)userobjp;
 	return mythis->homeWinEventFilter( etype, eventp );
 }
 //==================================================================
-int DSharinguApp::homeWinEventFilter( win_event_type etype, win_event_t *eventp )
+int DSharinguApp::homeWinEventFilter( WindowEvent::Type etype, WindowEvent *eventp )
 {
 	switch ( etype )
 	{
-	case WIN_ETYPE_WINRESIZE:
+	case WindowEvent::ETYPE_WINRESIZE:
 		if ( _home_winp )
 		{
 			int	BUTT_WD = (int)(FONT_TextHeight() * 12);
@@ -350,7 +350,7 @@ int DSharinguApp::homeWinEventFilter( win_event_type etype, win_event_t *eventp 
 		}
 		break;
 
-	case WIN_ETYPE_PAINT:
+	case WindowEvent::ETYPE_PAINT:
 //		doViewPaint();
 		break;
 	}

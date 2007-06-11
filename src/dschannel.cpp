@@ -964,25 +964,25 @@ void DSChannel::taskOnGadgetCB( DSTask *taskp, DSTask::ViewState view_state )
 }
 
 //==================================================================
-int DSChannel::viewEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp )
+int DSChannel::viewEventFilter_s( void *userobjp, WindowEvent::Type etype, WindowEvent *eventp )
 {
 	DSChannel	*mythis = (DSChannel *)userobjp;
 	return mythis->viewEventFilter( etype, eventp );
 }
 //==================================================================
-int DSChannel::viewEventFilter( win_event_type etype, win_event_t *eventp )
+int DSChannel::viewEventFilter( WindowEvent::Type etype, WindowEvent *eventp )
 {
 	switch ( etype )
 	{
-	case WIN_ETYPE_CREATE:
+	case WindowEvent::ETYPE_CREATE:
 		viewWinRebuildButtons( eventp->winp );
 		break;
 
-	case WIN_ETYPE_ACTIVATE:
+	case WindowEvent::ETYPE_ACTIVATE:
 		_console._win.SetFocus();
 		break;
 
-	case WIN_ETYPE_KEYDOWN:
+	case WindowEvent::ETYPE_KEYDOWN:
 		/*
 		if ( eventp->keycode == VK_SHIFT )
 		{
@@ -995,7 +995,7 @@ int DSChannel::viewEventFilter( win_event_type etype, win_event_t *eventp )
 		*/
 		break;
 
-	case WIN_ETYPE_MOUSEMOVE:
+	case WindowEvent::ETYPE_MOUSEMOVE:
 		if ( _intersys.IsActive() )
 		{
 			_intersys.FeedMessage( eventp->ms_message,
@@ -1018,10 +1018,10 @@ int DSChannel::viewEventFilter( win_event_type etype, win_event_t *eventp )
 		}
 		break;
 
-	case WIN_ETYPE_LBUTTONDOWN:
-	case WIN_ETYPE_LBUTTONUP:
-	case WIN_ETYPE_RBUTTONDOWN:
-	case WIN_ETYPE_RBUTTONUP:
+	case WindowEvent::ETYPE_LBUTTONDOWN:
+	case WindowEvent::ETYPE_LBUTTONUP:
+	case WindowEvent::ETYPE_RBUTTONDOWN:
+	case WindowEvent::ETYPE_RBUTTONUP:
 		if ( _intersys.IsActive() )
 		{
 			_intersys.FeedMessage( eventp->ms_message,
@@ -1039,14 +1039,14 @@ int DSChannel::viewEventFilter( win_event_type etype, win_event_t *eventp )
 		}
 		break;
 
-	case WIN_ETYPE_MOUSEMOVEDOUT:
+	case WindowEvent::ETYPE_MOUSEMOVEDOUT:
 		if ( _intersys.IsActive() )
 		{
 			setInteractiveMode( false );
 		}
 		break;
 
-	case WIN_ETYPE_WINRESIZE:
+	case WindowEvent::ETYPE_WINRESIZE:
 		{
 			int	new_w = eventp->win_w;
 			int	new_h = eventp->win_h;
@@ -1074,7 +1074,7 @@ int DSChannel::viewEventFilter( win_event_type etype, win_event_t *eventp )
 		//reshape( eventp->win_w, eventp->win_h );
 		break;
 
-	case WIN_ETYPE_PAINT:
+	case WindowEvent::ETYPE_PAINT:
 		doViewPaint();
 		break;
 	}

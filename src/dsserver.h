@@ -180,17 +180,17 @@ private:
 	void		processInputPacket( u_int pack_id, const u_char *datap, u_int data_size );
 	void		ensureDisconnect( const char *messagep, bool is_error=0 );
 
-	int			mainEventFilter( win_event_type etype, win_event_t *eventp );
-	static int	mainEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );
-	int			viewEventFilter( win_event_type etype, win_event_t *eventp );
-	static int	viewEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );
-	int			toolEventFilter( win_event_type etype, win_event_t *eventp );
-	static int	toolEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );
+	int			mainEventFilter( WindowEvent::Type etype, Window::Event *eventp );
+	static int	mainEventFilter_s( void *userobjp, WindowEvent::Type etype, Window::Event *eventp );
+	int			viewEventFilter( WindowEvent::Type etype, Window::Event *eventp );
+	static int	viewEventFilter_s( void *userobjp, WindowEvent::Type etype, Window::Event *eventp );
+	int			toolEventFilter( WindowEvent::Type etype, Window::Event *eventp );
+	static int	toolEventFilter_s( void *userobjp, WindowEvent::Type etype, Window::Event *eventp );
 	void		drawDispOffArrows();
 	void		doPaint();
 
-	int			dbgEventFilter( win_event_type etype, win_event_t *eventp );
-	static int	dbgEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );
+	int			dbgEventFilter( WindowEvent::Type etype, Window::Event *eventp );
+	static int	dbgEventFilter_s( void *userobjp, WindowEvent::Type etype, Window::Event *eventp );
 	void		dbgDoPaint();
 
 	void		cmd_connect( char *params[], int n_params );
