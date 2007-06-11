@@ -83,8 +83,8 @@ private:
 	void		addTab( int idx, const TCHAR *namep );
 	void		toggleOne( GGET_Manager &gam, int gget_id );
 	
-	static int	eventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );
-	int			eventFilter( win_event_type etype, win_event_t *eventp );
+	static int	eventFilter_s( void *userobjp, WindowEvent::Type etype, WindowEvent *eventp );
+	int			eventFilter( WindowEvent::Type etype, WindowEvent *eventp );
 	
 	int			findChannelIndex( DSChannel *chanp );
 };

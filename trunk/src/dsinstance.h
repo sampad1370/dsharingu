@@ -140,7 +140,13 @@ public:
 
 	void			Create( bool start_minimized );
 	void			StartListening( int port_listen );
-	int				Idle();
+	
+	bool			Idle();
+	bool			NeedQuit() const
+	{
+		return false;
+	}
+
 	Window			*GetWindowPtr()
 	{
 		return &_main_win;
@@ -156,11 +162,11 @@ private:
 
 	HWND		openModelessDialog( void *mythisp, DLGPROC dlg_proc, LPTSTR dlg_namep );
 
-	int			mainEventFilter( win_event_type etype, win_event_t *eventp );
-	static int	mainEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );
+	int			mainEventFilter( WindowEvent::Type etype, WindowEvent *eventp );
+	static int	mainEventFilter_s( void *userobjp, WindowEvent::Type etype, WindowEvent *eventp );
 
-	int			dbgEventFilter( win_event_type etype, win_event_t *eventp );
-	static int	dbgEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );
+	int			dbgEventFilter( WindowEvent::Type etype, WindowEvent *eventp );
+	static int	dbgEventFilter_s( void *userobjp, WindowEvent::Type etype, WindowEvent *eventp );
 	void		dbgDoPaint();
 
 	void		cmd_debug( TCHAR *params[], int n_params );
@@ -183,8 +189,8 @@ private:
 
 	void		homeWinCreate();
 	void		homeWinCreateLangButts( GGET_Manager &gam, int y );
-	static int	homeWinEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp );
-	int			homeWinEventFilter( win_event_type etype, win_event_t *eventp );
+	static int	homeWinEventFilter_s( void *userobjp, WindowEvent::Type etype, WindowEvent *eventp );
+	int			homeWinEventFilter( WindowEvent::Type etype, WindowEvent *eventp );
 	static void	homeWinGadgetCallback_s( void *userdatap, int gget_id, GGET_Item *itemp, GGET_CB_Action action );
 	void		homeWinGadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB_Action action );
 	void		homeWinOnChangedSettings();

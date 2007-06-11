@@ -345,28 +345,28 @@ HWND DSharinguApp::openModelessDialog( void *mythisp, DLGPROC dlg_proc, LPTSTR d
 }
 
 //==================================================================
-int DSharinguApp::mainEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp )
+int DSharinguApp::mainEventFilter_s( void *userobjp, WindowEvent::Type etype, WindowEvent *eventp )
 {
 	DSharinguApp	*mythis = (DSharinguApp *)userobjp;
 	return mythis->mainEventFilter( etype, eventp );
 }
 //=====================================================
-int DSharinguApp::mainEventFilter( win_event_type etype, win_event_t *eventp )
+int DSharinguApp::mainEventFilter( WindowEvent::Type etype, WindowEvent *eventp )
 {
 	if ( _cur_chanp )
 		_cur_chanp->_console.cons_parent_eventfilter( NULL, etype, eventp );
 
 	switch ( etype )
 	{
-	case WIN_ETYPE_ACTIVATE:
+	case WindowEvent::ETYPE_ACTIVATE:
 		if ( _cur_chanp )
 			_cur_chanp->_console._win.SetFocus();
 		break;
 
-	case WIN_ETYPE_CREATE:
+	case WindowEvent::ETYPE_CREATE:
 		break;
 
-	case WIN_ETYPE_WINRESIZE:
+	case WindowEvent::ETYPE_WINRESIZE:
 		if ( _chmanagerp )
 		{
 			for (int i=1; i < _chmanagerp->_n_channels; ++i)
@@ -374,13 +374,13 @@ int DSharinguApp::mainEventFilter( win_event_type etype, win_event_t *eventp )
 		}
 		break;
 
-	case WIN_ETYPE_SHOW:
+	case WindowEvent::ETYPE_SHOW:
 		break;
 
-	case WIN_ETYPE_PAINT:
+	case WindowEvent::ETYPE_PAINT:
 		break;
 
-	case WIN_ETYPE_COMMAND:
+	case WindowEvent::ETYPE_COMMAND:
 		switch ( eventp->command )
 		{
 		case ID_FILE_CONNECTIONS:
@@ -452,7 +452,7 @@ int DSharinguApp::mainEventFilter( win_event_type etype, win_event_t *eventp )
 		}
 		break;
 
-	case WIN_ETYPE_DESTROY:
+	case WindowEvent::ETYPE_DESTROY:
 		_chmanagerp->Quit();
 		//setState( STATE_QUIT );
 		PostQuitMessage(0);
@@ -580,22 +580,22 @@ void DSharinguApp::dbgDoPaint()
 }
 
 //==================================================================
-int DSharinguApp::dbgEventFilter( win_event_type etype, win_event_t *eventp )
+int DSharinguApp::dbgEventFilter( WindowEvent::Type etype, WindowEvent *eventp )
 {
 	switch ( etype )
 	{
-	case WIN_ETYPE_CREATE:
+	case WindowEvent::ETYPE_CREATE:
 		break;
 
-	case WIN_ETYPE_WINRESIZE:
+	case WindowEvent::ETYPE_WINRESIZE:
 		//reshape( eventp->win_w, eventp->win_h );
 		break;
 
-	case WIN_ETYPE_PAINT:
+	case WindowEvent::ETYPE_PAINT:
 		dbgDoPaint();
 		break;
 
-	case WIN_ETYPE_DESTROY:
+	case WindowEvent::ETYPE_DESTROY:
 		//PostQuitMessage(0);
 		break;
 	}
@@ -604,7 +604,7 @@ int DSharinguApp::dbgEventFilter( win_event_type etype, win_event_t *eventp )
 }
 
 //==================================================================
-int DSharinguApp::dbgEventFilter_s( void *userobjp, win_event_type etype, win_event_t *eventp )
+int DSharinguApp::dbgEventFilter_s( void *userobjp, WindowEvent::Type etype, WindowEvent *eventp )
 {
 	DSharinguApp	*mythis = (DSharinguApp *)userobjp;
 	return mythis->dbgEventFilter( etype, eventp );
@@ -758,9 +758,9 @@ void DSharinguApp::handleAutoCall()
 	}
 }
 //==================================================================
-int DSharinguApp::Idle()
+bool DSharinguApp::Idle()
 {
-	Application::Idle();
+	bool	quitting = Application::Idle();
 
 	if ( _download_updatep )
 	{
@@ -790,7 +790,7 @@ int DSharinguApp::Idle()
 
 	_chmanagerp->Idle();
 
-	return DSChannel::STATE_IDLE;
+	return quitting;
 }
 
 //==================================================================
