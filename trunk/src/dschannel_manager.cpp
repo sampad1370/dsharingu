@@ -94,15 +94,15 @@ DSChannelManager::DSChannelManager( Window *parent_winp, DSharinguApp *superp,
 }
 
 //==================================================================
-int DSChannelManager::eventFilter_s( void *userobjp, WindowEvent::Type etype, WindowEvent *eventp )
+int DSChannelManager::eventFilter_s( void *userobjp, WindowEvent *eventp )
 {
 	DSChannelManager	*mythis = (DSChannelManager *)userobjp;
-	return mythis->eventFilter( etype, eventp );
+	return mythis->eventFilter( eventp );
 }
 //==================================================================
-int DSChannelManager::eventFilter( WindowEvent::Type etype, WindowEvent *eventp )
+int DSChannelManager::eventFilter( WindowEvent *eventp )
 {
-	switch ( etype )
+	switch ( eventp->GetType() )
 	{
 	case WindowEvent::ETYPE_WINRESIZE:
 		if ( _tabs_winp )

@@ -320,15 +320,15 @@ void DSharinguApp::homeWinGadgetCallback( int gget_id, GGET_Item *itemp, GGET_CB
 }
 
 //==================================================================
-int DSharinguApp::homeWinEventFilter_s( void *userobjp, WindowEvent::Type etype, WindowEvent *eventp )
+int DSharinguApp::homeWinEventFilter_s( void *userobjp, WindowEvent *eventp )
 {
 	DSharinguApp	*mythis = (DSharinguApp *)userobjp;
-	return mythis->homeWinEventFilter( etype, eventp );
+	return mythis->homeWinEventFilter( eventp );
 }
 //==================================================================
-int DSharinguApp::homeWinEventFilter( WindowEvent::Type etype, WindowEvent *eventp )
+int DSharinguApp::homeWinEventFilter( WindowEvent *eventp )
 {
-	switch ( etype )
+	switch ( eventp->GetType() )
 	{
 	case WindowEvent::ETYPE_WINRESIZE:
 		if ( _home_winp )
