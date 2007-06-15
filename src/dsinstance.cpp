@@ -345,18 +345,18 @@ HWND DSharinguApp::openModelessDialog( void *mythisp, DLGPROC dlg_proc, LPTSTR d
 }
 
 //==================================================================
-int DSharinguApp::mainEventFilter_s( void *userobjp, WindowEvent::Type etype, WindowEvent *eventp )
+int DSharinguApp::mainEventFilter_s( void *userobjp, WindowEvent *eventp )
 {
 	DSharinguApp	*mythis = (DSharinguApp *)userobjp;
-	return mythis->mainEventFilter( etype, eventp );
+	return mythis->mainEventFilter( eventp );
 }
 //=====================================================
-int DSharinguApp::mainEventFilter( WindowEvent::Type etype, WindowEvent *eventp )
+int DSharinguApp::mainEventFilter( WindowEvent *eventp )
 {
 	if ( _cur_chanp )
-		_cur_chanp->_console.cons_parent_eventfilter( NULL, etype, eventp );
+		_cur_chanp->_console.cons_parent_eventfilter( NULL, eventp );
 
-	switch ( etype )
+	switch ( eventp->GetType() )
 	{
 	case WindowEvent::ETYPE_ACTIVATE:
 		if ( _cur_chanp )
@@ -580,9 +580,9 @@ void DSharinguApp::dbgDoPaint()
 }
 
 //==================================================================
-int DSharinguApp::dbgEventFilter( WindowEvent::Type etype, WindowEvent *eventp )
+int DSharinguApp::dbgEventFilter( WindowEvent *eventp )
 {
-	switch ( etype )
+	switch ( eventp->GetType() )
 	{
 	case WindowEvent::ETYPE_CREATE:
 		break;
@@ -604,10 +604,10 @@ int DSharinguApp::dbgEventFilter( WindowEvent::Type etype, WindowEvent *eventp )
 }
 
 //==================================================================
-int DSharinguApp::dbgEventFilter_s( void *userobjp, WindowEvent::Type etype, WindowEvent *eventp )
+int DSharinguApp::dbgEventFilter_s( void *userobjp, WindowEvent *eventp )
 {
 	DSharinguApp	*mythis = (DSharinguApp *)userobjp;
-	return mythis->dbgEventFilter( etype, eventp );
+	return mythis->dbgEventFilter( eventp );
 }
 
 

@@ -177,10 +177,10 @@ public:
 	void		setShellVisibility( bool do_switch=false );
 	void		processInputPacket( u_int pack_id, const u_char *datap, u_int data_size );
 
-	int			viewEventFilter( WindowEvent::Type etype, WindowEvent *eventp );
-	static int	viewEventFilter_s( void *userobjp, WindowEvent::Type etype, WindowEvent *eventp );
-	int			toolEventFilter( WindowEvent::Type etype, WindowEvent *eventp );
-	static int	toolEventFilter_s( void *userobjp, WindowEvent::Type etype, WindowEvent *eventp );
+	int			viewEventFilter( WindowEvent *eventp );
+	static int	viewEventFilter_s( void *userobjp, WindowEvent *eventp );
+	int			toolEventFilter( WindowEvent *eventp );
+	static int	toolEventFilter_s( void *userobjp, WindowEvent *eventp );
 	void		drawDispOffArrows();
 	void		doViewPaint();
 

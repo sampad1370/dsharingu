@@ -964,15 +964,15 @@ void DSChannel::taskOnGadgetCB( DSTask *taskp, DSTask::ViewState view_state )
 }
 
 //==================================================================
-int DSChannel::viewEventFilter_s( void *userobjp, WindowEvent::Type etype, WindowEvent *eventp )
+int DSChannel::viewEventFilter_s( void *userobjp, WindowEvent *eventp )
 {
 	DSChannel	*mythis = (DSChannel *)userobjp;
-	return mythis->viewEventFilter( etype, eventp );
+	return mythis->viewEventFilter( eventp );
 }
 //==================================================================
-int DSChannel::viewEventFilter( WindowEvent::Type etype, WindowEvent *eventp )
+int DSChannel::viewEventFilter( WindowEvent *eventp )
 {
-	switch ( etype )
+	switch ( eventp->GetType() )
 	{
 	case WindowEvent::ETYPE_CREATE:
 		viewWinRebuildButtons( eventp->winp );
