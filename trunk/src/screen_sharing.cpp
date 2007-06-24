@@ -325,6 +325,7 @@ double	grab_time;
 //==================================================================
 bool ScrShare::Writer::SendFrame( u_int msg_id, Compak *cpkp )
 {
+/*
 	int	tot_size =	sizeof(int) +
 					sizeof(int) +
 					sizeof(int) + _packer._data._blocks_use_bitmap.size_bytes() +
@@ -346,8 +347,18 @@ bool ScrShare::Writer::SendFrame( u_int msg_id, Compak *cpkp )
 	} catch (...) {
 		throw "Sad !";
 	}
-	
-	if ERR_ERROR( cpkp->SendPacket( dest_packp ) )	return false;
+*/	
+
+	Memfile	memfile;
+
+	memfile.WriteInt( _packer._data.GetWidth() );
+	memfile.WriteInt( _packer._data.GetHeight() );
+	memfile.WriteUCharArray( _packer._data.GetUseBitmap() );
+	memfile.WriteMemfile( &_packer._data.GetDataHead() );
+	memfile.WriteMemfile( &_packer._data.GetDataBits() );
+
+	if PBADPATH( cpkp->SendPacket( msg_id, memfile.GetData(), memfile.GetDataSize() ) )
+		return false;
 
 	return true;
 }

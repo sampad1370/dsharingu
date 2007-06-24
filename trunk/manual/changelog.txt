@@ -9,6 +9,9 @@ Legend:
  B - Bug fix
  P - Performance improvement
 
+---- 0.28a - 2007/06/17
+- B: Fixed crash bug when transfering the desktop
+
 ---- 0.27a - 2007/05/27
 - F: Added Italian and Japanese languages to the installer
 - F: Added partial Italian and Japanese translations to the application

@@ -41,7 +41,7 @@
 #define CHNTAG					_T(CHNTAG_UTF8)
 #define APP_NAME_UTF8			"DSharingu"
 #define APP_NAME				_T(APP_NAME_UTF8)
-#define APP_VERSION_STR_UTF8	"0.27a"
+#define APP_VERSION_STR_UTF8	"0.28a"
 #define APP_VERSION_STR			_T(APP_VERSION_STR_UTF8)
 
 /*
