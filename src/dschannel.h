@@ -88,7 +88,7 @@ public:
 	bool					_is_transmitting;
 	bool					_is_using_remote;
 
-	Console					_console;
+	Console					*_console;
 
 	struct RemoteState
 	{

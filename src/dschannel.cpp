@@ -46,6 +46,7 @@ static const int	BUTT_HE	= 22;
 ///
 //==================================================================
 DSChannel::DSChannel( DSChannelManager *managerp, int accepted_fd ) :
+	_console(NULL),
 	_managerp(managerp),
 	_intersys( &_cpk )
 {
@@ -184,17 +185,17 @@ void DSChannel::create()
 	
 	_view_winp = new Window( _T("view win"), &((DSharinguApp *)_managerp->_superp)->_main_win,
 							this, viewEventFilter_s,
-							WIN_ANCH_TYPE_FIXED, 0,
-							WIN_ANCH_TYPE_PARENT_Y1, _managerp->GetTabsWinHeight(),
-							WIN_ANCH_TYPE_PARENT_X2, 0,
-							WIN_ANCH_TYPE_PARENT_Y2, -160,
+							Window::ANCH_TYPE_FIXED, 0,
+							Window::ANCH_TYPE_PARENT_Y1, _managerp->GetTabsWinHeight(),
+							Window::ANCH_TYPE_PARENT_X2, 0,
+							Window::ANCH_TYPE_PARENT_Y2, -160,
 							(win_init_flags)(WIN_INIT_FLG_OPENGL | WIN_INTFLG_DONT_CLEAR | 0*WIN_INIT_FLG_HSCROLL | 0*WIN_INIT_FLG_VSCROLL) );
 
 	//-----------------------------------------------
-	_console.cons_init( &((DSharinguApp *)_managerp->_superp)->_main_win, (void *)this );
-	_console.cons_line_cb_set( console_line_func_s );
-	_console.cons_cmd_add_defs( _cmd_defs );
-	_console.Show( 1 );
+	_console = new Console( &((DSharinguApp *)_managerp->_superp)->_main_win, (void *)this );
+	_console->cons_line_cb_set( console_line_func_s );
+	_console->cons_cmd_add_defs( _cmd_defs );
+	_console->Show( 1 );
 
 	setShellVisibility();
 	//changeSessionRemote( NULL );
@@ -330,19 +331,19 @@ void DSChannel::setShellVisibility( bool do_switch )
 
 	if ( do_switch )
 	{
-		_console.Show( !_console.IsShowing() );
+		_console->Show( !_console->IsShowing() );
 	}
 
-	if ( _console.IsShowing() )
+	if ( _console->IsShowing() )
 	{
 		win_anchor_y2_offset_set( _view_winp, -160 );
-		_console.Show( 1 );
+		_console->Show( 1 );
 //		gam.SetGadgetText( DSharinguApp::BUTT_SHELL, "[O] Shell" );
 	}
 	else
 	{
 		win_anchor_y2_offset_set( _view_winp, 0 );
-		_console.Show( 0 );
+		_console->Show( 0 );
 //		gam.SetGadgetText( DSharinguApp::BUTT_SHELL, "[ ] Shell" );
 	}
 
@@ -360,11 +361,11 @@ void DSChannel::onConnect( bool is_connected_as_caller )
 
 	if ( is_connected_as_caller )
 	{
-		_console.cons_line_printf( CHNTAG _T("Calling..." ) );
+		_console->cons_line_printf( CHNTAG _T("Calling..." ) );
 	}
 	else
 	{
-		_console.cons_line_printf( CHNTAG _T("Incoming connection..." ) );
+		_console->cons_line_printf( CHNTAG _T("Incoming connection..." ) );
 	}
 
 	//gam.EnableGadget( DSharinguApp::BUTT_CONNECTIONS, false );
@@ -394,7 +395,7 @@ void DSChannel::onConnect( bool is_connected_as_caller )
 void DSChannel::DoDisconnect( const TCHAR *messagep, bool is_error )
 {
 	if ( messagep )
-		_console.cons_line_printf( CHNTAG _T("%s"), messagep );
+		_console->cons_line_printf( CHNTAG _T("%s"), messagep );
 
 	setState( STATE_DISCONNECT_START );
 }
@@ -461,9 +462,9 @@ void DSChannel::handleAutoScroll()
 //==================================================================
 int DSChannel::Idle()
 {
-	if ( _console.IsShowing() )
+	if ( _console->IsShowing() )
 	{
-		//		win_focus( &_console._win, 1 );
+		//		win_focus( &_console->_win, 1 );
 	}
 
 	handleAutoScroll();
@@ -508,7 +509,7 @@ int DSChannel::Idle()
 
 	default:
 		//_is_connected = false;
-		//_console.cons_line_printf( CHNTAG) _T("connection err #%i !!"), err );
+		//_console->cons_line_printf( CHNTAG) _T("connection err #%i !!"), err );
 		break;
 	}
 
@@ -563,7 +564,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 					remotep = ((DSharinguApp *)_managerp->_superp)->_remote_mng.FindRemoteDef( msg._caller_username );
 					if ( remotep && remotep->IsLocked() )
 					{
-						_console.cons_line_printf( CHNTAG _T(" '%s' is trying to connect again !"), msg._caller_username );
+						_console->cons_line_printf( CHNTAG _T(" '%s' is trying to connect again !"), msg._caller_username );
 						return;
 					}
 
@@ -579,7 +580,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 
 					if ( _tcsicmp( msg._communicating_username, ((DSharinguApp *)_managerp->_superp)->_settings._username ) )
 					{
-						_console.cons_line_printf( CHNTAG _T("PROBLEM: Rejected connection from '%s'. The wrong username was provided."),
+						_console->cons_line_printf( CHNTAG _T("PROBLEM: Rejected connection from '%s'. The wrong username was provided."),
 													msg._caller_username );
 						_cpk.SendPacket( HS_BAD_USERNAME_PKID );
 						DoDisconnect( _T("Connection Failed.") );
@@ -588,14 +589,14 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 
 					if NOT( sha1_t::AreEqual( msg._communicating_password, ((DSharinguApp *)_managerp->_superp)->_settings._password._data ) )
 					{
-						_console.cons_line_printf( CHNTAG _T("PROBLEM: Rejected connection for '%s'. The wrong password was provided."),
+						_console->cons_line_printf( CHNTAG _T("PROBLEM: Rejected connection for '%s'. The wrong password was provided."),
 													msg._caller_username );
 						_cpk.SendPacket( HS_BAD_PASSWORD_PKID );
 						DoDisconnect( _T("Connection Failed.") );
 						return;
 					}
 
-					_console.cons_line_printf( CHNTAG _T("OK ! Successfully connected to '%s'"), msg._caller_username );
+					_console->cons_line_printf( CHNTAG _T("OK ! Successfully connected to '%s'"), msg._caller_username );
 
 					PASSERT( _session_remotep != NULL );
 					_session_remotep->SetUserData( this );
@@ -636,7 +637,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 
 		case HS_BAD_USERNAME_PKID:
 			if ( _session_remotep )
-				_console.cons_line_printf( CHNTAG _T("PROBLEM: Wrong username !"), _session_remotep->_rm_username );
+				_console->cons_line_printf( CHNTAG _T("PROBLEM: Wrong username !"), _session_remotep->_rm_username );
 			else
 			{
 				PASSERT( _session_remotep != NULL );
@@ -646,7 +647,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 
 		case HS_BAD_PASSWORD_PKID:
 			if ( _session_remotep )
-				_console.cons_line_printf( CHNTAG _T("PROBLEM: Wrong password !"),
+				_console->cons_line_printf( CHNTAG _T("PROBLEM: Wrong password !"),
 											_session_remotep->_rm_username );
 			else
 			{
@@ -680,7 +681,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 		case HS_OK:
 			if ( _session_remotep )
 			{
-				_console.cons_line_printf( CHNTAG _T("OK ! Succesfully connected to '%s'"),
+				_console->cons_line_printf( CHNTAG _T("OK ! Succesfully connected to '%s'"),
 											_session_remotep->_rm_username );
 
 				_is_transmitting = true;
@@ -702,7 +703,7 @@ void DSChannel::processInputPacket( u_int pack_id, const u_char *datap, u_int da
 		switch ( pack_id )
 		{
 		case TEXT_MSG_PKID:
-			_console.cons_line_printf( _T("%s> %s"), _session_remotep->_rm_username, (const TCHAR *)datap );
+			_console->cons_line_printf( _T("%s> %s"), _session_remotep->_rm_username, (const TCHAR *)datap );
 			break;
 
 		case DESK_IMG_PKID:
@@ -958,7 +959,7 @@ void DSChannel::taskOnGadgetCB( DSTask *taskp, DSTask::ViewState view_state )
 
 	case VIEW_WIN_TASK_SHELL_BUTTON:
 		win_anchor_y2_offset_set( _view_winp, do_show ? -160 : 0 );
-		_console.Show( do_show );
+		_console->Show( do_show );
 		break;
 	}
 }
@@ -979,7 +980,7 @@ int DSChannel::viewEventFilter( WindowEvent *eventp )
 		break;
 
 	case WindowEvent::ETYPE_ACTIVATE:
-		_console._win.SetFocus();
+		_console->_win.SetFocus();
 		break;
 
 	case WindowEvent::ETYPE_KEYDOWN:
@@ -1195,7 +1196,7 @@ BOOL CALLBACK DSChannel::connectingDialogProc(HWND hwnd, UINT umsg, WPARAM wpara
 void DSChannel::Show( bool onoff )
 {
 	_view_winp->Show( onoff );
-	_console.Show( onoff );
+	_console->Show( onoff );
 }
 
 //===============================================================

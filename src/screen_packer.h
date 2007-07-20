@@ -93,7 +93,7 @@ struct ScreenPackerData
 	int					_w, _h;
 
 	PArray<BlockPackWork>		_blocks_pack_work;
-	PArray<u_char>				_blocks_use_bitmap;
+	std::vector<u_char>			_blocks_use_bitmap;
 	PUtils::Memfile				_blkdata_head_file;
 	PUtils::Memfile				_blkdata_bits_file;
 	PArray<u_char>				_blkdata_rgb;
@@ -114,7 +114,7 @@ struct ScreenPackerData
 	//==================================================================
 	int						GetWidth()		const {	return _w;	}
 	int						GetHeight()		const {	return _h;	}
-	PArray<u_char>			&GetUseBitmap()		{	return _blocks_use_bitmap;	}
+	std::vector<u_char>		&GetUseBitmap()		{	return _blocks_use_bitmap;	}
 	PUtils::Memfile			&GetDataHead()		{	return _blkdata_head_file;	}
 	PUtils::Memfile			&GetDataBits()		{	return _blkdata_bits_file;	}
 };
