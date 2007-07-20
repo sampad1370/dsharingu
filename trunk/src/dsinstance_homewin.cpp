@@ -206,10 +206,10 @@ void DSharinguApp::homeWinCreate()
 {
 	_home_winp = new Window( _T("home win"), &_main_win,
 		this, homeWinEventFilter_s,
-		WIN_ANCH_TYPE_FIXED, 0,
-		WIN_ANCH_TYPE_PARENT_Y1, _chmanagerp->GetTabsWinHeight(),
-		WIN_ANCH_TYPE_PARENT_X2, 0,
-		WIN_ANCH_TYPE_PARENT_Y2, 0,
+		Window::ANCH_TYPE_FIXED, 0,
+		Window::ANCH_TYPE_PARENT_Y1, _chmanagerp->GetTabsWinHeight(),
+		Window::ANCH_TYPE_PARENT_X2, 0,
+		Window::ANCH_TYPE_PARENT_Y2, 0,
 		(win_init_flags)(WIN_INIT_FLG_OPENGL | WIN_INTFLG_DONT_CLEAR) );
 
 	//win_show( _tabs_winp, true );

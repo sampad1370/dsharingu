@@ -140,7 +140,7 @@ void DSharinguApp::updateViewMenu( DSChannel *chanp )
 		EnableMenuItem( _main_menu, ID_VIEW_FITWINDOW,	MF_BYCOMMAND | MF_ENABLED );
 		EnableMenuItem( _main_menu, ID_VIEW_ACTUALSIZE, MF_BYCOMMAND | MF_ENABLED );
 
-		if ( chanp->_console.IsShowing() )
+		if ( chanp->_console->IsShowing() )
 			CheckMenuItem( _main_menu, ID_VIEW_SHELL, MF_BYCOMMAND | MF_CHECKED );
 		else
 			CheckMenuItem( _main_menu, ID_VIEW_SHELL, MF_BYCOMMAND | MF_UNCHECKED );
@@ -279,8 +279,10 @@ void DSharinguApp::Create( bool start_minimized )
 
 	win_init_quick( &_main_win, WINDOW_TITLE, NULL,
 					this, mainEventFilter_s,
-					WIN_ANCH_TYPE_FIXED, 0, WIN_ANCH_TYPE_FIXED, 0,
-					WIN_ANCH_TYPE_THIS_X1, 640, WIN_ANCH_TYPE_THIS_Y1, 490,
+					Window::ANCH_TYPE_FIXED, 0,
+					Window::ANCH_TYPE_FIXED, 0,
+					Window::ANCH_TYPE_THIS_X1, 640,
+					Window::ANCH_TYPE_THIS_Y1, 490,
 					(win_init_flags)(WIN_INIT_FLG_SYSTEM |
 									 WIN_INIT_FLG_INVISIBLE |
 									 WIN_INIT_FLG_CLIENTEDGE |
@@ -290,8 +292,10 @@ void DSharinguApp::Create( bool start_minimized )
 
 	win_init_quick( &_dbg_win, APP_NAME _T(" Debug Window"), NULL,
 					this, dbgEventFilter_s,
-					WIN_ANCH_TYPE_FIXED, 0, WIN_ANCH_TYPE_FIXED, 0,
-					WIN_ANCH_TYPE_THIS_X1, 400, WIN_ANCH_TYPE_THIS_Y1, 256,
+					Window::ANCH_TYPE_FIXED, 0,
+					Window::ANCH_TYPE_FIXED, 0,
+					Window::ANCH_TYPE_THIS_X1, 400,
+					Window::ANCH_TYPE_THIS_Y1, 256,
 					(win_init_flags)(WIN_INIT_FLG_OPENGL | WIN_INTFLG_DONT_CLEAR | WIN_INIT_FLG_INVISIBLE | WIN_INIT_FLG_CLIENTEDGE) );
 
 	homeWinCreate();
@@ -354,13 +358,13 @@ int DSharinguApp::mainEventFilter_s( void *userobjp, WindowEvent *eventp )
 int DSharinguApp::mainEventFilter( WindowEvent *eventp )
 {
 	if ( _cur_chanp )
-		_cur_chanp->_console.cons_parent_eventfilter( NULL, eventp );
+		_cur_chanp->_console->cons_parent_eventfilter( NULL, eventp );
 
 	switch ( eventp->GetType() )
 	{
 	case WindowEvent::ETYPE_ACTIVATE:
 		if ( _cur_chanp )
-			_cur_chanp->_console._win.SetFocus();
+			_cur_chanp->_console->_win.SetFocus();
 		break;
 
 	case WindowEvent::ETYPE_CREATE:
@@ -614,17 +618,17 @@ int DSharinguApp::dbgEventFilter_s( void *userobjp, WindowEvent *eventp )
 //==================================================================
 void DSharinguApp::StartListening( int port_listen )
 {
-	// $$$ _console.cons_line_printf( CHNTAG"Started !" );
+	// $$$ _console->cons_line_printf( CHNTAG"Started !" );
 	if ( _com_listener.StartListen( port_listen ) )
 	{
 		//msg_badlisten( DEF_PORT_NUMBER );
-		// $$$ _console.cons_line_printf( CHNTAG"PROBLEM: Port %i is busy. Server cannot accept calls.", port_listen );
+		// $$$ _console->cons_line_printf( CHNTAG"PROBLEM: Port %i is busy. Server cannot accept calls.", port_listen );
 	}
 	else
 	{
 		//state_set( STATE_LISTENING );
 		//state_set( STATE_ACCEPTING_CONNECTIONS );
-		// $$$ _console.cons_line_printf( CHNTAG"OK: Listening on port %i for incoming calls.", port_listen );
+		// $$$ _console->cons_line_printf( CHNTAG"OK: Listening on port %i for incoming calls.", port_listen );
 	}
 }
 /*
